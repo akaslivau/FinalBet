@@ -29,11 +29,9 @@ namespace FinalBet
             Thread.CurrentThread.CurrentUICulture = culture;
 
             base.OnStartup(e);
-            //Connection.Initialize(Settings.Default.Connection_String);
-
-
+            
             var window = new MainWindow();
-
+            Connection.Initialize(Settings.Default.soccerConnectionString);
             // Create the ViewModel to which 
             // the main window binds.
             var viewModel = new MainWindowViewModel();

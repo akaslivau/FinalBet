@@ -5,7 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using FinalBet.Database;
 using FinalBet.Framework;
+using FinalBet.Other;
+using FinalBet.Properties;
 using HtmlAgilityPack;
 
 namespace FinalBet.ViewModel
@@ -63,6 +66,7 @@ namespace FinalBet.ViewModel
 
         public MainWindowViewModel()
         {
+            
             TestCommand = new RelayCommand(Test);
         }
     }
@@ -89,6 +93,35 @@ namespace FinalBet.ViewModel
                 Select(x => x.GetAttributeValue("src", "default")).
                 Select(x=>x.Substring(x.LastIndexOf('/')+1)).
                 ToList();
+
+            var cnt = captions.Count;
+
+            if (links.Count != cnt || flagNames.Count != cnt)
+            {
+                throw new Exception("ParseSoccerPage(): количество элементов в списках различается!");
+            }
+
+            int z = 3;
+            //Добавление в базу данных
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var leagueTable = cntx.GetTable<league>();
+
+                for (int i = 0; i < cnt; i++)
+                {
+                    var toAdd = new league()
+                    {
+                        name = captions[i],
+                        url = links[i],
+                        svgName = flagNames[i],
+                        svgValue = "",
+                        other = ""
+                    };
+                    leagueTable.InsertOnSubmit(toAdd);
+                }
+                cntx.SubmitChanges();
+            }
+
 
         }
     }
