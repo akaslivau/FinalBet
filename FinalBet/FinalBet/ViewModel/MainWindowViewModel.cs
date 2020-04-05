@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,7 +46,11 @@ namespace FinalBet.ViewModel
                3. Грузим html
                4. Ссылка по которой загружен html Добавляется в БД
              */
-             BetExplorerParser.ParseSoccerPage();
+           
+            //BetExplorerParser.ParseSoccerPage();
+            var op = File.ReadAllText(@"D:\flags\1.svg");
+            //MessageBox.Show(op);
+
             return;
             var path = @"D:\russia_2012.html";
             var doc = new HtmlDocument();
@@ -88,7 +93,11 @@ namespace FinalBet.ViewModel
             //Получаем название страны и ссылку
             //  < a class="list-events__item__title" href="/soccer/africa/">
             var captions = htmlNode.SelectNodes(".//a[contains(@class, 'item__title')]").Select(x=>x.InnerText).ToList();
-            var links = htmlNode.SelectNodes(".//a[contains(@class, 'item__title')]").Select(x => x.GetAttributeValue("href", "default")).ToList();
+            var links = htmlNode.
+                SelectNodes(".//a[contains(@class, 'item__title')]").
+                Select(x => x.GetAttributeValue("href", "default")).
+                Select(x=> x.Substring(x.Substring(0,x.Length-2).LastIndexOf('/') + 1)).
+                ToList();
             var flagNames = htmlNode.SelectNodes(".//img").
                 Select(x => x.GetAttributeValue("src", "default")).
                 Select(x=>x.Substring(x.LastIndexOf('/')+1)).
@@ -100,8 +109,6 @@ namespace FinalBet.ViewModel
             {
                 throw new Exception("ParseSoccerPage(): количество элементов в списках различается!");
             }
-
-            int z = 3;
             //Добавление в базу данных
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
