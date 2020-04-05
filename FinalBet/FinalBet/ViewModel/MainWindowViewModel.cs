@@ -17,20 +17,7 @@ namespace FinalBet.ViewModel
 {
     public class MainWindowViewModel:ViewModelBase
     {
-        private string _flagPath;
-        public string FlagPath
-        {
-            get
-            {
-                return _flagPath;
-            }
-            set
-            {
-                if (_flagPath == value) return;
-                _flagPath = value;
-                OnPropertyChanged("FlagPath");
-            }
-        }
+        public DatabaseViewModel Database { get; set; }
 
         public string TestString
         {
@@ -43,39 +30,6 @@ namespace FinalBet.ViewModel
                 OnPropertyChanged("TestString");
             }
         }
-
-
-        private ObservableCollection<league> _leagues = new ObservableCollection<league>();
-        public ObservableCollection<league> Leagues
-        {
-            get
-            {
-                return _leagues;
-            }
-            set
-            {
-                if (_leagues == value) return;
-                _leagues = value;
-                OnPropertyChanged("Leagues");
-            }
-        }
-
-        private league _selected = null;
-        public league Selected
-        {
-            get
-            {
-                return _selected;
-            }
-            set
-            {
-                if (_selected == value) return;
-                _selected = value;
-                FlagPath = "/Images/Flags/" + _selected.svgName;
-                OnPropertyChanged("Selected");
-            }
-        }
-
 
         public ICommand TestCommand { get; private set; }
 
@@ -108,14 +62,14 @@ namespace FinalBet.ViewModel
                4. Ссылка по которой загружен html Добавляется в БД
              */
 
-           var op=  BetExplorerParser.GetLeagueUrls(Leagues.Single(x=>x.name=="Russia"));
+           /*var op=  BetExplorerParser.GetLeagueUrls(Database.Items.Single(x=>x.name=="Russia"));
 
            using (var cntx = new SqlDataContext(Connection.ConnectionString))
            {
                var table = cntx.GetTable<leagueUrl>();
                table.InsertAllOnSubmit(op);
                cntx.SubmitChanges();
-           }
+           }*/
 
         }
 
@@ -123,17 +77,9 @@ namespace FinalBet.ViewModel
 
         public MainWindowViewModel()
         {
-            FlagPath = "/Images/Flags/1.svg";
+            Database = new DatabaseViewModel();
             TestCommand = new RelayCommand(Test);
 
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var table = cntx.GetTable<league>().ToList();
-                foreach (var league in table)
-                {
-                    Leagues.Add(league);
-                }
-            }
         }
     }
 
