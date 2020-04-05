@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+        xmlns:ext="clr-namespace:FinalBet.Extensions"
         xmlns:properties="clr-namespace:FinalBet.Properties"
         xmlns:local="clr-namespace:FinalBet"
         mc:Ignorable="d"
@@ -14,7 +16,20 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Button Height="40" Width="100" Content="Test" Command="{Binding TestCommand}"/>
-            <TextBox Width="400" Text="{Binding TestString, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <Border BorderThickness="1" BorderBrush="Black">
+                <svgc:SvgViewbox Margin="5" Height="90" Width="120" Stretch="Uniform" ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
+            </Border>
         </StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ListBox Grid.Column="0"
+                     ItemsSource="{Binding Leagues}"
+                     SelectedItem="{Binding Selected}"
+                     DisplayMemberPath="name"
+                     />
+        </Grid>
     </Grid>
 </Window>

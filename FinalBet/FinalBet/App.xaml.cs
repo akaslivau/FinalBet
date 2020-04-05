@@ -20,7 +20,7 @@ namespace FinalBet
     {
         protected override void OnStartup(StartupEventArgs e)
         {
-            var culture = new CultureInfo("ru-RU")
+            var culture = new CultureInfo("en-Us")
             {
                 DateTimeFormat = { ShortDatePattern = "dd.MM.yyyy", LongTimePattern = "" }
             };

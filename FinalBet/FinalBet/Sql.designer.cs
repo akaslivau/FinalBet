@@ -88,8 +88,6 @@ namespace FinalBet
 		
 		private string _svgName;
 		
-		private string _svgValue;
-		
 		private string _other;
 		
     #region Extensibility Method Definitions
@@ -104,8 +102,6 @@ namespace FinalBet
     partial void OnurlChanged();
     partial void OnsvgNameChanging(string value);
     partial void OnsvgNameChanged();
-    partial void OnsvgValueChanging(string value);
-    partial void OnsvgValueChanged();
     partial void OnotherChanging(string value);
     partial void OnotherChanged();
     #endregion
@@ -191,26 +187,6 @@ namespace FinalBet
 					this._svgName = value;
 					this.SendPropertyChanged("svgName");
 					this.OnsvgNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_svgValue", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string svgValue
-		{
-			get
-			{
-				return this._svgValue;
-			}
-			set
-			{
-				if ((this._svgValue != value))
-				{
-					this.OnsvgValueChanging(value);
-					this.SendPropertyChanging();
-					this._svgValue = value;
-					this.SendPropertyChanged("svgValue");
-					this.OnsvgValueChanged();
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,66 @@ namespace FinalBet.ViewModel
 {
     public class MainWindowViewModel:ViewModelBase
     {
+        private string _flagPath;
+        public string FlagPath
+        {
+            get
+            {
+                return _flagPath;
+            }
+            set
+            {
+                if (_flagPath == value) return;
+                _flagPath = value;
+                OnPropertyChanged("FlagPath");
+            }
+        }
+
+        public string TestString
+        {
+            get => Properties.Settings.Default.soccerUrl;
+            set
+            {
+                if (Properties.Settings.Default.soccerUrl == value) return;
+                Properties.Settings.Default.soccerUrl = value;
+                Properties.Settings.Default.Save();
+                OnPropertyChanged("TestString");
+            }
+        }
+
+
+        private ObservableCollection<league> _leagues = new ObservableCollection<league>();
+        public ObservableCollection<league> Leagues
+        {
+            get
+            {
+                return _leagues;
+            }
+            set
+            {
+                if (_leagues == value) return;
+                _leagues = value;
+                OnPropertyChanged("Leagues");
+            }
+        }
+
+        private league _selected = null;
+        public league Selected
+        {
+            get
+            {
+                return _selected;
+            }
+            set
+            {
+                if (_selected == value) return;
+                _selected = value;
+                FlagPath = "/Images/Flags/" + _selected.svgName;
+                OnPropertyChanged("Selected");
+            }
+        }
+
+
         public ICommand TestCommand { get; private set; }
 
         public void Test(object a)
@@ -46,33 +107,33 @@ namespace FinalBet.ViewModel
                3. Грузим html
                4. Ссылка по которой загружен html Добавляется в БД
              */
-           
+
             //BetExplorerParser.ParseSoccerPage();
-            var op = File.ReadAllText(@"D:\flags\1.svg");
+
             //MessageBox.Show(op);
 
+            FlagPath = "/Images/Flags/au.svg";
             return;
             var path = @"D:\russia_2012.html";
             var doc = new HtmlDocument();
             doc.Load(path);
         }
 
-        public string TestString
-        {
-            get => Properties.Settings.Default.soccerUrl;
-            set
-            {
-                if (Properties.Settings.Default.soccerUrl == value) return;
-                Properties.Settings.Default.soccerUrl = value;
-                Properties.Settings.Default.Save();
-                OnPropertyChanged("TestString");
-            }
-        }
+
 
         public MainWindowViewModel()
         {
-            
+            FlagPath = "/Images/Flags/1.svg";
             TestCommand = new RelayCommand(Test);
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<league>().ToList();
+                foreach (var league in table)
+                {
+                    Leagues.Add(league);
+                }
+            }
         }
     }
 
@@ -121,7 +182,6 @@ namespace FinalBet.ViewModel
                         name = captions[i],
                         url = links[i],
                         svgName = flagNames[i],
-                        svgValue = "",
                         other = ""
                     };
                     leagueTable.InsertOnSubmit(toAdd);
