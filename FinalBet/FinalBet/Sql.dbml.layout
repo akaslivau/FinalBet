@@ -2,10 +2,16 @@
 <ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="Sql">
   <DataContextMoniker Name="/SqlDataContext" />
   <nestedChildShapes>
-    <classShape Id="301469c3-509b-4c19-8a05-8341c044ac52" absoluteBounds="1.125, 1.125, 2, 1.7708968098958331">
+    <classShape Id="301469c3-509b-4c19-8a05-8341c044ac52" isExpanded="false" absoluteBounds="0.5, 0.5, 2, 0.45">
       <DataClassMoniker Name="/SqlDataContext/league" />
       <nestedChildShapes>
-        <elementListCompartment Id="6185bd86-b11c-4165-8e60-a3c1cf58439e" absoluteBounds="1.1400000000000001, 1.585, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+        <elementListCompartment Id="6185bd86-b11c-4165-8e60-a3c1cf58439e" absoluteBounds="0.51500000000000012, 0.96, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="4c5e959f-7ab2-4d0a-b4e9-deb60ac112f9" isExpanded="false" absoluteBounds="0.5, 1.125, 2, 0.45">
+      <DataClassMoniker Name="/SqlDataContext/leagueUrl" />
+      <nestedChildShapes>
+        <elementListCompartment Id="d9dad14f-f7d9-4b82-98e8-26803b078fea" absoluteBounds="0.51499999999999968, 1.585, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
   </nestedChildShapes>

@@ -33,6 +33,9 @@ namespace FinalBet
     partial void Insertleague(league instance);
     partial void Updateleague(league instance);
     partial void Deleteleague(league instance);
+    partial void InsertleagueUrl(leagueUrl instance);
+    partial void UpdateleagueUrl(leagueUrl instance);
+    partial void DeleteleagueUrl(leagueUrl instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -70,6 +73,14 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<league>();
+			}
+		}
+		
+		public System.Data.Linq.Table<leagueUrl> leagueUrls
+		{
+			get
+			{
+				return this.GetTable<leagueUrl>();
 			}
 		}
 	}
@@ -192,6 +203,188 @@ namespace FinalBet
 		}
 		
 		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagueUrls")]
+	public partial class leagueUrl : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _parentId;
+		
+		private string _year;
+		
+		private string _name;
+		
+		private string _url;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnparentIdChanging(int value);
+    partial void OnparentIdChanged();
+    partial void OnyearChanging(string value);
+    partial void OnyearChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OnurlChanging(string value);
+    partial void OnurlChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public leagueUrl()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
+		public int parentId
+		{
+			get
+			{
+				return this._parentId;
+			}
+			set
+			{
+				if ((this._parentId != value))
+				{
+					this.OnparentIdChanging(value);
+					this.SendPropertyChanging();
+					this._parentId = value;
+					this.SendPropertyChanged("parentId");
+					this.OnparentIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_year", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string year
+		{
+			get
+			{
+				return this._year;
+			}
+			set
+			{
+				if ((this._year != value))
+				{
+					this.OnyearChanging(value);
+					this.SendPropertyChanging();
+					this._year = value;
+					this.SendPropertyChanged("year");
+					this.OnyearChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string name
+		{
+			get
+			{
+				return this._name;
+			}
+			set
+			{
+				if ((this._name != value))
+				{
+					this.OnnameChanging(value);
+					this.SendPropertyChanging();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string url
+		{
+			get
+			{
+				return this._url;
+			}
+			set
+			{
+				if ((this._url != value))
+				{
+					this.OnurlChanging(value);
+					this.SendPropertyChanging();
+					this._url = value;
+					this.SendPropertyChanged("url");
+					this.OnurlChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX)")]
 		public string other
 		{
 			get

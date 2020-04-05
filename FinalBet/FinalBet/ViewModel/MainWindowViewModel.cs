@@ -108,15 +108,15 @@ namespace FinalBet.ViewModel
                4. Ссылка по которой загружен html Добавляется в БД
              */
 
-            //BetExplorerParser.ParseSoccerPage();
+           var op=  BetExplorerParser.GetLeagueUrls(Leagues.Single(x=>x.name=="Russia"));
 
-            //MessageBox.Show(op);
+           using (var cntx = new SqlDataContext(Connection.ConnectionString))
+           {
+               var table = cntx.GetTable<leagueUrl>();
+               table.InsertAllOnSubmit(op);
+               cntx.SubmitChanges();
+           }
 
-            FlagPath = "/Images/Flags/au.svg";
-            return;
-            var path = @"D:\russia_2012.html";
-            var doc = new HtmlDocument();
-            doc.Load(path);
         }
 
 
@@ -137,60 +137,6 @@ namespace FinalBet.ViewModel
         }
     }
 
-    public static class BetExplorerParser
-    {
-        public static void ParseSoccerPage()
-        {
-            //getting html
-            var path = @"D:\soccerTab.html";
-            var doc = new HtmlDocument();
-            doc.Load(path);
 
-            //Начинаем парсить
-            // В комментариях обозначен тэг, по которому идет разборка html
-            //<ul class="list-events list-events--secondary js-divlinks" id="countries-select">
-            var htmlNode = doc.GetElementbyId("countries-select");
-
-            //Получаем название страны и ссылку
-            //  < a class="list-events__item__title" href="/soccer/africa/">
-            var captions = htmlNode.SelectNodes(".//a[contains(@class, 'item__title')]").Select(x=>x.InnerText).ToList();
-            var links = htmlNode.
-                SelectNodes(".//a[contains(@class, 'item__title')]").
-                Select(x => x.GetAttributeValue("href", "default")).
-                Select(x=> x.Substring(x.Substring(0,x.Length-2).LastIndexOf('/') + 1)).
-                ToList();
-            var flagNames = htmlNode.SelectNodes(".//img").
-                Select(x => x.GetAttributeValue("src", "default")).
-                Select(x=>x.Substring(x.LastIndexOf('/')+1)).
-                ToList();
-
-            var cnt = captions.Count;
-
-            if (links.Count != cnt || flagNames.Count != cnt)
-            {
-                throw new Exception("ParseSoccerPage(): количество элементов в списках различается!");
-            }
-            //Добавление в базу данных
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var leagueTable = cntx.GetTable<league>();
-
-                for (int i = 0; i < cnt; i++)
-                {
-                    var toAdd = new league()
-                    {
-                        name = captions[i],
-                        url = links[i],
-                        svgName = flagNames[i],
-                        other = ""
-                    };
-                    leagueTable.InsertOnSubmit(toAdd);
-                }
-                cntx.SubmitChanges();
-            }
-
-
-        }
-    }
 
 }

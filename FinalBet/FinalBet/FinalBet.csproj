@@ -91,6 +91,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Database\BetExplorerParser.cs" />
     <Compile Include="Database\Connection.cs" />
     <Compile Include="Extensions\SvgViewboxAttachedProperties.cs" />
     <Compile Include="Framework\CommandViewModel.cs" />
