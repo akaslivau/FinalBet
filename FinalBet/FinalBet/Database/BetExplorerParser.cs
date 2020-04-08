@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -70,17 +71,27 @@ namespace FinalBet.Database
 
         public static List<leagueUrl> GetLeagueUrls(league country)
         {
-            //getting html from file
-            var path = @"D:\russia.html";
+            var result = new List<leagueUrl>();
             var doc = new HtmlDocument();
-            doc.Load(path);
 
-            //getting html from url
+            //getting html from file
+            /*var path = @"D:\russia.html";
+            doc.Load(path);*/
+
+            //using for IDisposable.Dispose()
             var url = Properties.Settings.Default.soccerUrl + country.url;
 
-
-
-            var result = new List<leagueUrl>();
+            var web = new HtmlWeb();
+            HtmlDocument webDoc;
+            try
+            {
+                doc = web.Load(url);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            
             //Начинаем парсить
             // В комментариях обозначен тэг, по которому идет разборка html
             //< table class="table-main js-tablebanner-t">

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using FinalBet.Database;
 using FinalBet.Framework;
 
@@ -26,7 +27,6 @@ namespace FinalBet.ViewModel
                 OnPropertyChanged("FlagPath");
             }
         }
-
 
         private ObservableCollection<league> _items = new ObservableCollection<league>();
         public ObservableCollection<league> Items
@@ -61,6 +61,23 @@ namespace FinalBet.ViewModel
 
         #endregion
 
+        #region Commands
+        public ICommand TestCommand { get; private set; }
+
+        public void Test(object a)
+        {
+            var op = BetExplorerParser.GetLeagueUrls(Selected);
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<leagueUrl>();
+                table.InsertAllOnSubmit(op);
+                cntx.SubmitChanges();
+            }
+        }
+
+        #endregion
+
         public DatabaseViewModel()
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -73,6 +90,9 @@ namespace FinalBet.ViewModel
             }
 
             if (Items.Any()) Selected = Items[0];
+
+            //Commands
+            TestCommand = new RelayCommand(Test, a=> Selected!=null);
         }
     }
 }

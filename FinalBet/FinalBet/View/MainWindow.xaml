@@ -54,6 +54,7 @@
                                          <Grid.ColumnDefinitions>
                                              <ColumnDefinition Width="Auto"/>
                                              <ColumnDefinition Width="Auto"/>
+                                             <ColumnDefinition Width="*"/>
                                          </Grid.ColumnDefinitions>
                                              <TextBlock Text="{Binding Path=Selected.name, Mode=OneWay}" 
                                                         Style="{StaticResource Textblock.H1}"
@@ -67,6 +68,9 @@
                                                  Stretch="Uniform" 
                                                  ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
                                              </Border>
+                                             <StackPanel Orientation="Horizontal" Grid.Column="2">
+                                                 <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
+                                             </StackPanel>
                             </Grid>
                                      <Border Grid.Row="1" BorderThickness="1" BorderBrush="LightSlateGray"/>
 
