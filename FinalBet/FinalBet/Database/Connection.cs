@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace FinalBet.Database
 {
@@ -36,6 +37,7 @@ namespace FinalBet.Database
             }
             catch (Exception ex)
             {
+                Log.Fatal(ex, "Не удалось подключиться к базе данных. {@conString}",conString);
                 IsSuccessful = false;
             }
             finally

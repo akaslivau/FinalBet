@@ -5,23 +5,42 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using FinalBet.Other;
 using HtmlAgilityPack;
+using Serilog;
+using Serilog.Core;
 
 namespace FinalBet.Database
 {
     public static class BetExplorerParser
     {
+        public const string RESULTS = "results/";
+        public const string NO_TABS_TAG = "NO_TABS";
+        public const char BE_TEAMS_DELIMITER = '-';
+
         //Заполняет таблицу dbo.leagues [название лиги, URL, flagName]
         public static void ParseSoccerPage()
         {
             //getting html from file
-            var path = @"D:\soccerTab.html";
+            /*var path = @"D:\soccerTab.html";
             var doc = new HtmlDocument();
-            doc.Load(path);
+            doc.Load(path);*/
 
             //getting html from url
             var url = Properties.Settings.Default.soccerUrl;
+            var doc = new HtmlDocument();
             
+            var web = new HtmlWeb();
+            try
+            {
+                doc = web.Load(url);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "ParseSoccerPage can't load html");
+            }
+
+
 
             //Начинаем парсить
             // В комментариях обозначен тэг, по которому идет разборка html
@@ -69,6 +88,7 @@ namespace FinalBet.Database
 
         }
 
+        //Возвращает список URL с сезонами для выбранной лиги
         public static List<leagueUrl> GetLeagueUrls(league country)
         {
             var result = new List<leagueUrl>();
@@ -82,14 +102,13 @@ namespace FinalBet.Database
             var url = Properties.Settings.Default.soccerUrl + country.url;
 
             var web = new HtmlWeb();
-            HtmlDocument webDoc;
             try
             {
                 doc = web.Load(url);
             }
             catch (Exception ex)
             {
-                
+                Log.Error(ex, "GetLeagueUrls can't load html");
             }
             
             //Начинаем парсить
@@ -134,6 +153,165 @@ namespace FinalBet.Database
             }
             
             return result;
+        }
+
+        //Возвращает список матчей для выбранной ссылки
+        //В случае, если по указанной ссылке находятся несколько Tab-вкладок
+        //Например, Russia-2013, [Main, Regelation],
+        //То будут возвращены все матчи
+        public static List<BeMatch> GetMatches(league country, leagueUrl leagueUrl)
+        {
+            var result = new List<BeMatch>();
+
+            var doc = new HtmlDocument();
+
+            //using for IDisposable.Dispose()
+            /*var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS;
+
+            var web = new HtmlWeb();
+            try
+            {
+                doc = web.Load(url);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "GetMatches can't load html");
+            }*/
+
+
+            var path = @"D:\Only_res.html";
+            doc.Load(path);
+
+            //Проверяем, есть ли несколько вкладок
+            //<ul class="list-tabs list-tabs--secondary"....
+            var isSingleTab = doc.DocumentNode.SelectSingleNode(".//ul[contains(@class, 'list-tabs--secondary')]") == null;
+
+            //Если одна вкладка, то возвращаем список матчей из загруженного документа
+            if (isSingleTab)
+            {
+               return GetMatches(doc, NO_TABS_TAG);
+            }
+            else
+            {
+                //Иначе получаем список новых ссылок и их названий
+                var tabListNode = doc.DocumentNode.SelectSingleNode(".//ul[contains(@class, 'list-tabs--secondary')]");
+
+                //<li class="list-tabs__item">
+                var urls = tabListNode.SelectNodes(".//li[@class='list-tabs__item']").
+                    Select(x=>x.SelectSingleNode(".//a")).
+                    ToList();
+
+                for (int i = 0; i < urls.Count; i++)
+                {
+                    var href = urls[i].GetAttributeValue("href", "default");
+                    var tag = urls[i].InnerText;
+
+                    //Загружаем документ по полученным ссылкам
+                    var web2 = new HtmlWeb();
+                    var doc2 = new HtmlDocument();
+                    try
+                    {
+                        doc2 = web2.Load(href);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "GetMatches can't load html");
+                    }
+
+                    //Распарсиваем список матчей и добавляем к результату
+                    var matches = GetMatches(doc2, tag);
+                    result.AddRange(matches);
+                }
+            }
+            return result;
+        }
+
+        private static List<BeMatch> GetMatches(HtmlDocument doc, string tag)
+        {
+            var result = new List<BeMatch>();
+
+            //< table class="table-main h-mb15
+            var tableNode = doc.DocumentNode.SelectSingleNode(".//table[contains(@class, 'table-main h-mb15')]");
+
+            //<tr>
+            //  <td class="h-text-left">
+            //      <a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/amkar-krasnodar/xpAWzhYl/" class="in-match">
+            //          <span>Amkar</span> - <span>Krasnodar</span>
+            //      </a>
+            //  </td>
+            //  <td class="h-text-center">
+            //      <a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/amkar-krasnodar/xpAWzhYl/">
+            //          2:2
+            //      </a>
+            //  </td>
+            //  <td class="table-main__odds">3.94</td>
+            //  <td class="table-main__odds colored">
+            //      <span><span><span>3.41</span></span></span>
+            //  </td>
+            //  <td class="table-main__odds">1.87</td>
+            //  <td class="h-text-right h-text-no-wrap">15.05.2014</td>
+            //</tr>
+            var trNodes = tableNode.SelectNodes(".//tr").ToList();
+            foreach (var tr in trNodes)
+            {
+                if(tr.InnerText.Contains("Round") || tr.InnerText.Length < 10) continue; //<tr><th class="h-text-left" colspan="2">1. Round</th><th class="h-text-center">1</th><th class="h-text-center">X</th><th class="h-text-center">2</th><th>&nbsp;</th></tr>
+
+                var names = tr.SelectSingleNode(".//td[@class='h-text-left']");
+                if (names == null)
+                {
+                    Log.Warning("GetMatches. Tr node parse. Null td node with names. " + tr.InnerText);
+                    continue;
+                }
+
+                var teams = names.SelectNodes(".//span").Select(x => x.InnerText).ToList();
+                var matchHref = names.SelectSingleNode(".//a[@class='in-match']").
+                                            GetAttributeValue("href", "default");
+
+                var finalScore = tr.SelectSingleNode(".//td[@class='h-text-center']").InnerText.Trim();
+
+                var odds = tr.SelectNodes(".//td[contains(@class, 'table-main__odds')]").
+                    Select(x => x.InnerText.Trim())
+                    .ToList();
+
+                var date = tr.SelectSingleNode(".//td[contains(@class, 'h-text-right')]").InnerText;
+                
+                var toAdd = new BeMatch(teams, matchHref, finalScore, odds, date);
+                result.Add(toAdd);
+            }
+
+            return result;
+        }
+
+
+
+    }
+
+    public class BeMatch
+    {
+        public List<string> Names { get; private set; }
+        public string Href { get; private set; }
+        public string FinalScore { get; private set; }
+        public List<string> Odds { get; private set; }
+        public string Date { get; private set; }
+
+        public BeMatch(List<string> names, string href, string finalScore, List<string> odds, string date)
+        {
+            Names = new List<string>();
+            Odds = new List<string>();
+
+            Href = href;
+            FinalScore = finalScore;
+            Date = date;
+            
+            foreach (var name in names)
+            {
+                Names.Add(name);
+            }
+
+            foreach (var odd in odds)
+            {
+                Odds.Add(odd);
+            }
         }
     }
 }

@@ -66,14 +66,17 @@ namespace FinalBet.ViewModel
 
         public void Test(object a)
         {
-            var op = BetExplorerParser.GetLeagueUrls(Selected);
+            var op = BetExplorerParser.GetMatches(null, null);
+
+
+            /*var op = BetExplorerParser.GetLeagueUrls(Selected);
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var table = cntx.GetTable<leagueUrl>();
                 table.InsertAllOnSubmit(op);
                 cntx.SubmitChanges();
-            }
+            }*/
         }
 
         #endregion

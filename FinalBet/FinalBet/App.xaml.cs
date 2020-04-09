@@ -10,6 +10,8 @@ using System.Windows;
 using FinalBet.Database;
 using FinalBet.Properties;
 using FinalBet.ViewModel;
+using Serilog;
+using Serilog.Core;
 
 namespace FinalBet
 {
@@ -20,6 +22,14 @@ namespace FinalBet
     {
         protected override void OnStartup(StartupEventArgs e)
         {
+            var log = new LoggerConfiguration()
+                .WriteTo.File("log.txt", rollingInterval: RollingInterval.Month)
+                .CreateLogger();
+
+            Log.Logger = log;
+
+            Log.Information("Application started");
+
             var culture = new CultureInfo("en-Us")
             {
                 DateTimeFormat = { ShortDatePattern = "dd.MM.yyyy", LongTimePattern = "" }
@@ -42,6 +52,7 @@ namespace FinalBet
             handler = delegate
             {
                 viewModel.RequestClose -= handler;
+                Log.CloseAndFlush();
                 window.Close();
             };
             viewModel.RequestClose += handler;
