@@ -36,6 +36,12 @@ namespace FinalBet
     partial void InsertleagueUrl(leagueUrl instance);
     partial void UpdateleagueUrl(leagueUrl instance);
     partial void DeleteleagueUrl(leagueUrl instance);
+    partial void InsertteamName(teamName instance);
+    partial void UpdateteamName(teamName instance);
+    partial void DeleteteamName(teamName instance);
+    partial void InsertpossibleResult(possibleResult instance);
+    partial void UpdatepossibleResult(possibleResult instance);
+    partial void DeletepossibleResult(possibleResult instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -81,6 +87,22 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<leagueUrl>();
+			}
+		}
+		
+		public System.Data.Linq.Table<teamName> teamNames
+		{
+			get
+			{
+				return this.GetTable<teamName>();
+			}
+		}
+		
+		public System.Data.Linq.Table<possibleResult> possibleResults
+		{
+			get
+			{
+				return this.GetTable<possibleResult>();
 			}
 		}
 	}
@@ -385,6 +407,322 @@ namespace FinalBet
 		}
 		
 		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX)")]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.teamNames")]
+	public partial class teamName : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _leagueId;
+		
+		private string _name;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnleagueIdChanging(int value);
+    partial void OnleagueIdChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public teamName()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_leagueId", DbType="Int NOT NULL")]
+		public int leagueId
+		{
+			get
+			{
+				return this._leagueId;
+			}
+			set
+			{
+				if ((this._leagueId != value))
+				{
+					this.OnleagueIdChanging(value);
+					this.SendPropertyChanging();
+					this._leagueId = value;
+					this.SendPropertyChanged("leagueId");
+					this.OnleagueIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string name
+		{
+			get
+			{
+				return this._name;
+			}
+			set
+			{
+				if ((this._name != value))
+				{
+					this.OnnameChanging(value);
+					this.SendPropertyChanging();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.possibleResults")]
+	public partial class possibleResult : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private string _value;
+		
+		private bool _isCorrect;
+		
+		private int _scored;
+		
+		private int _missed;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnvalueChanging(string value);
+    partial void OnvalueChanged();
+    partial void OnisCorrectChanging(bool value);
+    partial void OnisCorrectChanged();
+    partial void OnscoredChanging(int value);
+    partial void OnscoredChanged();
+    partial void OnmissedChanging(int value);
+    partial void OnmissedChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public possibleResult()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_value", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string value
+		{
+			get
+			{
+				return this._value;
+			}
+			set
+			{
+				if ((this._value != value))
+				{
+					this.OnvalueChanging(value);
+					this.SendPropertyChanging();
+					this._value = value;
+					this.SendPropertyChanged("value");
+					this.OnvalueChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_isCorrect", DbType="Bit NOT NULL")]
+		public bool isCorrect
+		{
+			get
+			{
+				return this._isCorrect;
+			}
+			set
+			{
+				if ((this._isCorrect != value))
+				{
+					this.OnisCorrectChanging(value);
+					this.SendPropertyChanging();
+					this._isCorrect = value;
+					this.SendPropertyChanged("isCorrect");
+					this.OnisCorrectChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_scored", DbType="Int NOT NULL")]
+		public int scored
+		{
+			get
+			{
+				return this._scored;
+			}
+			set
+			{
+				if ((this._scored != value))
+				{
+					this.OnscoredChanging(value);
+					this.SendPropertyChanging();
+					this._scored = value;
+					this.SendPropertyChanged("scored");
+					this.OnscoredChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_missed", DbType="Int NOT NULL")]
+		public int missed
+		{
+			get
+			{
+				return this._missed;
+			}
+			set
+			{
+				if ((this._missed != value))
+				{
+					this.OnmissedChanging(value);
+					this.SendPropertyChanging();
+					this._missed = value;
+					this.SendPropertyChanged("missed");
+					this.OnmissedChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
 		public string other
 		{
 			get

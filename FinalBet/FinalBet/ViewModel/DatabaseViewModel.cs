@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using FinalBet.Database;
 using FinalBet.Framework;
+using Serilog;
 
 namespace FinalBet.ViewModel
 {
@@ -67,6 +68,44 @@ namespace FinalBet.ViewModel
         public void Test(object a)
         {
             var op = BetExplorerParser.GetMatches(null, null);
+
+            var notCorrect = op.Where(x => !x.IsCorrect).ToList();
+            foreach (var beMatch in notCorrect)
+            {
+                Log.Information("Not correct! {@item}", beMatch);
+            }
+
+            var onlyCorrect = op.Where(x => x.IsCorrect).ToList();
+
+            //Добавляем новые имена команд в таблицу dbo.teamNames
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var teamNamesTable = cntx.GetTable<teamName>();
+                var existingNames = teamNamesTable.Where(x => x.leagueId == 666).Select(x => x.name).ToList();
+
+                var teamNames = (from item in onlyCorrect
+                    from name in item.Names
+                    select name).Distinct().ToList();
+
+                var newNames = teamNames.Except(existingNames).ToList();
+                if (newNames.Any())
+                {
+                    var toAddRange = newNames.Select(x => new teamName()
+                        {
+                            leagueId = 666,
+                            name = x,
+                            other = ""
+                        })
+                        .ToList();
+
+                    teamNamesTable.InsertAllOnSubmit(toAddRange);
+                    cntx.SubmitChanges();
+                }
+            }
+
+            //Добавляем все возможные результаты в таблицу dbo.possibleResults
+
+
 
 
             /*var op = BetExplorerParser.GetLeagueUrls(Selected);

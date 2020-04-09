@@ -283,6 +283,13 @@ namespace FinalBet.Database
         }
 
 
+        public static void ParseMatchResult(string matchResult, out bool isCorrect, out int scored, out int missed)
+        {
+            isCorrect = false;
+            scored = -1;
+            missed = -1;
+
+        }
 
     }
 
@@ -293,6 +300,8 @@ namespace FinalBet.Database
         public string FinalScore { get; private set; }
         public List<string> Odds { get; private set; }
         public string Date { get; private set; }
+
+        public bool IsCorrect { get; private set; }
 
         public BeMatch(List<string> names, string href, string finalScore, List<string> odds, string date)
         {
@@ -312,6 +321,26 @@ namespace FinalBet.Database
             {
                 Odds.Add(odd);
             }
+
+            IsCorrect = GetIsCorrect();
+        }
+
+        private bool GetIsCorrect()
+        {
+            if (Names.Count != 2) return false;
+            if (Names.Any(x => x.Length < 1)) return false;
+
+            if (string.IsNullOrEmpty(Href)) return false;
+            if (string.IsNullOrEmpty(FinalScore)) return false;
+
+            if (Odds.Any(string.IsNullOrEmpty)) return false;
+            if (Odds.Count != 3) return false;
+
+            if (string.IsNullOrEmpty(Date)) return false;
+            DateTime dt;
+            if (!DateTime.TryParse(Date, out dt)) return false;
+
+            return true;
         }
     }
 }
