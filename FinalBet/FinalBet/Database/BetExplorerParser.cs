@@ -204,7 +204,7 @@ namespace FinalBet.Database
                     using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
                     {
                         zip.CreateEntryFromFile(Properties.Settings.Default.tmpHtmlFile,
-                            country.name + "_urlId__" + leagueUrl.id + ".html",
+                            Settings.Default.zipMainFilename,
                             CompressionLevel.Optimal);
                     }
                 }
@@ -239,6 +239,8 @@ namespace FinalBet.Database
                     var href = urls[i].GetAttributeValue("href", "default");
                     var tag = urls[i].InnerText;
 
+                    var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS + href;
+
                     //Загружаем документ по полученным ссылкам
                     var web2 = new HtmlWeb();
                     var doc2 = new HtmlDocument();
@@ -269,10 +271,10 @@ namespace FinalBet.Database
                         }
                         else
                         {
-                            doc2 = web2.Load(href);
+                            doc2 = web2.Load(url);
                             File.WriteAllText("stage" + i + ".html", doc2.DocumentNode.InnerHtml);
 
-                            using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                            using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Update))
                             {
                                 zip.CreateEntryFromFile("stage" + i + ".html", stageFileName);
                             }

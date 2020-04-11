@@ -70,8 +70,8 @@
                                              </Border>
                                              <StackPanel Orientation="Horizontal" Grid.Column="2">
                                                  <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
-                                                 <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
-                                                 <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
+                                                 <Button Width="150" Content="Загрузить ссылки" Command="{Binding LoadUrlsCommand}"/>
+                                                 <Button Width="150" Content="Загрузить матчи" Command="{Binding LoadMatchesCommand}"/>
                                              </StackPanel>
                             </Grid>
                                      <Border Grid.Row="1" BorderThickness="1" BorderBrush="LightSlateGray"/>

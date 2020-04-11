@@ -88,6 +88,9 @@ namespace FinalBet.ViewModel
 
         #region Commands
         public ICommand TestCommand { get; private set; }
+        public ICommand LoadUrlsCommand { get; private set; }
+        public ICommand LoadMatchesCommand { get; private set; }
+
 
         public void Test(object a)
         {
@@ -165,6 +168,35 @@ namespace FinalBet.ViewModel
             }*/
         }
 
+        public void LoadUrls(object a)
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<leagueUrl>();
+                bool anyItemExists = table.Any(x => x.parentId == Selected.id);
+
+                var country = Selected.name;
+                if (anyItemExists)
+                {
+                    Log.Warning("LoadUrls, table not empty! {@country}", country);
+                    return;
+                }
+                else
+                {
+                    var urls = BetExplorerParser.GetLeagueUrls(Selected);
+                    table.InsertAllOnSubmit(urls);
+                    cntx.SubmitChanges();
+                    Log.Information("LeagueUrls загружены для страны {@country}", country);
+                }
+            }
+        }
+
+        public void LoadMatches(object a)
+        {
+           BetExplorerParser.GetMatches(Selected, LeagueUrls.Selected);
+        }
+
+
         #endregion
 
         public DatabaseViewModel()
@@ -182,6 +214,9 @@ namespace FinalBet.ViewModel
 
             //Commands
             TestCommand = new RelayCommand(Test, a=> Selected!=null);
+            LoadUrlsCommand = new RelayCommand(LoadUrls, a=> Selected!=null);
+            LoadMatchesCommand = new RelayCommand(LoadMatches,
+                a => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null);
         }
     }
 }
