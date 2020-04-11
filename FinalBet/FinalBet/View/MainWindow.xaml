@@ -70,11 +70,39 @@
                                              </Border>
                                              <StackPanel Orientation="Horizontal" Grid.Column="2">
                                                  <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
+                                                 <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
+                                                 <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
                                              </StackPanel>
                             </Grid>
                                      <Border Grid.Row="1" BorderThickness="1" BorderBrush="LightSlateGray"/>
-
-                            </Grid>
+                            <DataGrid Grid.Row="2" 
+                                    DataContext="{Binding LeagueUrls}"
+                                    Margin="{StaticResource ControlMargin}"
+                                    AutoGenerateColumns="False"
+                                    CanUserDeleteRows="False"
+                                    CanUserAddRows="False"
+                                    HeadersVisibility="All"
+                                    ItemsSource="{Binding Path=Items}"
+                                    SelectedItem="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    RowHeaderWidth="0"
+                                    SelectionUnit="FullRow">
+                                <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Год" Width="100"
+                                                            IsReadOnly="True"
+                                                            Binding="{Binding Path=year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                            />
+                                        <DataGridTextColumn Header="Название" Width="100"
+                                                            IsReadOnly="True"
+                                                            Binding="{Binding Path=name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                        />
+                                </DataGrid.Columns>
+                                <DataGrid.Style>
+                                    <Style BasedOn="{StaticResource MetroDataGrid}" TargetType="{x:Type DataGrid}">
+                                        <Setter Property="AlternatingRowBackground" Value="{DynamicResource GrayBrush10}" />
+                                    </Style>
+                                </DataGrid.Style>
+                            </DataGrid>
+                        </Grid>
                         </GroupBox>
                     </Grid>
 

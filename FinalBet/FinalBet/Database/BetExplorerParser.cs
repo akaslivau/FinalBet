@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -8,6 +9,8 @@ using System.Windows;
 using FinalBet.Other;
 using HtmlAgilityPack;
 using Serilog;
+using System.IO.Compression;
+using FinalBet.Properties;
 using Serilog.Core;
 
 namespace FinalBet.Database
@@ -165,23 +168,52 @@ namespace FinalBet.Database
 
             var doc = new HtmlDocument();
 
-            //using for IDisposable.Dispose()
-            /*var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS;
+            //Проверяем, есть ли загруженный html в архиве
+            var zipFileName = country.name + "_urlId__" + leagueUrl.id + ".zip";
+            var zipPath = Properties.Settings.Default.zipFolder + zipFileName;
 
-            var web = new HtmlWeb();
-            try
+            var isHtmlExists = File.Exists(zipPath);
+            if (isHtmlExists)
             {
-                doc = web.Load(url);
+                using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                {
+                    if (zip.Entries.All(x => x.Name != Settings.Default.zipMainFilename))
+                    {
+                        Log.Fatal("В zip архиве нет файла " + Settings.Default.zipMainFilename);
+                        throw new Exception();
+                    }
+
+                    var entry = zip.Entries.Single(x => x.Name == Settings.Default.zipMainFilename);
+                    entry.ExtractToFile(Settings.Default.zipMainFilename, true);
+
+                    //Загружаем html из извлеченного файла
+                    doc.Load(Settings.Default.zipMainFilename);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Log.Error(ex, "GetMatches can't load html");
-            }*/
+                //using for IDisposable.Dispose()
+                var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS;
 
-
-            var path = @"D:\Only_res.html";
-            doc.Load(path);
-
+                var web = new HtmlWeb();
+                try
+                {
+                    doc = web.Load(url);
+                    //Zipping HTML
+                    File.WriteAllText(Properties.Settings.Default.tmpHtmlFile, doc.DocumentNode.InnerHtml);
+                    using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+                    {
+                        zip.CreateEntryFromFile(Properties.Settings.Default.tmpHtmlFile,
+                            country.name + "_urlId__" + leagueUrl.id + ".html",
+                            CompressionLevel.Optimal);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "GetMatches can't load html");
+                }
+            }
+            
             //Проверяем, есть ли несколько вкладок
             //<ul class="list-tabs list-tabs--secondary"....
             var isSingleTab = doc.DocumentNode.SelectSingleNode(".//ul[contains(@class, 'list-tabs--secondary')]") == null;
@@ -203,6 +235,7 @@ namespace FinalBet.Database
 
                 for (int i = 0; i < urls.Count; i++)
                 {
+                    //<a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/results/?stage=baGxDORM"
                     var href = urls[i].GetAttributeValue("href", "default");
                     var tag = urls[i].InnerText;
 
@@ -211,7 +244,39 @@ namespace FinalBet.Database
                     var doc2 = new HtmlDocument();
                     try
                     {
-                        doc2 = web2.Load(href);
+                        var stagePos = href.IndexOf("?stage=") + "?stage=".Length;
+                        var stage = href.Substring(stagePos, href.Length - stagePos);
+
+                        var stageFileName = stage + ".html";
+
+                        var isStageHtmlExists = false;
+
+                        using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                        {
+                            isStageHtmlExists = zip.Entries.Any(x => x.Name == stageFileName);
+                        }
+
+                        if (isStageHtmlExists)
+                        {
+                            using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                            {
+                                var entry = zip.Entries.Single(x => x.Name == stageFileName);
+                                entry.ExtractToFile("stage" + i + ".html", true);
+
+                                //Загружаем html из извлеченного файла
+                                doc.Load("stage" + i + ".html");
+                            }
+                        }
+                        else
+                        {
+                            doc2 = web2.Load(href);
+                            File.WriteAllText("stage" + i + ".html", doc2.DocumentNode.InnerHtml);
+
+                            using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                            {
+                                zip.CreateEntryFromFile("stage" + i + ".html", stageFileName);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {

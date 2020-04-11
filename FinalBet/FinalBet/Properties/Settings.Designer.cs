@@ -45,5 +45,41 @@ namespace FinalBet.Properties {
                 return ((string)(this["soccerConnectionString"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("D:\\BEHTML\\")]
+        public string zipFolder {
+            get {
+                return ((string)(this["zipFolder"]));
+            }
+            set {
+                this["zipFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("temp.html")]
+        public string tmpHtmlFile {
+            get {
+                return ((string)(this["tmpHtmlFile"]));
+            }
+            set {
+                this["tmpHtmlFile"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("main.html")]
+        public string zipMainFilename {
+            get {
+                return ((string)(this["zipMainFilename"]));
+            }
+            set {
+                this["zipMainFilename"] = value;
+            }
+        }
     }
 }

@@ -13,5 +13,14 @@
 &lt;/SerializableConnectionString&gt;</DesignTimeValue>
       <Value Profile="(Default)">Data Source=ANDREW-PC\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True;MultipleActiveResultSets=True</Value>
     </Setting>
+    <Setting Name="zipFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\BEHTML\</Value>
+    </Setting>
+    <Setting Name="tmpHtmlFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)">temp.html</Value>
+    </Setting>
+    <Setting Name="zipMainFilename" Type="System.String" Scope="User">
+      <Value Profile="(Default)">main.html</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

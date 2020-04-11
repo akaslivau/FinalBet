@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using FinalBet.Database;
 using FinalBet.Framework;
+using FinalBet.Properties;
 using Serilog;
 
 namespace FinalBet.ViewModel
@@ -44,6 +47,22 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private LeagueUrlRepoViewModel _leagueUrls = new LeagueUrlRepoViewModel(null);
+        public LeagueUrlRepoViewModel LeagueUrls
+        {
+            get
+            {
+                return _leagueUrls;
+            }
+            set
+            {
+                if (_leagueUrls == value) return;
+                _leagueUrls = value;
+                OnPropertyChanged("LeagueUrls");
+            }
+        }
+
+
         private league _selected = null;
         public league Selected
         {
@@ -56,9 +75,14 @@ namespace FinalBet.ViewModel
                 if (_selected == value) return;
                 _selected = value;
                 FlagPath = "/Images/Flags/" + _selected.svgName;
+                LeagueUrls.Update(value);
                 OnPropertyChanged("Selected");
+                OnPropertyChanged("LeagueUrls");
             }
         }
+
+
+
 
         #endregion
 
@@ -67,7 +91,29 @@ namespace FinalBet.ViewModel
 
         public void Test(object a)
         {
-            var op = BetExplorerParser.GetMatches(null, null);
+
+
+            //
+            return;
+            var tstCountry = new league()
+            {
+                id = 1,
+                name = "Austria",
+                other = "",
+                svgName = "",
+                url = ""
+            };
+            var tstLeague = new leagueUrl()
+            {
+                id = 15,
+                name = "wtf",
+                other = "",
+                parentId = 666,
+                url = "",
+                year = ""
+            };
+
+            var op = BetExplorerParser.GetMatches(tstCountry, tstLeague);
 
             var notCorrect = op.Where(x => !x.IsCorrect).ToList();
             foreach (var beMatch in notCorrect)
@@ -83,11 +129,12 @@ namespace FinalBet.ViewModel
                 var teamNamesTable = cntx.GetTable<teamName>();
                 var existingNames = teamNamesTable.Where(x => x.leagueId == 666).Select(x => x.name).ToList();
 
-                var teamNames = (from item in onlyCorrect
+                var newNames = (from item in onlyCorrect
                     from name in item.Names
-                    select name).Distinct().ToList();
+                    select name).Distinct().
+                    Where(x=>!existingNames.Contains(x)).
+                    ToList();
 
-                var newNames = teamNames.Except(existingNames).ToList();
                 if (newNames.Any())
                 {
                     var toAddRange = newNames.Select(x => new teamName()
