@@ -87,10 +87,14 @@
                                     RowHeaderWidth="0"
                                     SelectionUnit="FullRow">
                                 <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Год" Width="100"
-                                                            IsReadOnly="True"
-                                                            Binding="{Binding Path=year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                                            />
+                                    <DataGridTextColumn Header="id" Width="100"
+                                                        IsReadOnly="True"
+                                                        Binding="{Binding Path=id, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                    />
+                                    <DataGridTextColumn Header="Год" Width="100"
+                                                        IsReadOnly="True"
+                                                        Binding="{Binding Path=year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                    />
                                         <DataGridTextColumn Header="Название" Width="100"
                                                             IsReadOnly="True"
                                                             Binding="{Binding Path=name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"

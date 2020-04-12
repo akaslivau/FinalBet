@@ -34,7 +34,17 @@
       <Column Name="isCorrect" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
       <Column Name="scored" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="missed" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="total" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="diff" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="other" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.matchTags" Member="matchTags">
+    <Type Name="matchTag">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="name" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="other" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="caption" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
     </Type>
   </Table>
 </Database>

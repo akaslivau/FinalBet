@@ -20,6 +20,7 @@ namespace FinalBet.Database
         public const string RESULTS = "results/";
         public const string NO_TABS_TAG = "NO_TABS";
         public const char BE_TEAMS_DELIMITER = '-';
+        public const char BE_SCORE_DELIMITER = ':';
 
         //Заполняет таблицу dbo.leagues [название лиги, URL, flagName]
         public static void ParseSoccerPage()
@@ -229,9 +230,8 @@ namespace FinalBet.Database
                 var tabListNode = doc.DocumentNode.SelectSingleNode(".//ul[contains(@class, 'list-tabs--secondary')]");
 
                 //<li class="list-tabs__item">
-                var urls = tabListNode.SelectNodes(".//li[@class='list-tabs__item']").
-                    Select(x=>x.SelectSingleNode(".//a")).
-                    ToList();
+                var urls = tabListNode.SelectNodes(".//li[@class='list-tabs__item']")
+                    .Select(x => x.SelectSingleNode(".//a")).ToList();
 
                 for (int i = 0; i < urls.Count; i++)
                 {
@@ -242,47 +242,40 @@ namespace FinalBet.Database
                     var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS + href;
 
                     //Загружаем документ по полученным ссылкам
-                    var web2 = new HtmlWeb();
                     var doc2 = new HtmlDocument();
-                    try
+
+                    var stagePos = href.IndexOf("?stage=") + "?stage=".Length;
+                    var stage = href.Substring(stagePos, href.Length - stagePos);
+
+                    var stageFileName = stage + ".html";
+
+                    var isStageHtmlExists = false;
+
+                    using (ZipArchive zip = ZipFile.OpenRead(zipPath))
                     {
-                        var stagePos = href.IndexOf("?stage=") + "?stage=".Length;
-                        var stage = href.Substring(stagePos, href.Length - stagePos);
+                        isStageHtmlExists = zip.Entries.Any(x => x.Name == stageFileName);
+                    }
 
-                        var stageFileName = stage + ".html";
-
-                        var isStageHtmlExists = false;
-
+                    if (isStageHtmlExists)
+                    {
                         using (ZipArchive zip = ZipFile.OpenRead(zipPath))
                         {
-                            isStageHtmlExists = zip.Entries.Any(x => x.Name == stageFileName);
+                            var entry = zip.Entries.Single(x => x.Name == stageFileName);
+                            entry.ExtractToFile("stage" + i + ".html", true);
                         }
-
-                        if (isStageHtmlExists)
-                        {
-                            using (ZipArchive zip = ZipFile.OpenRead(zipPath))
-                            {
-                                var entry = zip.Entries.Single(x => x.Name == stageFileName);
-                                entry.ExtractToFile("stage" + i + ".html", true);
-
-                                //Загружаем html из извлеченного файла
-                                doc.Load("stage" + i + ".html");
-                            }
-                        }
-                        else
-                        {
-                            doc2 = web2.Load(url);
-                            File.WriteAllText("stage" + i + ".html", doc2.DocumentNode.InnerHtml);
-
-                            using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Update))
-                            {
-                                zip.CreateEntryFromFile("stage" + i + ".html", stageFileName);
-                            }
-                        }
+                        //Загружаем html из извлеченного файла
+                        doc2.Load("stage" + i + ".html");
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Log.Error(ex, "GetMatches can't load html");
+                        var web2 = new HtmlWeb();
+                        doc2 = web2.Load(url);
+                        File.WriteAllText("stage" + i + ".html", doc2.DocumentNode.InnerHtml);
+
+                        using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Update))
+                        {
+                            zip.CreateEntryFromFile("stage" + i + ".html", stageFileName);
+                        }
                     }
 
                     //Распарсиваем список матчей и добавляем к результату
@@ -290,6 +283,7 @@ namespace FinalBet.Database
                     result.AddRange(matches);
                 }
             }
+
             return result;
         }
 
@@ -300,6 +294,8 @@ namespace FinalBet.Database
             //< table class="table-main h-mb15
             var tableNode = doc.DocumentNode.SelectSingleNode(".//table[contains(@class, 'table-main h-mb15')]");
 
+
+            //Это вариант при ручнос сохранении:)
             //<tr>
             //  <td class="h-text-left">
             //      <a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/amkar-krasnodar/xpAWzhYl/" class="in-match">
@@ -318,6 +314,23 @@ namespace FinalBet.Database
             //  <td class="table-main__odds">1.87</td>
             //  <td class="h-text-right h-text-no-wrap">15.05.2014</td>
             //</tr>
+
+            //Это вариант при машинном сохранении, видимо, не успевают скрипты отработать
+            //<tr>
+            //  < td class="h-text-left">
+            //      <a href = "/soccer/austria/tipico-bundesliga-2017-2018/admira-st-polten/nP2TjLD6/" class="in-match">
+            //          <span>Admira</span> - <span><strong>St.Polten</strong></span>
+            //      </a>
+            //  </td>
+            //  <td class="h-text-center">
+            //      <a href = "/soccer/austria/tipico-bundesliga-2017-2018/admira-st-polten/nP2TjLD6/" > 0:2</a>
+            //  </td>
+            //  <td class="table-main__odds" data-odd="1.98"></td>
+            //  <td class="table-main__odds" data-odd="3.67"></td>
+            //  <td class="table-main__odds colored"><span><span><span data-odd="3.42"></span></span></span></td>
+            //  <td class="h-text-right h-text-no-wrap">27.05.2018</td>
+            //</tr>
+
             var trNodes = tableNode.SelectNodes(".//tr").ToList();
             foreach (var tr in trNodes)
             {
@@ -326,7 +339,7 @@ namespace FinalBet.Database
                 var names = tr.SelectSingleNode(".//td[@class='h-text-left']");
                 if (names == null)
                 {
-                    Log.Warning("GetMatches. Tr node parse. Null td node with names. " + tr.InnerText);
+                    Log.Information("GetMatches. Tr node parse. Null td node with names. " + tr.InnerText);
                     continue;
                 }
 
@@ -337,12 +350,14 @@ namespace FinalBet.Database
                 var finalScore = tr.SelectSingleNode(".//td[@class='h-text-center']").InnerText.Trim();
 
                 var odds = tr.SelectNodes(".//td[contains(@class, 'table-main__odds')]").
-                    Select(x => x.InnerText.Trim())
-                    .ToList();
+                    Select(x => x.GetAttributeValue("data-odd", "default")).
+                    Select(x=>x.Trim()).
+                    ToList();
+
 
                 var date = tr.SelectSingleNode(".//td[contains(@class, 'h-text-right')]").InnerText;
                 
-                var toAdd = new BeMatch(teams, matchHref, finalScore, odds, date);
+                var toAdd = new BeMatch(teams, matchHref, finalScore, odds, date, tag);
                 result.Add(toAdd);
             }
 
@@ -356,6 +371,21 @@ namespace FinalBet.Database
             scored = -1;
             missed = -1;
 
+            //Contains any letter == notCorrect
+            bool hasAnyLetter = matchResult.Any(char.IsLetter);
+            if (hasAnyLetter) return;
+
+            //Parsing
+            var pos = matchResult.IndexOf(BE_SCORE_DELIMITER);
+            if (pos < 0) return;
+
+            var strScore = matchResult.Substring(0, pos).Trim();
+            var strMissed = matchResult.Substring(pos + 1).Trim();
+
+            if (!int.TryParse(strScore, out scored)) return;
+            if (!int.TryParse(strMissed, out missed)) return;
+
+            isCorrect = true;
         }
 
     }
@@ -367,10 +397,11 @@ namespace FinalBet.Database
         public string FinalScore { get; private set; }
         public List<string> Odds { get; private set; }
         public string Date { get; private set; }
+        public string Tag { get; private set; }
 
         public bool IsCorrect { get; private set; }
 
-        public BeMatch(List<string> names, string href, string finalScore, List<string> odds, string date)
+        public BeMatch(List<string> names, string href, string finalScore, List<string> odds, string date, string tag)
         {
             Names = new List<string>();
             Odds = new List<string>();
@@ -378,6 +409,7 @@ namespace FinalBet.Database
             Href = href;
             FinalScore = finalScore;
             Date = date;
+            Tag = tag;
             
             foreach (var name in names)
             {

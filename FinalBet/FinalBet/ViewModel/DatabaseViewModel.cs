@@ -94,78 +94,7 @@ namespace FinalBet.ViewModel
 
         public void Test(object a)
         {
-
-
-            //
-            return;
-            var tstCountry = new league()
-            {
-                id = 1,
-                name = "Austria",
-                other = "",
-                svgName = "",
-                url = ""
-            };
-            var tstLeague = new leagueUrl()
-            {
-                id = 15,
-                name = "wtf",
-                other = "",
-                parentId = 666,
-                url = "",
-                year = ""
-            };
-
-            var op = BetExplorerParser.GetMatches(tstCountry, tstLeague);
-
-            var notCorrect = op.Where(x => !x.IsCorrect).ToList();
-            foreach (var beMatch in notCorrect)
-            {
-                Log.Information("Not correct! {@item}", beMatch);
-            }
-
-            var onlyCorrect = op.Where(x => x.IsCorrect).ToList();
-
-            //Добавляем новые имена команд в таблицу dbo.teamNames
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var teamNamesTable = cntx.GetTable<teamName>();
-                var existingNames = teamNamesTable.Where(x => x.leagueId == 666).Select(x => x.name).ToList();
-
-                var newNames = (from item in onlyCorrect
-                    from name in item.Names
-                    select name).Distinct().
-                    Where(x=>!existingNames.Contains(x)).
-                    ToList();
-
-                if (newNames.Any())
-                {
-                    var toAddRange = newNames.Select(x => new teamName()
-                        {
-                            leagueId = 666,
-                            name = x,
-                            other = ""
-                        })
-                        .ToList();
-
-                    teamNamesTable.InsertAllOnSubmit(toAddRange);
-                    cntx.SubmitChanges();
-                }
-            }
-
-            //Добавляем все возможные результаты в таблицу dbo.possibleResults
-
-
-
-
-            /*var op = BetExplorerParser.GetLeagueUrls(Selected);
-
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var table = cntx.GetTable<leagueUrl>();
-                table.InsertAllOnSubmit(op);
-                cntx.SubmitChanges();
-            }*/
+            
         }
 
         public void LoadUrls(object a)
@@ -193,9 +122,131 @@ namespace FinalBet.ViewModel
 
         public void LoadMatches(object a)
         {
-           BetExplorerParser.GetMatches(Selected, LeagueUrls.Selected);
+           var matches = BetExplorerParser.GetMatches(Selected, LeagueUrls.Selected);
+
+           //Базовая проверка на некорректные записи
+           var notCorrect = matches.Where(x => !x.IsCorrect).ToList();
+           foreach (var beMatch in notCorrect)
+           {
+               Log.Information("Not correct! {@item}", beMatch);
+           }
+
+           //Добавляем новые значения в соответствующие таблицы
+           AddNewTeamnamesToDb(matches); //dbo.teamNames
+           AddNewResultsToDb(matches); //dbo.possibleResults
+           AddNewMatchTagsToDb(matches); //dbo.matchTags
+            
+           //Добавляем матчи в базу данных
+
+
+
+            /*var op = BetExplorerParser.GetLeagueUrls(Selected);
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<leagueUrl>();
+                table.InsertAllOnSubmit(op);
+                cntx.SubmitChanges();
+            }*/
         }
 
+        private void AddNewMatchTagsToDb(List<BeMatch> matches)
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var tagTable = cntx.GetTable<matchTag>();
+                var existingTags = tagTable.Select(x => x.name).ToList();
+
+                var newTags = matches.Select(x => x.Tag).Distinct().Where(x => !existingTags.Contains(x)).ToList();
+
+                if (newTags.Any())
+                {
+                    var toAddRange = newTags.Select(x => new matchTag()
+                    {
+                        name = x,
+                        caption = "",
+                        other = ""
+                    }).ToList();
+
+                    tagTable.InsertAllOnSubmit(toAddRange);
+                    cntx.SubmitChanges();
+                }
+            }
+        }
+
+        private void AddNewResultsToDb(List<BeMatch> matches)
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var resultsTable = cntx.GetTable<possibleResult>();
+                var existingResults = resultsTable.Select(x => x.value).ToList();
+
+                var newResults = matches.Select(x => x.FinalScore).Distinct().Where(x => !existingResults.Contains(x)).ToList();
+
+                if (newResults.Any())
+                {
+                    var toAddRange = new List<possibleResult>();
+                    foreach (var newResult in newResults)
+                    {
+                        int scored;
+                        int missed;
+                        bool isCorrect;
+
+                        int total = -1;
+                        int diff = -1;
+
+                        BetExplorerParser.ParseMatchResult(newResult, out isCorrect, out scored, out missed);
+                        if (isCorrect)
+                        {
+                            total = scored + missed;
+                            diff = scored - missed;
+                        }
+
+                        var toAdd = new possibleResult()
+                        {
+                            isCorrect = isCorrect,
+                            scored = scored,
+                            missed = missed,
+                            total = total,
+                            diff = diff,
+                            value = newResult,
+                            other = ""
+                        };
+                        toAddRange.Add(toAdd);
+                    }
+
+                    resultsTable.InsertAllOnSubmit(toAddRange);
+                    cntx.SubmitChanges();
+                }
+            }
+        }
+
+        private void AddNewTeamnamesToDb(List<BeMatch> matches)
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var teamNamesTable = cntx.GetTable<teamName>();
+                var existingNames = teamNamesTable.Where(x => x.leagueId == Selected.id).Select(x => x.name).ToList();
+
+                var newNames = (from item in matches
+                    from name in item.Names
+                    select name).Distinct().Where(x => !existingNames.Contains(x)).ToList();
+
+                if (newNames.Any())
+                {
+                    var toAddRange = newNames.Select(x => new teamName()
+                        {
+                            leagueId = Selected.id,
+                            name = x,
+                            other = ""
+                        })
+                        .ToList();
+
+                    teamNamesTable.InsertAllOnSubmit(toAddRange);
+                    cntx.SubmitChanges();
+                }
+            }
+        }
 
         #endregion
 
