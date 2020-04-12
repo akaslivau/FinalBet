@@ -135,19 +135,41 @@ namespace FinalBet.ViewModel
            AddNewTeamnamesToDb(matches); //dbo.teamNames
            AddNewResultsToDb(matches); //dbo.possibleResults
            AddNewMatchTagsToDb(matches); //dbo.matchTags
-            
+
+           var parentId = LeagueUrls.Selected.id;
+
+           
            //Добавляем матчи в базу данных
+           using (var cntx = new SqlDataContext(Connection.ConnectionString))
+           {
+               var teamsDict = cntx.GetTable<teamName>().
+                   Where(x => x.leagueId == Selected.id).
+                   ToDictionary(teamName => teamName.name, teamName => teamName.id);
 
+               var tagsDict = cntx.GetTable<matchTag>()
+                   .ToDictionary(matchTag => matchTag.name, matchTag => matchTag.id);
+                   
 
+               var matchesTable = cntx.GetTable<match>();
 
-            /*var op = BetExplorerParser.GetLeagueUrls(Selected);
+               var toAddRange = matches.Select(x => new match()
+               {
+                   parentId = parentId,
+                   date = DateTime.Parse(x.Date),
+                   homeTeamId = teamsDict[x.Names[0]],
+                   guestTeamId = teamsDict[x.Names[1]],
+                   tagId = tagsDict[x.Tag],
+                   href = x.Href,
+                   other = ""
+               }).ToList();
 
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var table = cntx.GetTable<leagueUrl>();
-                table.InsertAllOnSubmit(op);
-                cntx.SubmitChanges();
-            }*/
+               matchesTable.InsertAllOnSubmit(toAddRange);
+               cntx.SubmitChanges();
+
+               //Adding odds
+               //Adding scores
+
+           }
         }
 
         private void AddNewMatchTagsToDb(List<BeMatch> matches)

@@ -45,6 +45,15 @@ namespace FinalBet
     partial void InsertmatchTag(matchTag instance);
     partial void UpdatematchTag(matchTag instance);
     partial void DeletematchTag(matchTag instance);
+    partial void Insertmatch(match instance);
+    partial void Updatematch(match instance);
+    partial void Deletematch(match instance);
+    partial void Insertodd(odd instance);
+    partial void Updateodd(odd instance);
+    partial void Deleteodd(odd instance);
+    partial void Insertresult(result instance);
+    partial void Updateresult(result instance);
+    partial void Deleteresult(result instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -114,6 +123,30 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<matchTag>();
+			}
+		}
+		
+		public System.Data.Linq.Table<match> matches
+		{
+			get
+			{
+				return this.GetTable<match>();
+			}
+		}
+		
+		public System.Data.Linq.Table<odd> odds
+		{
+			get
+			{
+				return this.GetTable<odd>();
+			}
+		}
+		
+		public System.Data.Linq.Table<result> results
+		{
+			get
+			{
+				return this.GetTable<result>();
 			}
 		}
 	}
@@ -931,6 +964,552 @@ namespace FinalBet
 					this._caption = value;
 					this.SendPropertyChanged("caption");
 					this.OncaptionChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.matches")]
+	public partial class match : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _parentId;
+		
+		private int _homeTeamId;
+		
+		private int _guestTeamId;
+		
+		private int _tagId;
+		
+		private string _href;
+		
+		private System.DateTime _date;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnparentIdChanging(int value);
+    partial void OnparentIdChanged();
+    partial void OnhomeTeamIdChanging(int value);
+    partial void OnhomeTeamIdChanged();
+    partial void OnguestTeamIdChanging(int value);
+    partial void OnguestTeamIdChanged();
+    partial void OntagIdChanging(int value);
+    partial void OntagIdChanged();
+    partial void OnhrefChanging(string value);
+    partial void OnhrefChanged();
+    partial void OndateChanging(System.DateTime value);
+    partial void OndateChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public match()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
+		public int parentId
+		{
+			get
+			{
+				return this._parentId;
+			}
+			set
+			{
+				if ((this._parentId != value))
+				{
+					this.OnparentIdChanging(value);
+					this.SendPropertyChanging();
+					this._parentId = value;
+					this.SendPropertyChanged("parentId");
+					this.OnparentIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_homeTeamId", DbType="Int NOT NULL")]
+		public int homeTeamId
+		{
+			get
+			{
+				return this._homeTeamId;
+			}
+			set
+			{
+				if ((this._homeTeamId != value))
+				{
+					this.OnhomeTeamIdChanging(value);
+					this.SendPropertyChanging();
+					this._homeTeamId = value;
+					this.SendPropertyChanged("homeTeamId");
+					this.OnhomeTeamIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_guestTeamId", DbType="Int NOT NULL")]
+		public int guestTeamId
+		{
+			get
+			{
+				return this._guestTeamId;
+			}
+			set
+			{
+				if ((this._guestTeamId != value))
+				{
+					this.OnguestTeamIdChanging(value);
+					this.SendPropertyChanging();
+					this._guestTeamId = value;
+					this.SendPropertyChanged("guestTeamId");
+					this.OnguestTeamIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_tagId", DbType="Int NOT NULL")]
+		public int tagId
+		{
+			get
+			{
+				return this._tagId;
+			}
+			set
+			{
+				if ((this._tagId != value))
+				{
+					this.OntagIdChanging(value);
+					this.SendPropertyChanging();
+					this._tagId = value;
+					this.SendPropertyChanged("tagId");
+					this.OntagIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_href", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string href
+		{
+			get
+			{
+				return this._href;
+			}
+			set
+			{
+				if ((this._href != value))
+				{
+					this.OnhrefChanging(value);
+					this.SendPropertyChanging();
+					this._href = value;
+					this.SendPropertyChanged("href");
+					this.OnhrefChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_date", DbType="DateTime NOT NULL")]
+		public System.DateTime date
+		{
+			get
+			{
+				return this._date;
+			}
+			set
+			{
+				if ((this._date != value))
+				{
+					this.OndateChanging(value);
+					this.SendPropertyChanging();
+					this._date = value;
+					this.SendPropertyChanged("date");
+					this.OndateChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.odds")]
+	public partial class odd : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _parentId;
+		
+		private string _oddType;
+		
+		private double _value;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnparentIdChanging(int value);
+    partial void OnparentIdChanged();
+    partial void OnoddTypeChanging(string value);
+    partial void OnoddTypeChanged();
+    partial void OnvalueChanging(double value);
+    partial void OnvalueChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public odd()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
+		public int parentId
+		{
+			get
+			{
+				return this._parentId;
+			}
+			set
+			{
+				if ((this._parentId != value))
+				{
+					this.OnparentIdChanging(value);
+					this.SendPropertyChanging();
+					this._parentId = value;
+					this.SendPropertyChanged("parentId");
+					this.OnparentIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_oddType", DbType="NVarChar(50) NOT NULL", CanBeNull=false)]
+		public string oddType
+		{
+			get
+			{
+				return this._oddType;
+			}
+			set
+			{
+				if ((this._oddType != value))
+				{
+					this.OnoddTypeChanging(value);
+					this.SendPropertyChanging();
+					this._oddType = value;
+					this.SendPropertyChanged("oddType");
+					this.OnoddTypeChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_value", DbType="Float NOT NULL")]
+		public double value
+		{
+			get
+			{
+				return this._value;
+			}
+			set
+			{
+				if ((this._value != value))
+				{
+					this.OnvalueChanging(value);
+					this.SendPropertyChanging();
+					this._value = value;
+					this.SendPropertyChanged("value");
+					this.OnvalueChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.results")]
+	public partial class result : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _parentId;
+		
+		private int _matchPeriod;
+		
+		private int _resultId;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnparentIdChanging(int value);
+    partial void OnparentIdChanged();
+    partial void OnmatchPeriodChanging(int value);
+    partial void OnmatchPeriodChanged();
+    partial void OnresultIdChanging(int value);
+    partial void OnresultIdChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public result()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
+		public int parentId
+		{
+			get
+			{
+				return this._parentId;
+			}
+			set
+			{
+				if ((this._parentId != value))
+				{
+					this.OnparentIdChanging(value);
+					this.SendPropertyChanging();
+					this._parentId = value;
+					this.SendPropertyChanged("parentId");
+					this.OnparentIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_matchPeriod", DbType="Int NOT NULL")]
+		public int matchPeriod
+		{
+			get
+			{
+				return this._matchPeriod;
+			}
+			set
+			{
+				if ((this._matchPeriod != value))
+				{
+					this.OnmatchPeriodChanging(value);
+					this.SendPropertyChanging();
+					this._matchPeriod = value;
+					this.SendPropertyChanged("matchPeriod");
+					this.OnmatchPeriodChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_resultId", DbType="Int NOT NULL")]
+		public int resultId
+		{
+			get
+			{
+				return this._resultId;
+			}
+			set
+			{
+				if ((this._resultId != value))
+				{
+					this.OnresultIdChanging(value);
+					this.SendPropertyChanging();
+					this._resultId = value;
+					this.SendPropertyChanged("resultId");
+					this.OnresultIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
 				}
 			}
 		}
