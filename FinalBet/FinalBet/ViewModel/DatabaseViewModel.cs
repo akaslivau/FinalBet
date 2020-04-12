@@ -152,7 +152,7 @@ namespace FinalBet.ViewModel
 
                var matchesTable = cntx.GetTable<match>();
 
-               var toAddRange = matches.Select(x => new match()
+               var toAddMatches = matches.Select(x => new match()
                {
                    parentId = parentId,
                    date = DateTime.Parse(x.Date),
@@ -163,12 +163,41 @@ namespace FinalBet.ViewModel
                    other = ""
                }).ToList();
 
-               matchesTable.InsertAllOnSubmit(toAddRange);
+               matchesTable.InsertAllOnSubmit(toAddMatches);
                cntx.SubmitChanges();
 
                //Adding odds
-               //Adding scores
+               var oddsTable = cntx.GetTable<odd>();
+               var oddTypes = new Dictionary<int, string> {{0, "1"}, {1, "X"}, {2, "2"}};
+               for (int k = 0; k < 3; k++)
+               {
+                   var toAddOdds = toAddMatches.
+                       Select((t, i) => new odd()
+                       {
+                           parentId = t.id,
+                           oddType = oddTypes[k],
+                           value = double.Parse(matches[i].Odds[k]),
+                           other = ""
+                       }).ToList();
+                   oddsTable.InsertAllOnSubmit(toAddOdds);
+                   cntx.SubmitChanges();
+               }
+               //Adding results
+               var resultsTable = cntx.GetTable<result>();
+               var resultsDict = cntx.GetTable<possibleResult>().ToDictionary(possibleResult => possibleResult.value,
+                   possibleResult => possibleResult.id);
 
+               var toAddResults = toAddMatches.
+                   Select((t, i) => new result()
+                   {
+                       parentId = t.id,
+                       matchPeriod = 0,
+                       resultId = resultsDict[matches[i].FinalScore],
+                       other = ""
+                   }).ToList();
+
+               resultsTable.InsertAllOnSubmit(toAddResults);
+               cntx.SubmitChanges();
            }
         }
 

@@ -349,12 +349,27 @@ namespace FinalBet.Database
 
                 var finalScore = tr.SelectSingleNode(".//td[@class='h-text-center']").InnerText.Trim();
 
-                var odds = tr.SelectNodes(".//td[contains(@class, 'table-main__odds')]").
-                    Select(x => x.GetAttributeValue("data-odd", "default")).
-                    Select(x=>x.Trim()).
-                    ToList();
-
-
+                var odds = new List<string>();
+                var tdNodes = tr.SelectNodes(".//td[contains(@class, 'table-main__odds')]").ToList();
+                foreach (var td in tdNodes)
+                {
+                    var str = td.GetAttributeValue("data-odd", "default").Trim();
+                    if (str != "default")
+                    {
+                        odds.Add(str);
+                    }
+                    else
+                    //<td class="table-main__odds colored"><span><span><span data-odd="2.29"></span></span></span></td>
+                    {
+                        var spanNodes = td.SelectNodes(".//span").ToList();
+                        foreach (var spanNode in spanNodes.Where(spanNode => spanNode.Attributes["data-odd"] != null))
+                        {
+                            odds.Add(spanNode.GetAttributeValue("data-odd", "default").Trim());
+                            break;
+                        }
+                    }
+                }
+                
                 var date = tr.SelectSingleNode(".//td[contains(@class, 'h-text-right')]").InnerText;
                 
                 var toAdd = new BeMatch(teams, matchHref, finalScore, odds, date, tag);
@@ -442,4 +457,6 @@ namespace FinalBet.Database
             return true;
         }
     }
+
+    
 }
