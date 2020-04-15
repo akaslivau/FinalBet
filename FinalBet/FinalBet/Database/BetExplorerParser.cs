@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.PerformanceData;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -170,8 +171,7 @@ namespace FinalBet.Database
             var doc = new HtmlDocument();
 
             //Проверяем, есть ли загруженный html в архиве
-            var zipFileName = country.name + "_urlId__" + leagueUrl.id + ".zip";
-            var zipPath = Properties.Settings.Default.zipFolder + zipFileName;
+            var zipPath = GetZipPath(country, leagueUrl);  
 
             var isHtmlExists = File.Exists(zipPath);
             if (isHtmlExists)
@@ -401,6 +401,12 @@ namespace FinalBet.Database
             if (!int.TryParse(strMissed, out missed)) return;
 
             isCorrect = true;
+        }
+
+        public static string GetZipPath(league country, leagueUrl leagueUrl)
+        {
+            var zipFileName = country.name + "_urlId__" + leagueUrl.id + ".zip";
+            return Settings.Default.zipFolder + zipFileName;
         }
 
     }

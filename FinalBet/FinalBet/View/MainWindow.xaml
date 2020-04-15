@@ -8,7 +8,9 @@
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:properties="clr-namespace:FinalBet.Properties"
                       xmlns:local="clr-namespace:FinalBet"
+                      xmlns:other="clr-namespace:FinalBet.Other"
                       mc:Ignorable="d"
+                      WindowState="Maximized"
                       Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
@@ -43,7 +45,7 @@
                                      DisplayMemberPath="name"
                             />
                         </GroupBox>
-                    <GroupBox Grid.Column="1" Header="Операции" Margin="{StaticResource ControlMargin}">
+                         <GroupBox Grid.Column="1" Header="Операции с БД" Margin="{StaticResource ControlMargin}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -52,6 +54,7 @@
                                 </Grid.RowDefinitions>
                                      <Grid Grid.Row="0">
                                          <Grid.ColumnDefinitions>
+                                             <ColumnDefinition Width="Auto"/>
                                              <ColumnDefinition Width="Auto"/>
                                              <ColumnDefinition Width="Auto"/>
                                              <ColumnDefinition Width="*"/>
@@ -72,33 +75,73 @@
                                                  <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
                                                  <Button Width="150" Content="Загрузить ссылки" Command="{Binding LoadUrlsCommand}"/>
                                                  <Button Width="150" Content="Загрузить матчи" Command="{Binding LoadMatchesCommand}"/>
+
+                                    <TextBox Width="200" 
+                                                          Controls:TextBoxHelper.Watermark="Быстрый поиск"
+                                                          Controls:TextBoxHelper.ClearTextButton="True"
+                                                          DataContext="{Binding Path=LeagueUrls}"
+                                                          Text="{Binding Path=SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+                                                     <TextBox.InputBindings>
+                                                         <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                                                     </TextBox.InputBindings>
+                                                 </TextBox>
                                              </StackPanel>
-                            </Grid>
+                                     </Grid>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                        <Button Width="150" Height="30" 
+                                                CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                                Command="{Binding MarkSelectedUrlsCommand}"
+                                                Content="Отметить выбранные"/>
+                                        <ComboBox Width="300" 
+                                                  DisplayMemberPath="name"
+                                                  ItemsSource="{x:Static other:AppData.LeagueMarks}"
+                                                  SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  />
+                                    </StackPanel>
                                      <Border Grid.Row="1" BorderThickness="1" BorderBrush="LightSlateGray"/>
                             <DataGrid Grid.Row="2" 
+                                      Name="LeagueUrlsDatagrid"
                                     DataContext="{Binding LeagueUrls}"
                                     Margin="{StaticResource ControlMargin}"
                                     AutoGenerateColumns="False"
                                     CanUserDeleteRows="False"
                                     CanUserAddRows="False"
                                     HeadersVisibility="All"
-                                    ItemsSource="{Binding Path=Items}"
+                                    ItemsSource="{Binding Path=View}"
                                     SelectedItem="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     RowHeaderWidth="0"
                                     SelectionUnit="FullRow">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="id" Width="100"
                                                         IsReadOnly="True"
-                                                        Binding="{Binding Path=id, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Binding="{Binding Path=Source.id, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
-                                    <DataGridTextColumn Header="Год" Width="100"
+
+                                    <DataGridTextColumn Header="Название" Width="4*"
                                                         IsReadOnly="True"
-                                                        Binding="{Binding Path=year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Binding="{Binding Path=Source.name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
-                                        <DataGridTextColumn Header="Название" Width="100"
-                                                            IsReadOnly="True"
-                                                            Binding="{Binding Path=name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                        />
+
+                                    <DataGridTextColumn Header="Отметка" Width="*"
+                                                        IsReadOnly="True"
+                                                        Binding="{Binding Path=Source.mark, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                    />
+
+                                    <DataGridTextColumn Header="Год" Width="*"
+                                                        IsReadOnly="True"
+                                                        Binding="{Binding Path=Source.year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                    />
+
+                                    <DataGridTextColumn Header="N, шт." Width="*"
+                                                        IsReadOnly="True"
+                                                        Binding="{Binding Path=MatchesCount, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                    />
+
+                                    <DataGridTextColumn Header="Файл" Width="*"
+                                                        IsReadOnly="True"
+                                                        Binding="{Binding Path=File, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                    />
+
                                 </DataGrid.Columns>
                                 <DataGrid.Style>
                                     <Style BasedOn="{StaticResource MetroDataGrid}" TargetType="{x:Type DataGrid}">

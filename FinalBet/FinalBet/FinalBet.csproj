@@ -130,6 +130,7 @@
     </Compile>
     <Compile Include="ViewModel\DatabaseViewModel.cs" />
     <Compile Include="ViewModel\LeagueUrlRepoViewModel.cs" />
+    <Compile Include="ViewModel\LeagueUrlViewModel.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

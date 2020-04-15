@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using FinalBet.Database;
 using FinalBet.Framework;
@@ -47,7 +48,7 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private LeagueUrlRepoViewModel _leagueUrls = new LeagueUrlRepoViewModel(null);
+        private LeagueUrlRepoViewModel _leagueUrls = new LeagueUrlRepoViewModel();
         public LeagueUrlRepoViewModel LeagueUrls
         {
             get
@@ -81,7 +82,20 @@ namespace FinalBet.ViewModel
             }
         }
 
-
+        private leagueMark _selectedLeagueMark;
+        public leagueMark SelectedLeagueMark
+        {
+            get
+            {
+                return _selectedLeagueMark;
+            }
+            set
+            {
+                if (_selectedLeagueMark == value) return;
+                _selectedLeagueMark = value;
+                OnPropertyChanged("SelectedLeagueMark");
+            }
+        }
 
 
         #endregion
@@ -91,10 +105,11 @@ namespace FinalBet.ViewModel
         public ICommand LoadUrlsCommand { get; private set; }
         public ICommand LoadMatchesCommand { get; private set; }
 
+        public ICommand MarkSelectedUrlsCommand { get; private set; }
 
         public void Test(object a)
         {
-            
+            MessageBox.Show("test");
         }
 
         public void LoadUrls(object a)
@@ -122,7 +137,7 @@ namespace FinalBet.ViewModel
 
         public void LoadMatches(object a)
         {
-           var matches = BetExplorerParser.GetMatches(Selected, LeagueUrls.Selected);
+           var matches = BetExplorerParser.GetMatches(Selected, LeagueUrls.Selected.Source);
 
            //Базовая проверка на некорректные записи
            var notCorrect = matches.Where(x => !x.IsCorrect).ToList();
@@ -136,7 +151,7 @@ namespace FinalBet.ViewModel
            AddNewResultsToDb(matches); //dbo.possibleResults
            AddNewMatchTagsToDb(matches); //dbo.matchTags
 
-           var parentId = LeagueUrls.Selected.id;
+           var parentId = LeagueUrls.Selected.Source.id;
 
            
            //Добавляем матчи в базу данных
@@ -299,10 +314,36 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private void MarkSelectedUrls(object a)
+        {
+            System.Collections.IList items = (System.Collections.IList)a;
+            var leagueUrls = items.Cast<LeagueUrlViewModel>();
+            var ids = leagueUrls.Select(x => x.Source.id).ToList();
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<leagueUrl>();
+
+                var mark = SelectedLeagueMark.name;
+                foreach (var id in ids)
+                {
+                    var single = table.Single(x => x.id == id);
+                    single.mark = mark;
+
+                    var cur = LeagueUrls.Items.Single(x => x.Source.id == id);
+                    cur.Source.mark = mark;
+
+                }
+                cntx.SubmitChanges();
+            }
+        }
+
         #endregion
 
         public DatabaseViewModel()
         {
+            // TODO: leagueUrl: ShowMatches 
+
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var table = cntx.GetTable<league>().ToList();
@@ -319,6 +360,8 @@ namespace FinalBet.ViewModel
             LoadUrlsCommand = new RelayCommand(LoadUrls, a=> Selected!=null);
             LoadMatchesCommand = new RelayCommand(LoadMatches,
                 a => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null);
+
+            MarkSelectedUrlsCommand = new RelayCommand(MarkSelectedUrls, a => LeagueUrls.Selected != null);
         }
     }
 }

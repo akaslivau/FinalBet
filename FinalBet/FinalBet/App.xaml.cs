@@ -29,6 +29,7 @@ namespace FinalBet
             Log.Logger = log;
 
             Log.Information("Application started");
+            Connection.Initialize(Settings.Default.soccerConnectionString);
 
             var culture = new CultureInfo("en-Us")
             {
@@ -41,7 +42,7 @@ namespace FinalBet
             base.OnStartup(e);
             
             var window = new MainWindow();
-            Connection.Initialize(Settings.Default.soccerConnectionString);
+           
             // Create the ViewModel to which 
             // the main window binds.
             var viewModel = new MainWindowViewModel();

@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Data;
+using System.Windows.Input;
 using FinalBet.Database;
 using FinalBet.Framework;
 
@@ -12,10 +16,27 @@ namespace FinalBet.ViewModel
     public class LeagueUrlRepoViewModel:ViewModelBase
     {
         #region Variables
-        private league _parent;
 
-        private ObservableCollection<leagueUrl> _items = new ObservableCollection<leagueUrl>();
-        public ObservableCollection<leagueUrl> Items
+        private league _parent = null;
+
+        private ListCollectionView _view;
+        public ListCollectionView View
+        {
+            get
+            {
+                return _view;
+            }
+            set
+            {
+                if (_view == value) return;
+                _view = value;
+                OnPropertyChanged("View");
+            }
+        }
+
+
+        private ObservableCollection<LeagueUrlViewModel> _items = new ObservableCollection<LeagueUrlViewModel>();
+        public ObservableCollection<LeagueUrlViewModel> Items
         {
             get
             {
@@ -29,8 +50,8 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private leagueUrl _selected;
-        public leagueUrl Selected
+        private LeagueUrlViewModel _selected;
+        public LeagueUrlViewModel Selected
         {
             get
             {
@@ -44,12 +65,32 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private string _searchText = "";
+        public string SearchText
+        {
+            get
+            {
+                return _searchText;
+            }
+            set
+            {
+                if (_searchText == value) return;
+                _searchText = value;
+                OnPropertyChanged("SearchText");
+            }
+        }
+
+        private bool Filter(object obj)
+        {
+            var item = (LeagueUrlViewModel) obj;
+            return item.Source.name.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) > -1;
+        }
+
         #endregion
 
-        public LeagueUrlRepoViewModel(league parent)
-        {
-            _parent = parent;
-        }
+        #region Commands
+        public ICommand SearchCommand { get; private set; }
+        #endregion
 
         public void Update(league parent)
         {
@@ -60,16 +101,38 @@ namespace FinalBet.ViewModel
             using (var cntx = new SqlDataContext(Connection.Con))
             {
                 var table = cntx.GetTable<leagueUrl>();
+                var matches = cntx.GetTable<match>();
+
+
                 var items = table.Where(x => x.parentId == _parent.id).ToList();
 
                 foreach (var leagueUrl in items)
                 {
-                    Items.Add(leagueUrl);
+                    var toAdd = new LeagueUrlViewModel(leagueUrl);
+                    var zipPath = BetExplorerParser.GetZipPath(_parent, leagueUrl);
+                    toAdd.File = File.Exists(zipPath) ? Path.GetFileName(zipPath): "-";
+                    toAdd.MatchesCount = matches.Count(x => x.parentId == leagueUrl.id);    
+
+                    Items.Add(toAdd);
                 }
 
                 if (Items.Any()) Selected = Items[0];
             }
 
+            View = new ListCollectionView(Items);
+
+            SearchCommand = new RelayCommand(a =>
+            {
+                if (!string.IsNullOrEmpty(_searchText))
+                {
+                    View.Filter = Filter;
+                }
+                else
+                {
+                    View.Filter = null;
+                }
+                View.Refresh();
+            });
         }
     }
 }
