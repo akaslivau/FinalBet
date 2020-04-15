@@ -20,140 +20,168 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Button Height="40" Width="100" Content="Test" Command="{Binding TestCommand}"/>
         </StackPanel>
-            <TabControl Grid.Row="1">
-                <TabControl.Resources>
-                    <Style TargetType="{x:Type TextBlock}">
-                        <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
-                    </Style>
-                    <Style TargetType="{x:Type TextBox}">
-                        <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
-                    </Style>
-                </TabControl.Resources>
-                <TabItem Header="База данных"
+        <TabControl Grid.Row="1">
+            <TabControl.Resources>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+                </Style>
+                <Style TargetType="{x:Type TextBox}">
+                    <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+                </Style>
+            </TabControl.Resources>
+            <TabItem Header="База данных"
                          DataContext="{Binding Database}"
                          >
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="3*"/>
-                            <ColumnDefinition Width="10*"/>
-                        </Grid.ColumnDefinitions>
-                        <GroupBox Grid.Column="0" Header="Страны" 
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="10*"/>
+                    </Grid.ColumnDefinitions>
+                    <GroupBox Grid.Column="0" Header="Страны" 
                                   Margin="{StaticResource ControlMargin}">
-                            <ListBox Grid.Column="0"
+                        <ListBox Grid.Column="0"
                                      ItemsSource="{Binding Items}"
                                      SelectedItem="{Binding Selected}"
                                      DisplayMemberPath="name"
                             />
-                        </GroupBox>
-                         <GroupBox Grid.Column="1" Header="Операции с БД" Margin="{StaticResource ControlMargin}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                     <Grid Grid.Row="0">
-                                         <Grid.ColumnDefinitions>
-                                             <ColumnDefinition Width="Auto"/>
-                                             <ColumnDefinition Width="Auto"/>
-                                             <ColumnDefinition Width="Auto"/>
-                                             <ColumnDefinition Width="*"/>
-                                         </Grid.ColumnDefinitions>
-                                             <TextBlock Text="{Binding Path=Selected.name, Mode=OneWay}" 
-                                                        Style="{StaticResource Textblock.H1}"
-                                                        Grid.Column="0"/>
-                                            <Border BorderThickness="0.5" 
-                                                    BorderBrush="LightSlateGray" 
-                                                    Margin="{StaticResource ControlMargin}"
-                                                    Grid.Column="1">
-                                             <svgc:SvgViewbox 
-                                                 Height="30" Width="40" 
-                                                 Stretch="Uniform" 
-                                                 ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
-                                             </Border>
-                                             <StackPanel Orientation="Horizontal" Grid.Column="2">
-                                                 <Button Width="150" Content="Test" Command="{Binding TestCommand}"/>
-                                                 <Button Width="150" Content="Загрузить ссылки" Command="{Binding LoadUrlsCommand}"/>
-                                                 <Button Width="150" Content="Загрузить матчи" Command="{Binding LoadMatchesCommand}"/>
+                    </GroupBox>
+                    <Grid Grid.Column="1" Margin="{StaticResource ControlMargin}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                        
+                        <GroupBox Grid.Row="0" Header="LeagueUrl">
+                            <StackPanel Orientation="Horizontal" >
+                                <Button 
+                                    Style="{StaticResource Button.Usual}"
+                                    Content="Загрузить ссылки для лиги" 
+                                    Command="{Binding LoadUrlsCommand}"/>
+                                <Button Content="Загрузить все ссылки" 
+                                        Style="{StaticResource Button.Usual}"
+                                />
+                                <Button Content="Поставить отметку"
+                                        Style="{StaticResource Button.Usual}"
+                                        CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                        Command="{Binding MarkSelectedUrlsCommand}"
+                                />
+                                <ComboBox Width="300"
+                                          Margin="{StaticResource ControlMargin}"
+                                          DisplayMemberPath="name"
+                                          ItemsSource="{x:Static other:AppData.LeagueMarks}"
+                                          SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                />
+                            </StackPanel>
 
-                                    <TextBox Width="200" 
-                                                          Controls:TextBoxHelper.Watermark="Быстрый поиск"
-                                                          Controls:TextBoxHelper.ClearTextButton="True"
-                                                          DataContext="{Binding Path=LeagueUrls}"
-                                                          Text="{Binding Path=SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
-                                                     <TextBox.InputBindings>
-                                                         <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
-                                                     </TextBox.InputBindings>
-                                                 </TextBox>
-                                             </StackPanel>
-                                     </Grid>
-                                    <StackPanel Grid.Row="1" Orientation="Horizontal">
-                                        <Button Width="150" Height="30" 
-                                                CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
-                                                Command="{Binding MarkSelectedUrlsCommand}"
-                                                Content="Отметить выбранные"/>
-                                        <ComboBox Width="300" 
-                                                  DisplayMemberPath="name"
-                                                  ItemsSource="{x:Static other:AppData.LeagueMarks}"
-                                                  SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                  />
-                                    </StackPanel>
-                                     <Border Grid.Row="1" BorderThickness="1" BorderBrush="LightSlateGray"/>
-                            <DataGrid Grid.Row="2" 
-                                      Name="LeagueUrlsDatagrid"
-                                    DataContext="{Binding LeagueUrls}"
-                                    Margin="{StaticResource ControlMargin}"
-                                    AutoGenerateColumns="False"
-                                    CanUserDeleteRows="False"
-                                    CanUserAddRows="False"
-                                    HeadersVisibility="All"
-                                    ItemsSource="{Binding Path=View}"
-                                    SelectedItem="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    RowHeaderWidth="0"
-                                    SelectionUnit="FullRow">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="id" Width="100"
+
+                        </GroupBox>
+                        <GroupBox Grid.Row="1" Header="Загрузка матчей">
+                            <StackPanel Orientation="Horizontal" >
+                                <Button Content="Загрузить матчи для URL" 
+                                        Style="{StaticResource Button.Usual}"
+                                        Command="{Binding LoadMatchesCommand}"/>
+                                <Button Content="Test" 
+                                        Style="{StaticResource Button.Usual}"
+                                        Command="{Binding TestCommand}"/>
+                            </StackPanel>
+                        </GroupBox>
+                        <Grid Grid.Row="2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0"
+                                    Orientation="Horizontal" >
+                                    <TextBlock Text="{Binding Path=Selected.name, Mode=OneWay}" 
+                                               Style="{StaticResource Textblock.H1}"
+                                               Margin="{StaticResource ControlMargin}"/>
+                                    <Border BorderThickness="0.5" 
+                                            BorderBrush="LightSlateGray" 
+                                            Margin="{StaticResource ControlMargin}"
+                                            Grid.Column="1">
+                                        <svgc:SvgViewbox 
+                                            Height="30" Width="40" 
+                                            Stretch="Uniform" 
+                                            ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBox Grid.Column="1"
+                                         Width="200" 
+                                         HorizontalAlignment="Right"
+                                         Controls:TextBoxHelper.Watermark="Быстрый поиск"
+                                         Controls:TextBoxHelper.ClearTextButton="True"
+                                         DataContext="{Binding Path=LeagueUrls}"
+                                         Text="{Binding Path=SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                                    </TextBox.InputBindings>
+                                </TextBox>
+
+
+                            </Grid>
+                            
+                        </Grid>
+                        <Border Grid.Row="3" BorderThickness="2" 
+                                Margin="{StaticResource ControlMargin}"
+                                BorderBrush="LightSlateGray"/>
+                        <DataGrid Grid.Row="4" 
+                                  Name="LeagueUrlsDatagrid"
+                                  DataContext="{Binding LeagueUrls}"
+                                  Margin="{StaticResource ControlMargin}"
+                                  AutoGenerateColumns="False"
+                                  CanUserDeleteRows="False"
+                                  CanUserAddRows="False"
+                                  HeadersVisibility="All"
+                                  ItemsSource="{Binding Path=View}"
+                                  SelectedItem="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  RowHeaderWidth="0"
+                                  SelectionUnit="FullRow" Grid.ColumnSpan="2">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="id" Width="100"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.id, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
-                                    <DataGridTextColumn Header="Название" Width="4*"
+                                <DataGridTextColumn Header="Название" Width="4*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
-                                    <DataGridTextColumn Header="Отметка" Width="*"
+                                <DataGridTextColumn Header="Отметка" Width="*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.mark, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
-                                    <DataGridTextColumn Header="Год" Width="*"
+                                <DataGridTextColumn Header="Год" Width="*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
-                                    <DataGridTextColumn Header="N, шт." Width="*"
+                                <DataGridTextColumn Header="N, шт." Width="*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=MatchesCount, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
-                                    <DataGridTextColumn Header="Файл" Width="*"
+                                <DataGridTextColumn Header="Файл" Width="*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=File, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
-                                </DataGrid.Columns>
-                                <DataGrid.Style>
-                                    <Style BasedOn="{StaticResource MetroDataGrid}" TargetType="{x:Type DataGrid}">
-                                        <Setter Property="AlternatingRowBackground" Value="{DynamicResource GrayBrush10}" />
-                                    </Style>
-                                </DataGrid.Style>
-                            </DataGrid>
-                        </Grid>
-                        </GroupBox>
+                            </DataGrid.Columns>
+                            <DataGrid.Style>
+                                <Style BasedOn="{StaticResource MetroDataGrid}" TargetType="{x:Type DataGrid}">
+                                    <Setter Property="AlternatingRowBackground" Value="{DynamicResource GrayBrush10}" />
+                                </Style>
+                            </DataGrid.Style>
+                        </DataGrid>
+                    </Grid>
                     </Grid>
 
             </TabItem>
-                </TabControl>
+        </TabControl>
     </Grid>
 </Controls:MetroWindow>

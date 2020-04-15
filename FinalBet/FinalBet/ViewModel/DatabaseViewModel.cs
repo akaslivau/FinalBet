@@ -343,6 +343,7 @@ namespace FinalBet.ViewModel
         public DatabaseViewModel()
         {
             // TODO: leagueUrl: ShowMatches 
+            // TODO: загрузка url Для всех стран async
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {

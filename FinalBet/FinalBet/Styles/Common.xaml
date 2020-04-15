@@ -9,4 +9,10 @@
                Right="5"
     />
 
+    <Style TargetType="{x:Type Button}" x:Key="Button.Usual" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="Height" Value="30"/>
+    </Style>
+
 </ResourceDictionary>
