@@ -100,6 +100,21 @@ namespace FinalBet.ViewModel
 
         #endregion
 
+        private int _tstInt = 10;
+        public int TstInt
+        {
+            get
+            {
+                return _tstInt;
+            }
+            set
+            {
+                if (_tstInt == value) return;
+                _tstInt = value;
+                OnPropertyChanged("TstInt");
+            }
+        }
+
         #region Commands
         public ICommand TestCommand { get; private set; }
         public ICommand LoadUrlsCommand { get; private set; }
