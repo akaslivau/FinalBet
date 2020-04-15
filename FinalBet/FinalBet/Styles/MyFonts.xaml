@@ -1,11 +1,19 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Style TargetType="{x:Type TextBlock}" x:Key="Textblock.H1">
-        <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
-        <Setter Property="FontSize" Value="20"/>
+    <Style TargetType="{x:Type TextBlock}" x:Key="Textblock.base">
         <Setter Property="FontFamily" Value="Courier New"/>
+        <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+    </Style>
+    
+    <Style TargetType="{x:Type TextBlock}" x:Key="Textblock.H1" BasedOn="{StaticResource Textblock.base}">
+        <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style TargetType="{x:Type TextBlock}" x:Key="Textblock.H3" BasedOn="{StaticResource Textblock.base}">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Medium"/>
     </Style>
 
 </ResourceDictionary>

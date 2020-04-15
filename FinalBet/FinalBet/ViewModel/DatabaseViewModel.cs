@@ -97,34 +97,38 @@ namespace FinalBet.ViewModel
             }
         }
 
-
-        #endregion
-
-        private int _tstInt = 10;
-        public int TstInt
+        private string _statusText="";
+        public string StatusText
         {
             get
             {
-                return _tstInt;
+                return _statusText;
             }
             set
             {
-                if (_tstInt == value) return;
-                _tstInt = value;
-                OnPropertyChanged("TstInt");
+                if (_statusText == value) return;
+                _statusText = value;
+                OnPropertyChanged("StatusText");
             }
         }
+
+        #endregion
+
 
         #region Commands
         public ICommand TestCommand { get; private set; }
         public ICommand LoadUrlsCommand { get; private set; }
+        public ICommand LoadAllUrlsCommand { get; private set; }
         public ICommand LoadMatchesCommand { get; private set; }
 
         public ICommand MarkSelectedUrlsCommand { get; private set; }
 
         public void Test(object a)
         {
-            MessageBox.Show("test");
+            foreach (var league in Items)
+            {
+                
+            }
         }
 
         public void LoadUrls(object a)
@@ -147,6 +151,14 @@ namespace FinalBet.ViewModel
                     cntx.SubmitChanges();
                     Log.Information("LeagueUrls загружены для страны {@country}", country);
                 }
+            }
+        }
+
+        public void LoadAllUrls(object a)
+        {
+            foreach (var league in Items)
+            {
+
             }
         }
 
@@ -374,6 +386,8 @@ namespace FinalBet.ViewModel
             //Commands
             TestCommand = new RelayCommand(Test, a=> Selected!=null);
             LoadUrlsCommand = new RelayCommand(LoadUrls, a=> Selected!=null);
+            LoadAllUrlsCommand = new RelayCommand(LoadAllUrls, a => Items.Any());
+
             LoadMatchesCommand = new RelayCommand(LoadMatches,
                 a => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null);
 
