@@ -120,6 +120,7 @@
     <Compile Include="Database\Connection.cs" />
     <Compile Include="Extensions\SvgViewboxAttachedProperties.cs" />
     <Compile Include="Framework\CommandViewModel.cs" />
+    <Compile Include="Framework\Extensions.cs" />
     <Compile Include="Framework\RelayCommand.cs" />
     <Compile Include="Framework\ViewModelBase.cs" />
     <Compile Include="Other\AppData.cs" />

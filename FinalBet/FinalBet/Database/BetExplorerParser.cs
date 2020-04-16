@@ -11,6 +11,7 @@ using FinalBet.Other;
 using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
+using System.Linq.Expressions;
 using FinalBet.Properties;
 using Serilog.Core;
 
@@ -93,15 +94,11 @@ namespace FinalBet.Database
 
         }
 
-        //Возвращает список URL с сезонами для выбранной лиги
-        public static List<leagueUrl> GetLeagueUrls(league country)
-        {
-            var result = new List<leagueUrl>();
-            var doc = new HtmlDocument();
 
-            //getting html from file
-            /*var path = @"D:\russia.html";
-            doc.Load(path);*/
+        public static async Task<string> GetLeagueUrlsHtml(league country)
+        {
+            var doc = new HtmlDocument();
+            bool hasError = false;
 
             //using for IDisposable.Dispose()
             var url = Properties.Settings.Default.soccerUrl + country.url;
@@ -109,19 +106,35 @@ namespace FinalBet.Database
             var web = new HtmlWeb();
             try
             {
-                doc = web.Load(url);
+                doc = await web.LoadFromWebAsync(url);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "GetLeagueUrls can't load html");
+                hasError = true;
+                Log.Error(ex, "GetLeagueUrlsHtml can't load html");
             }
+
+
+            return hasError ? "" : doc.DocumentNode.InnerHtml;
+        }
+        
+        
+        //Возвращает список URL с сезонами для выбранной лиги
+        public static List<leagueUrl> GetLeagueUrls(string html, int countryId)
+        {
+            var result = new List<leagueUrl>();
+            int z = 3;
+            if (string.IsNullOrEmpty(html)) return result;
+
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
             
             //Начинаем парсить
             // В комментариях обозначен тэг, по которому идет разборка html
             //< table class="table-main js-tablebanner-t">
             var htmlNode = doc.DocumentNode.SelectSingleNode("//table[@class='table-main js-tablebanner-t']");
-
-
+            
             //Тут просто <tbody>, но нам нужны только те, которые содержат
             //<th class="h-text-left">
             var yearNodes = htmlNode.SelectNodes(".//tbody").
@@ -147,10 +160,11 @@ namespace FinalBet.Database
                 {
                     var toAdd = new leagueUrl()
                     {
-                        parentId = country.id,
+                        parentId = countryId,
                         name = names[i],
                         url = urls[i],
                         year = year,
+                        mark = "",
                         other = ""
                     };
                     result.Add(toAdd);

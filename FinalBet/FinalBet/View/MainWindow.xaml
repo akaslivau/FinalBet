@@ -12,6 +12,9 @@
                       mc:Ignorable="d"
                       WindowState="Maximized"
                       Title="MainWindow" Height="450" Width="800">
+    <Controls:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Controls:MetroWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -65,6 +68,10 @@
                                         Command="{Binding LoadAllUrlsCommand}"
                                 />
 
+                                <Button Content="Прервать загрузку" 
+                                        Style="{StaticResource Button.Usual}"
+                                        Command="{Binding BreakCommand}"/>
+
                                 <Controls:Badged x:Name="CountingBadge"
                                                  Badge="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems.Count}"
                                                  BadgeBackground="{StaticResource AccentColorBrush4}"
@@ -94,48 +101,74 @@
                                 <Button Content="Загрузить матчи для URL" 
                                         Style="{StaticResource Button.Usual}"
                                         Command="{Binding LoadMatchesCommand}"/>
-                                <Button Content="Test" 
-                                        Style="{StaticResource Button.Usual}"
-                                        Command="{Binding TestCommand}"/>
+
                             </StackPanel>
                         </GroupBox>
                         <Grid Grid.Row="2">
-                            <Grid>
+                            <Grid Height="50">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0"
                                     Orientation="Horizontal" >
-                                    <TextBlock Text="{Binding Path=Selected.name, Mode=OneWay}" 
-                                               Style="{StaticResource Textblock.H1}"
-                                               Margin="{StaticResource ControlMargin}"/>
-                                    <Border BorderThickness="0.5" 
-                                            BorderBrush="LightSlateGray" 
-                                            Margin="{StaticResource ControlMargin}"
-                                            Grid.Column="1">
-                                        <svgc:SvgViewbox 
-                                            Height="30" Width="40" 
-                                            Stretch="Uniform" 
-                                            ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
-                                    </Border>
-                                    <TextBlock Text="{Binding Path=StatusText}" 
-                                               Style="{StaticResource Textblock.H3}"
-                                               Margin="{StaticResource ControlMargin}"/>
+                                    <TextBox Width="300" 
+                                             Height="25"
+                                             DataContext="{Binding Path=LeagueUrls}"
+                                             Text="{Binding Path=SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
+                                        </TextBox.InputBindings>
+                                        <TextBox.Style>
+                                            <Style BasedOn="{StaticResource MetroTextBox}" TargetType="{x:Type TextBox}">
+                                                <Setter Property="Controls:TextBoxHelper.ClearTextButton" Value="True" />
+                                                <Style.Triggers>
+                                                    <Trigger Property="Controls:TextBoxHelper.HasText" Value="False">
+                                                        <Setter Property="Controls:TextBoxHelper.ClearTextButton" Value="False" />
+                                                        <Setter Property="Controls:TextBoxHelper.Watermark" Value="Быстрый фильтр..." />
+                                                    </Trigger>
+                                                    <Trigger Property="Controls:TextBoxHelper.HasText" Value="True">
+                                                        <Setter Property="Controls:TextBoxHelper.ClearTextButton" Value="True" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
                                 </StackPanel>
-                                <TextBox Grid.Column="1"
-                                         Width="200" 
-                                         HorizontalAlignment="Right"
-                                         Controls:TextBoxHelper.Watermark="Быстрый поиск"
-                                         Controls:TextBoxHelper.ClearTextButton="True"
-                                         DataContext="{Binding Path=LeagueUrls}"
-                                         Text="{Binding Path=SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
-                                    <TextBox.InputBindings>
-                                        <KeyBinding Key="Enter" Command="{Binding SearchCommand}"/>
-                                    </TextBox.InputBindings>
-                                </TextBox>
 
+                                <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding Path=StatusText}" 
+                                               Style="{StaticResource Textblock.H3}"/>
+                                    <Controls:MetroProgressBar 
+                                        Margin="{StaticResource ControlMargin}"
+                                        Width="200"
+                                        Height="10"
+                                        Value="{Binding Path=ProgressBarValue}"
+                                        Background="{StaticResource ControlBorderBrush}"
+                                        Visibility="{Binding Path=IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    />
 
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" >
+                                <TextBlock Text="{Binding Path=Selected.name, Mode=OneWay}" 
+                                           Style="{StaticResource Textblock.H1}"
+                                           VerticalAlignment="Center"
+                                           />
+                                <Border BorderThickness="0.5" 
+                                        BorderBrush="LightSlateGray" 
+                                        Margin="{StaticResource ControlMargin}"
+                                        Height="30"
+                                        Width="40"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Right"
+                                        >
+                                    <svgc:SvgViewbox 
+                                        Height="30" Width="40" 
+                                        Stretch="Uniform" 
+                                        ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
+                                </Border>
+                                </StackPanel>
                             </Grid>
                             
                         </Grid>

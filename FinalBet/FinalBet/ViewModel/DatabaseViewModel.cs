@@ -15,6 +15,7 @@ using Serilog;
 
 namespace FinalBet.ViewModel
 {
+
     public class DatabaseViewModel: ViewModelBase
     {
         #region Variables
@@ -115,23 +116,70 @@ namespace FinalBet.ViewModel
         #endregion
 
 
-        #region Commands
-        public ICommand TestCommand { get; private set; }
-        public ICommand LoadUrlsCommand { get; private set; }
-        public ICommand LoadAllUrlsCommand { get; private set; }
-        public ICommand LoadMatchesCommand { get; private set; }
-
-        public ICommand MarkSelectedUrlsCommand { get; private set; }
-
-        public void Test(object a)
+        #region AsyncCommands
+        private bool _isBusy = false;
+        public bool IsBusy
         {
-            foreach (var league in Items)
+            get
             {
-                
+                return _isBusy;
+            }
+            set
+            {
+                if (_isBusy == value) return;
+                _isBusy = value;
+                OnPropertyChanged("IsBusy");
             }
         }
 
-        public void LoadUrls(object a)
+        private bool _cancelAsync;
+        public bool CancelAsync
+        {
+            get
+            {
+                return _cancelAsync;
+            }
+            set
+            {
+                if (_cancelAsync == value) return;
+                _cancelAsync = value;
+                OnPropertyChanged("CancelAsync");
+            }
+        }
+
+        private double _pBarValue = 0;
+        public double ProgressBarValue
+        {
+            get
+            {
+                return _pBarValue;
+            }
+            set
+            {
+                if (_pBarValue == value) return;
+                _pBarValue = value;
+                OnPropertyChanged("ProgressBarValue");
+            }
+        }
+
+        public ICommand BreakCommand
+        {
+            get
+            {
+                return new RelayCommand(x => 
+                    {
+                        CancelAsync = true;
+                        StatusText = "Операция прервана";
+                        IsBusy = false;
+                    },
+                    a=> IsBusy); }
+        }
+
+        public IAsyncCommand LoadUrlsCommand { get; private set; }
+        public IAsyncCommand TestAsyncCommand { get; private set; }
+        public IAsyncCommand LoadAllUrlsCommand { get; private set; }
+
+        public async Task LoadUrls()
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -142,25 +190,102 @@ namespace FinalBet.ViewModel
                 if (anyItemExists)
                 {
                     Log.Warning("LoadUrls, table not empty! {@country}", country);
-                    return;
                 }
                 else
                 {
-                    var urls = BetExplorerParser.GetLeagueUrls(Selected);
-                    table.InsertAllOnSubmit(urls);
-                    cntx.SubmitChanges();
-                    Log.Information("LeagueUrls загружены для страны {@country}", country);
+                    try
+                    {
+                        IsBusy = true;
+                        StatusText = "Начинаю загрузку ссылок для " + Selected.name;
+
+                        var html = await BetExplorerParser.GetLeagueUrlsHtml(Selected);
+
+                        var urls = BetExplorerParser.GetLeagueUrls(html, Selected.id);
+                        table.InsertAllOnSubmit(urls);
+                        cntx.SubmitChanges();
+
+                        StatusText = "Успешно!";
+                        Log.Information("LeagueUrls загружены для страны {@country}", country);
+                    }
+                    catch (Exception ex)
+                    {
+                        StatusText = "Возникло исключение, смотри логи!";
+                        Log.Warning(ex, "Task LoadUrls()");
+                    }
+                    finally
+                    {
+                        IsBusy = false;
+                    }
                 }
             }
         }
 
-        public void LoadAllUrls(object a)
+        public async Task LoadAllUrls()
         {
-            foreach (var league in Items)
+            IsBusy = true;
+            try
             {
+                var total = Items.Count;
+                int i = 0;
+                foreach (var country in Items)
+                {
+                    if (CancelAsync) break;
+                    StatusText = country.name;
+                    await Task.Delay(2000);
 
+                    i++;
+                    ProgressBarValue = 100*((double) i / (double) total);
+
+
+                    //var op = BetExplorerParser.GetLeagueUrls(country);
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+                CancelAsync = false;
             }
         }
+
+
+        private async Task ExecuteSubmitAsync()
+        {
+            try
+            {
+                IsBusy = true;
+                StatusText = "Начинаю загрузочку";
+
+                for (int i = 0; i < 15; i++)
+                {
+                    if (CancelAsync) break;
+                    await Task.Delay(1000);
+                    StatusText = i + " ...";
+                }
+
+                StatusText = CancelAsync ? "Загрузочка прервана" : "Загрузочка завершена";
+
+            }
+            finally
+            {
+                IsBusy = false;
+                CancelAsync = false;
+            }
+        }
+        #endregion
+
+        #region Commands
+        
+        public ICommand TestCommand { get; private set; }
+        public ICommand LoadMatchesCommand { get; private set; }
+        public ICommand MarkSelectedUrlsCommand { get; private set; }
+
+
+        public void Test(object a)
+        {
+            CancelAsync = true;
+        }
+
+
 
         public void LoadMatches(object a)
         {
@@ -384,14 +509,17 @@ namespace FinalBet.ViewModel
             if (Items.Any()) Selected = Items[0];
 
             //Commands
-            TestCommand = new RelayCommand(Test, a=> Selected!=null);
-            LoadUrlsCommand = new RelayCommand(LoadUrls, a=> Selected!=null);
-            LoadAllUrlsCommand = new RelayCommand(LoadAllUrls, a => Items.Any());
+            LoadUrlsCommand = new AsyncCommand(LoadUrls, () => Selected != null);
+            LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any());
+            TestAsyncCommand = new AsyncCommand(ExecuteSubmitAsync, () => !IsBusy);
 
+            
+            TestCommand = new RelayCommand(Test, a=> Selected!=null);
             LoadMatchesCommand = new RelayCommand(LoadMatches,
                 a => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null);
-
             MarkSelectedUrlsCommand = new RelayCommand(MarkSelectedUrls, a => LeagueUrls.Selected != null);
+
+            
         }
     }
 }
