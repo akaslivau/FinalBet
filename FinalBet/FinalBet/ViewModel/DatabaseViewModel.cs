@@ -179,14 +179,14 @@ namespace FinalBet.ViewModel
         public IAsyncCommand TestAsyncCommand { get; private set; }
         public IAsyncCommand LoadAllUrlsCommand { get; private set; }
 
-        public async Task LoadUrls()
+        public async Task LoadUrls(league cntr)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var table = cntx.GetTable<leagueUrl>();
-                bool anyItemExists = table.Any(x => x.parentId == Selected.id);
+                bool anyItemExists = table.Any(x => x.parentId == cntr.id);
 
-                var country = Selected.name;
+                var country = cntr.name;
                 if (anyItemExists)
                 {
                     Log.Warning("LoadUrls, table not empty! {@country}", country);
@@ -196,11 +196,11 @@ namespace FinalBet.ViewModel
                     try
                     {
                         IsBusy = true;
-                        StatusText = "Начинаю загрузку ссылок для " + Selected.name;
+                        StatusText = "Начинаю загрузку ссылок для " + cntr.name;
 
-                        var html = await BetExplorerParser.GetLeagueUrlsHtml(Selected);
+                        var html = await BetExplorerParser.GetLeagueUrlsHtml(cntr);
 
-                        var urls = BetExplorerParser.GetLeagueUrls(html, Selected.id);
+                        var urls = BetExplorerParser.GetLeagueUrls(html, cntr.id);
                         table.InsertAllOnSubmit(urls);
                         cntx.SubmitChanges();
 
@@ -230,14 +230,11 @@ namespace FinalBet.ViewModel
                 foreach (var country in Items)
                 {
                     if (CancelAsync) break;
-                    StatusText = country.name;
-                    await Task.Delay(2000);
+                    
+                    await LoadUrls(country);
 
                     i++;
                     ProgressBarValue = 100*((double) i / (double) total);
-
-
-                    //var op = BetExplorerParser.GetLeagueUrls(country);
                 }
             }
             finally
@@ -285,8 +282,7 @@ namespace FinalBet.ViewModel
             CancelAsync = true;
         }
 
-
-
+        
         public void LoadMatches(object a)
         {
            var matches = BetExplorerParser.GetMatches(Selected, LeagueUrls.Selected.Source);
@@ -509,7 +505,7 @@ namespace FinalBet.ViewModel
             if (Items.Any()) Selected = Items[0];
 
             //Commands
-            LoadUrlsCommand = new AsyncCommand(LoadUrls, () => Selected != null);
+            LoadUrlsCommand = new AsyncCommand(()=> LoadUrls(Selected), () => Selected != null);
             LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any());
             TestAsyncCommand = new AsyncCommand(ExecuteSubmitAsync, () => !IsBusy);
 
