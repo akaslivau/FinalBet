@@ -11,6 +11,7 @@ using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
 using System.Linq.Expressions;
+using FinalBet.Model;
 using FinalBet.Properties;
 using Serilog.Core;
 
@@ -111,6 +112,7 @@ namespace FinalBet.Database
             {
                 hasError = true;
                 Log.Error(ex, "GetLeagueUrlsHtml can't load html");
+                Global.Current.Errors++;
             }
 
 
@@ -194,6 +196,7 @@ namespace FinalBet.Database
                     if (zip.Entries.All(x => x.Name != Settings.Default.zipMainFilename))
                     {
                         Log.Fatal("В zip архиве нет файла " + Settings.Default.zipMainFilename);
+                        Global.Current.Errors++;
                         throw new Exception();
                     }
 
@@ -225,6 +228,7 @@ namespace FinalBet.Database
                 catch (Exception ex)
                 {
                     Log.Error(ex, "GetMatches can't load html");
+                    Global.Current.Errors++;
                 }
             }
             
@@ -353,6 +357,7 @@ namespace FinalBet.Database
                 if (names == null)
                 {
                     Log.Information("GetMatches. Tr node parse. Null td node with names. " + tr.InnerText);
+                    Global.Current.Infos++;
                     continue;
                 }
 

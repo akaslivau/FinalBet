@@ -2,12 +2,6 @@
 <ordesignerObjectsDiagram dslVersion="1.0.0.0" absoluteBounds="0, 0, 11, 8.5" name="Sql">
   <DataContextMoniker Name="/SqlDataContext" />
   <nestedChildShapes>
-    <classShape Id="301469c3-509b-4c19-8a05-8341c044ac52" isExpanded="false" absoluteBounds="0.5, 0.5, 2, 0.45">
-      <DataClassMoniker Name="/SqlDataContext/league" />
-      <nestedChildShapes>
-        <elementListCompartment Id="6185bd86-b11c-4165-8e60-a3c1cf58439e" absoluteBounds="0.51500000000000012, 0.96, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
-      </nestedChildShapes>
-    </classShape>
     <classShape Id="54fbd035-41fa-407a-a0de-c6fc890d3f45" isExpanded="false" absoluteBounds="0.5, 1.875, 2, 0.45">
       <DataClassMoniker Name="/SqlDataContext/teamName" />
       <nestedChildShapes>
@@ -54,6 +48,12 @@
       <DataClassMoniker Name="/SqlDataContext/leagueMark" />
       <nestedChildShapes>
         <elementListCompartment Id="059fa765-014b-438c-a70d-a0e896764068" absoluteBounds="3.2649999999999997, 1.085, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="4acf38e8-1c04-4c93-b824-b1991824f6f7" isExpanded="false" absoluteBounds="0.5, 0.625, 2, 0.45">
+      <DataClassMoniker Name="/SqlDataContext/league" />
+      <nestedChildShapes>
+        <elementListCompartment Id="76394b57-84ad-4c00-91ea-05a2e4e9bf67" absoluteBounds="0.51499999999999968, 1.085, 1.9700000000000002, 1.4031982421875" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
   </nestedChildShapes>

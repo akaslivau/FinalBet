@@ -30,9 +30,6 @@ namespace FinalBet
 		
     #region Extensibility Method Definitions
     partial void OnCreated();
-    partial void Insertleague(league instance);
-    partial void Updateleague(league instance);
-    partial void Deleteleague(league instance);
     partial void InsertteamName(teamName instance);
     partial void UpdateteamName(teamName instance);
     partial void DeleteteamName(teamName instance);
@@ -57,6 +54,9 @@ namespace FinalBet
     partial void InsertleagueMark(leagueMark instance);
     partial void UpdateleagueMark(leagueMark instance);
     partial void DeleteleagueMark(leagueMark instance);
+    partial void Insertleague(league instance);
+    partial void Updateleague(league instance);
+    partial void Deleteleague(league instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -87,14 +87,6 @@ namespace FinalBet
 				base(connection, mappingSource)
 		{
 			OnCreated();
-		}
-		
-		public System.Data.Linq.Table<league> leagues
-		{
-			get
-			{
-				return this.GetTable<league>();
-			}
 		}
 		
 		public System.Data.Linq.Table<teamName> teamNames
@@ -160,162 +152,12 @@ namespace FinalBet
 				return this.GetTable<leagueMark>();
 			}
 		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagues")]
-	public partial class league : INotifyPropertyChanging, INotifyPropertyChanged
-	{
 		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private string _name;
-		
-		private string _url;
-		
-		private string _svgName;
-		
-		private string _other;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnnameChanging(string value);
-    partial void OnnameChanged();
-    partial void OnurlChanging(string value);
-    partial void OnurlChanged();
-    partial void OnsvgNameChanging(string value);
-    partial void OnsvgNameChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
-    #endregion
-		
-		public league()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
+		public System.Data.Linq.Table<league> leagues
 		{
 			get
 			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string name
-		{
-			get
-			{
-				return this._name;
-			}
-			set
-			{
-				if ((this._name != value))
-				{
-					this.OnnameChanging(value);
-					this.SendPropertyChanging();
-					this._name = value;
-					this.SendPropertyChanged("name");
-					this.OnnameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string url
-		{
-			get
-			{
-				return this._url;
-			}
-			set
-			{
-				if ((this._url != value))
-				{
-					this.OnurlChanging(value);
-					this.SendPropertyChanging();
-					this._url = value;
-					this.SendPropertyChanged("url");
-					this.OnurlChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_svgName", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string svgName
-		{
-			get
-			{
-				return this._svgName;
-			}
-			set
-			{
-				if ((this._svgName != value))
-				{
-					this.OnsvgNameChanging(value);
-					this.SendPropertyChanging();
-					this._svgName = value;
-					this.SendPropertyChanged("svgName");
-					this.OnsvgNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
-		{
-			get
-			{
-				return this._other;
-			}
-			set
-			{
-				if ((this._other != value))
-				{
-					this.OnotherChanging(value);
-					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+				return this.GetTable<league>();
 			}
 		}
 	}
@@ -1631,6 +1473,188 @@ namespace FinalBet
 					this._name = value;
 					this.SendPropertyChanged("name");
 					this.OnnameChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagues")]
+	public partial class league : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private string _name;
+		
+		private string _url;
+		
+		private string _svgName;
+		
+		private bool _isFavorite;
+		
+		private string _other;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OnurlChanging(string value);
+    partial void OnurlChanged();
+    partial void OnsvgNameChanging(string value);
+    partial void OnsvgNameChanged();
+    partial void OnisFavoriteChanging(bool value);
+    partial void OnisFavoriteChanged();
+    partial void OnotherChanging(string value);
+    partial void OnotherChanged();
+    #endregion
+		
+		public league()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string name
+		{
+			get
+			{
+				return this._name;
+			}
+			set
+			{
+				if ((this._name != value))
+				{
+					this.OnnameChanging(value);
+					this.SendPropertyChanging();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string url
+		{
+			get
+			{
+				return this._url;
+			}
+			set
+			{
+				if ((this._url != value))
+				{
+					this.OnurlChanging(value);
+					this.SendPropertyChanging();
+					this._url = value;
+					this.SendPropertyChanged("url");
+					this.OnurlChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_svgName", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string svgName
+		{
+			get
+			{
+				return this._svgName;
+			}
+			set
+			{
+				if ((this._svgName != value))
+				{
+					this.OnsvgNameChanging(value);
+					this.SendPropertyChanging();
+					this._svgName = value;
+					this.SendPropertyChanged("svgName");
+					this.OnsvgNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_isFavorite", DbType="Bit NOT NULL")]
+		public bool isFavorite
+		{
+			get
+			{
+				return this._isFavorite;
+			}
+			set
+			{
+				if ((this._isFavorite != value))
+				{
+					this.OnisFavoriteChanging(value);
+					this.SendPropertyChanging();
+					this._isFavorite = value;
+					this.SendPropertyChanged("isFavorite");
+					this.OnisFavoriteChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string other
+		{
+			get
+			{
+				return this._other;
+			}
+			set
+			{
+				if ((this._other != value))
+				{
+					this.OnotherChanging(value);
+					this.SendPropertyChanging();
+					this._other = value;
+					this.SendPropertyChanged("other");
+					this.OnotherChanged();
 				}
 			}
 		}

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using FinalBet.Database;
+using FinalBet.Model;
 using FinalBet.Properties;
 using FinalBet.ViewModel;
 using Serilog;
@@ -28,8 +29,10 @@ namespace FinalBet
                 .CreateLogger();
 
             Log.Logger = log;
-
+           
             Log.Information("Application started");
+            Global.Current.Infos++;
+
             Connection.Initialize(Settings.Default.soccerConnectionString);
 
             var culture = new CultureInfo("en-Us")

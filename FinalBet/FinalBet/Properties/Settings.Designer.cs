@@ -81,5 +81,17 @@ namespace FinalBet.Properties {
                 this["zipMainFilename"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool onlyFavorites {
+            get {
+                return ((bool)(this["onlyFavorites"]));
+            }
+            set {
+                this["onlyFavorites"] = value;
+            }
+        }
     }
 }

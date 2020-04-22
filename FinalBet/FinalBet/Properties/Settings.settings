@@ -22,5 +22,8 @@
     <Setting Name="zipMainFilename" Type="System.String" Scope="User">
       <Value Profile="(Default)">main.html</Value>
     </Setting>
+    <Setting Name="onlyFavorites" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

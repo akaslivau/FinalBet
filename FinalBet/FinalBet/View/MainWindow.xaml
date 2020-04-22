@@ -9,12 +9,12 @@
                       xmlns:properties="clr-namespace:FinalBet.Properties"
                       xmlns:local="clr-namespace:FinalBet"
                       xmlns:model="clr-namespace:FinalBet.Model"
+                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                       mc:Ignorable="d"
                       WindowState="Maximized"
-                      Title="MainWindow" Height="450" Width="800">
+                      Title="MainWindow" Height="450" Width="1200">
     <Controls:MetroWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <model:Global x:Key="Global"/>
     </Controls:MetroWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -38,6 +38,19 @@
                          DataContext="{Binding Database}"
                          >
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0">
+                        <CheckBox Content="Только избранные" 
+                                  Margin="{StaticResource ControlMargin}"
+                                  IsChecked="{Binding OnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  />
+                    </DockPanel>
+
+                    <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="3*"/>
                         <ColumnDefinition Width="10*"/>
@@ -45,7 +58,7 @@
                     <GroupBox Grid.Column="0" Header="Страны" 
                                   Margin="{StaticResource ControlMargin}">
                         <ListBox Grid.Column="0"
-                                     ItemsSource="{Binding Items}"
+                                     ItemsSource="{Binding Table}"
                                      SelectedItem="{Binding Selected}"
                                      DisplayMemberPath="name"
                             />
@@ -95,15 +108,16 @@
                         <GroupBox Grid.Row="1" Header="Управление отметками" Margin="{StaticResource ControlMargin}">
                             <StackPanel Orientation="Horizontal">
                                 <ComboBox Width="300"
-                                          Height="30"
+                                          Height="20"
                                           Margin="{StaticResource ControlMargin}"
                                           DisplayMemberPath="name"
-                                          ItemsSource="{Binding Source={StaticResource Global}, Path=LeagueMarks}"
+                                          ItemsSource="{Binding Source={x:Static model:Global.LeagueMarks}}"
                                           SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 />
 
                                 <Controls:Badged x:Name="CountingBadge"
                                                  Badge="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems.Count}"
+                                                 BadgePlacementMode="BottomRight"
                                                  BadgeBackground="LightSeaGreen"
                                                  Margin="{StaticResource ControlMargin}">
                                     <Button Content="Поставить отметку"
@@ -112,9 +126,17 @@
                                             Command="{Binding MarkSelectedUrlsCommand}"
                                     />
                                 </Controls:Badged>
-
-
-
+                                <Button Content="Удалить отметку"
+                                        Margin="15,5,5,5"
+                                        Style="{StaticResource Button.Usual}"
+                                        CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                        Command="{Binding UnmarkSelectedUrlsCommand}"
+                                />
+                                <Button Content="Автомат"
+                                        Style="{StaticResource Button.Usual}"
+                                        CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                        Command="{Binding MarkAutoCommand}"
+                                />
 
                             </StackPanel>
                         </GroupBox>
@@ -127,7 +149,9 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0"
-                                    Orientation="Horizontal" >
+                                    Orientation="Horizontal"
+                                    Margin="{StaticResource ControlMargin}"
+                                    >
                                     <TextBox Width="300" 
                                              Height="25"
                                              DataContext="{Binding Path=LeagueUrls}"
@@ -165,25 +189,73 @@
                                     />
 
                                 </StackPanel>
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" >
-                                <TextBlock Text="{Binding Path=Selected.name, Mode=OneWay}" 
-                                           Style="{StaticResource Textblock.H1}"
-                                           VerticalAlignment="Center"
-                                           />
-                                <Border BorderThickness="0.5" 
-                                        BorderBrush="LightSlateGray" 
-                                        Margin="{StaticResource ControlMargin}"
-                                        Height="30"
-                                        Width="40"
-                                        VerticalAlignment="Center"
-                                        HorizontalAlignment="Right"
+                                    <Grid Grid.Column="2">
+                                        <Grid.Resources>
+                                            <Canvas x:Key="AppBar" x:Name="appbar_star" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
+                                                <Path Width="41.1667" Height="38" Canvas.Left="17.4167" Canvas.Top="18" Stretch="Fill" Fill="#FF000000" Data="F1 M 17.4167,32.25L 32.9107,32.25L 38,18L 43.0893,32.25L 58.5833,32.25L 45.6798,41.4944L 51.4583,56L 38,48.0833L 26.125,56L 30.5979,41.7104L 17.4167,32.25 Z "/>
+                                            </Canvas>
+                                            <!-- StarButton Template -->
+                                            <ControlTemplate x:Key="StarToggleButton" TargetType="{x:Type ToggleButton}">
+                                                <Canvas
+                                                Width="76"
+                                                Height="76"
+                                                Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
+                                                    <Path
+                                                    x:Name="ButtonPath"
+                                                    Width="41.166"
+                                                    Height="38"
+                                                    Canvas.Left="17.416"
+                                                    Canvas.Top="0"
+                                                    Data="F1 M 17.416,32.25L 32.910,32.25L 38,18L 43.089,32.25L 58.583,32.25L 45.679,41.494L 51.458,56L 38,48.083L 26.125,56L 30.597,41.710L 17.416,32.25 Z "
+                                                    Fill="Transparent"
+                                                    Stroke="{StaticResource AccentBaseColorBrush}"
+                                                    StrokeThickness="2"
+                                                    Stretch="Fill"/>
+                                                </Canvas>
+                                                <!-- When checked, fill with Yellow -->
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="true">
+                                                        <Setter TargetName="ButtonPath" Property="Fill" Value="{StaticResource AccentBaseColorBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ToggleButton Grid.Column="2" 
+                                                      HorizontalAlignment="Right"
+                                                      IsChecked="{Binding IsFavorite, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Margin="{StaticResource ControlMargin}"
+                                            Style="{DynamicResource MahApps.Metro.Styles.MetroCircleToggleButtonStyle}"
+                                            Template="{DynamicResource StarToggleButton}"
+                                        />
+
+                                        <TextBlock Grid.Column="0"
+                                                   HorizontalAlignment="Right"
+                                                   Text="{Binding Path=Selected.name, Mode=OneWay}" 
+                                                   Style="{StaticResource Textblock.H1}"
+                                                   VerticalAlignment="Center"
+                                        />
+                                        <Border Grid.Column="1"
+                                                BorderThickness="0.5" 
+                                                BorderBrush="LightSlateGray" 
+                                                Margin="{StaticResource ControlMargin}"
+                                                Height="30"
+                                                Width="40"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Right"
                                         >
-                                    <svgc:SvgViewbox 
-                                        Height="30" Width="40" 
-                                        Stretch="Uniform" 
-                                        ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
-                                </Border>
-                                </StackPanel>
+                                            <svgc:SvgViewbox 
+                                                Height="30" Width="40" 
+                                                Stretch="Uniform" 
+                                                ext:SvgViewboxAttachedProperties.Source="{Binding Path=FlagPath}"/>
+                                        </Border>
+                                    </Grid>
                             </Grid>
                             
                         </Grid>
@@ -222,6 +294,10 @@
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
+                                <DataGridTextColumn Header="Год int" Width="*"
+                                                    IsReadOnly="True"
+                                                    Binding="{Binding Path=PossibleYear, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                />
 
                                 <DataGridTextColumn Header="N, шт." Width="*"
                                                         IsReadOnly="True"
@@ -242,17 +318,26 @@
                         </DataGrid>
                     </Grid>
                     </Grid>
-
+                </Grid>
             </TabItem>
         </TabControl>
         <StatusBar Grid.Row="2">
             <StatusBarItem>Final Bet</StatusBarItem>
             <Separator Style="{StaticResource MetroStatusBarSeparator}" />
             <StatusBarItem Content="Показать лог">
-                <StatusBarItem.CommandBindings>
-                    <CommandBinding Command="{Binding OpenLogCommand}"/>
-                </StatusBarItem.CommandBindings>
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseDoubleClick">
+                        <i:InvokeCommandAction Command="{Binding OpenLogCommand}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
             </StatusBarItem>
+            <StatusBarItem Content="{Binding Source={x:Static model:Global.Current}, Path=Infos}"
+                           ContentStringFormat="Сообщений: {0} шт. "/>
+            <StatusBarItem Content="{Binding Source={x:Static model:Global.Current}, Path=Warnings}"
+                           ContentStringFormat="Предупреждений: {0} шт. "/>
+            <StatusBarItem Content="{Binding Source={x:Static model:Global.Current}, Path=Errors}"
+                           ContentStringFormat="Ошибок: {0} шт. "/>
+
         </StatusBar>
     </Grid>
 </Controls:MetroWindow>

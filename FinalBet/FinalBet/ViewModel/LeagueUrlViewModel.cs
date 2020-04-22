@@ -56,11 +56,48 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private int _possibleYear = -1;
+        public int PossibleYear
+        {
+            get
+            {
+                return _possibleYear;
+            }
+            set
+            {
+                if (_possibleYear == value) return;
+                _possibleYear = value;
+                OnPropertyChanged("PossibleYear");
+            }
+        }
         #endregion
 
         public LeagueUrlViewModel(leagueUrl item)
         {
             Source = item;
+
+            //kekeke
+            var strYear = item.year;
+            if (!string.IsNullOrEmpty(strYear))
+            {
+                int attempt1;
+                if (int.TryParse(strYear, out attempt1))
+                {
+                    PossibleYear = attempt1;
+                }
+                else
+                {
+                    var split = strYear.Substring(0,strYear.IndexOf('/'));
+                    if (!string.IsNullOrEmpty(split))
+                    {
+                        int attempt2;
+                        if (int.TryParse(split, out attempt2))
+                        {
+                            PossibleYear = attempt2;
+                        }
+                    }
+                }
+            }
         }
     }
 }
