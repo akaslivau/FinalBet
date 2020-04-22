@@ -5,11 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FinalBet.Database;
+using FinalBet.Framework;
 
-namespace FinalBet.Other
+namespace FinalBet.Model
 {
-    public static class AppData
+    public class Global: ViewModelBase
     {
+        public static Global Current = new Global();
+
         private static ObservableCollection<leagueMark> _leagueMarks = null;
         public static ObservableCollection<leagueMark> LeagueMarks
         {
@@ -23,7 +26,7 @@ namespace FinalBet.Other
 
                     _leagueMarks = new ObservableCollection<leagueMark>(table);
                 }
-                
+
                 return _leagueMarks;
             }
         }

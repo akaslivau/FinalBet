@@ -22,10 +22,7 @@ namespace FinalBet.ViewModel
         private string _flagPath;
         public string FlagPath
         {
-            get
-            {
-                return _flagPath;
-            }
+            get => _flagPath;
             set
             {
                 if (_flagPath == value) return;
@@ -37,10 +34,7 @@ namespace FinalBet.ViewModel
         private ObservableCollection<league> _items = new ObservableCollection<league>();
         public ObservableCollection<league> Items
         {
-            get
-            {
-                return _items;
-            }
+            get => _items;
             set
             {
                 if (_items == value) return;
@@ -52,10 +46,7 @@ namespace FinalBet.ViewModel
         private LeagueUrlRepoViewModel _leagueUrls = new LeagueUrlRepoViewModel();
         public LeagueUrlRepoViewModel LeagueUrls
         {
-            get
-            {
-                return _leagueUrls;
-            }
+            get => _leagueUrls;
             set
             {
                 if (_leagueUrls == value) return;
@@ -68,10 +59,7 @@ namespace FinalBet.ViewModel
         private league _selected = null;
         public league Selected
         {
-            get
-            {
-                return _selected;
-            }
+            get => _selected;
             set
             {
                 if (_selected == value) return;
@@ -86,10 +74,7 @@ namespace FinalBet.ViewModel
         private leagueMark _selectedLeagueMark;
         public leagueMark SelectedLeagueMark
         {
-            get
-            {
-                return _selectedLeagueMark;
-            }
+            get => _selectedLeagueMark;
             set
             {
                 if (_selectedLeagueMark == value) return;
@@ -101,10 +86,7 @@ namespace FinalBet.ViewModel
         private string _statusText="";
         public string StatusText
         {
-            get
-            {
-                return _statusText;
-            }
+            get => _statusText;
             set
             {
                 if (_statusText == value) return;
@@ -120,10 +102,7 @@ namespace FinalBet.ViewModel
         private bool _isBusy = false;
         public bool IsBusy
         {
-            get
-            {
-                return _isBusy;
-            }
+            get => _isBusy;
             set
             {
                 if (_isBusy == value) return;
@@ -135,10 +114,7 @@ namespace FinalBet.ViewModel
         private bool _cancelAsync;
         public bool CancelAsync
         {
-            get
-            {
-                return _cancelAsync;
-            }
+            get => _cancelAsync;
             set
             {
                 if (_cancelAsync == value) return;
@@ -150,10 +126,7 @@ namespace FinalBet.ViewModel
         private double _pBarValue = 0;
         public double ProgressBarValue
         {
-            get
-            {
-                return _pBarValue;
-            }
+            get => _pBarValue;
             set
             {
                 if (_pBarValue == value) return;
@@ -491,8 +464,16 @@ namespace FinalBet.ViewModel
         public DatabaseViewModel()
         {
             // TODO: leagueUrl: ShowMatches 
-            // TODO: Automark leagueUrls
+            // TODO: Automark leagueUrl
+            // TODO: possible year
+            // TODO: loadMatches async
             // TODO: loadMatches for allLeagues (marked or separate list)
+            // TODO: IsBusy чтобы были недоступны другие команды, когда идет async задача
+            // TODO: удалить other где точно не нужно
+            // TODO: iMatch??? id, score, losted
+            // TODO: GetOuput(iMatch, code)
+            // TODO: Code => UserControl + Class
+
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -506,9 +487,9 @@ namespace FinalBet.ViewModel
             if (Items.Any()) Selected = Items[0];
 
             //Commands
-            LoadUrlsCommand = new AsyncCommand(()=> LoadUrls(Selected), () => Selected != null);
-            LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any());
-            TestAsyncCommand = new AsyncCommand(ExecuteSubmitAsync, () => !IsBusy);
+            LoadUrlsCommand = new AsyncCommand(()=> LoadUrls(Selected), () => Selected != null && !IsBusy);
+            LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any() && !IsBusy);
+            TestAsyncCommand = new AsyncCommand(ExecuteSubmitAsync, () => !IsBusy && !IsBusy);
 
             
             TestCommand = new RelayCommand(Test, a=> Selected!=null);

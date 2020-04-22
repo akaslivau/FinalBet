@@ -44,16 +44,16 @@
         <elementListCompartment Id="d02f270a-325a-43b3-9057-4587312b92bb" absoluteBounds="3.7649999999999997, 2.71, 1.9700000000000002, 1.2108968098958333" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <classShape Id="b17afaff-3be8-4af8-aded-2607520d420c" isExpanded="false" absoluteBounds="2.875, 0.5, 2, 0.45">
-      <DataClassMoniker Name="/SqlDataContext/leagueMark" />
-      <nestedChildShapes>
-        <elementListCompartment Id="db0f0eb7-1a47-4fe1-afd5-5b26f3d84e00" absoluteBounds="2.8899999999999997, 0.96, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
-      </nestedChildShapes>
-    </classShape>
     <classShape Id="9baadda8-7c34-4287-9b64-f2d58ac81507" isExpanded="false" absoluteBounds="0.5, 1.25, 2, 0.45">
       <DataClassMoniker Name="/SqlDataContext/leagueUrl" />
       <nestedChildShapes>
         <elementListCompartment Id="a9b844c3-d3d9-4333-affc-17e2ff69c1bf" absoluteBounds="0.51500000000000012, 1.71, 1.9700000000000002, 1.5954996744791665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
+    <classShape Id="a9c5207b-7baa-478e-93a2-4270c11fc986" isExpanded="false" absoluteBounds="3.25, 0.625, 2, 0.45">
+      <DataClassMoniker Name="/SqlDataContext/leagueMark" />
+      <nestedChildShapes>
+        <elementListCompartment Id="059fa765-014b-438c-a70d-a0e896764068" absoluteBounds="3.2649999999999997, 1.085, 1.9700000000000002, 0.63399251302083326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
   </nestedChildShapes>

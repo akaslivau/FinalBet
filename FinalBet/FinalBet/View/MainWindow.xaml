@@ -8,17 +8,19 @@
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:properties="clr-namespace:FinalBet.Properties"
                       xmlns:local="clr-namespace:FinalBet"
-                      xmlns:other="clr-namespace:FinalBet.Other"
+                      xmlns:model="clr-namespace:FinalBet.Model"
                       mc:Ignorable="d"
                       WindowState="Maximized"
                       Title="MainWindow" Height="450" Width="800">
     <Controls:MetroWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <model:Global x:Key="Global"/>
     </Controls:MetroWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Button Height="40" Width="100" Content="Test" Command="{Binding TestCommand}"/>
@@ -48,7 +50,7 @@
                                      DisplayMemberPath="name"
                             />
                     </GroupBox>
-                    <Grid Grid.Column="1" Margin="{StaticResource ControlMargin}">
+                    <Grid Grid.Column="1">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -57,24 +59,52 @@
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                         
-                        <GroupBox Grid.Row="0" Header="LeagueUrl">
-                            <StackPanel Orientation="Horizontal" >
-                                <Button 
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <GroupBox Grid.Column="0" Header="LeagueUrl" Margin="{StaticResource ControlMargin}">
+                                <StackPanel Orientation="Horizontal" >
+                                    <Button 
                                     Style="{StaticResource Button.Usual}"
                                     Content="Загрузить ссылки для лиги" 
                                     Command="{Binding LoadUrlsCommand}"/>
-                                <Button Content="Загрузить все ссылки" 
+                                    <Button Content="Загрузить все ссылки" 
                                         Style="{StaticResource Button.Usual}"
                                         Command="{Binding LoadAllUrlsCommand}"
                                 />
-
-                                <Button Content="Прервать загрузку" 
+                                    <Button Content="Прервать загрузку" 
+                                            Style="{StaticResource Button.Usual}"
+                                            Command="{Binding BreakCommand}"/>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox Grid.Column="1" Header="Загрузка матчей" Margin="{StaticResource ControlMargin}">
+                                <StackPanel Orientation="Horizontal" >
+                                    <Button Content="Загрузить матчи для URL" 
                                         Style="{StaticResource Button.Usual}"
-                                        Command="{Binding BreakCommand}"/>
+                                        Command="{Binding LoadMatchesCommand}"/>
+                                    <Button Content="Прервать загрузку" 
+                                            Style="{StaticResource Button.Usual}"
+                                            Command="{Binding BreakCommand}"/>
+
+                                </StackPanel>
+                            </GroupBox>
+                        </Grid>
+
+                        <GroupBox Grid.Row="1" Header="Управление отметками" Margin="{StaticResource ControlMargin}">
+                            <StackPanel Orientation="Horizontal">
+                                <ComboBox Width="300"
+                                          Height="30"
+                                          Margin="{StaticResource ControlMargin}"
+                                          DisplayMemberPath="name"
+                                          ItemsSource="{Binding Source={StaticResource Global}, Path=LeagueMarks}"
+                                          SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                />
 
                                 <Controls:Badged x:Name="CountingBadge"
                                                  Badge="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems.Count}"
-                                                 BadgeBackground="{StaticResource AccentColorBrush4}"
+                                                 BadgeBackground="LightSeaGreen"
                                                  Margin="{StaticResource ControlMargin}">
                                     <Button Content="Поставить отметку"
                                             Style="{StaticResource Button.Usual}"
@@ -82,28 +112,13 @@
                                             Command="{Binding MarkSelectedUrlsCommand}"
                                     />
                                 </Controls:Badged>
-                                
-                                <TextBlock Text="" Margin="50,5,5,5"/>
-
-                                <ComboBox Width="300"
-                                          Height="30"
-                                          Margin="{StaticResource ControlMargin}"
-                                          DisplayMemberPath="name"
-                                          ItemsSource="{x:Static other:AppData.LeagueMarks}"
-                                          SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                />
-                            </StackPanel>
 
 
-                        </GroupBox>
-                        <GroupBox Grid.Row="1" Header="Загрузка матчей">
-                            <StackPanel Orientation="Horizontal" >
-                                <Button Content="Загрузить матчи для URL" 
-                                        Style="{StaticResource Button.Usual}"
-                                        Command="{Binding LoadMatchesCommand}"/>
+
 
                             </StackPanel>
                         </GroupBox>
+
                         <Grid Grid.Row="2">
                             <Grid Height="50">
                                 <Grid.ColumnDefinitions>
@@ -230,5 +245,14 @@
 
             </TabItem>
         </TabControl>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>Final Bet</StatusBarItem>
+            <Separator Style="{StaticResource MetroStatusBarSeparator}" />
+            <StatusBarItem Content="Показать лог">
+                <StatusBarItem.CommandBindings>
+                    <CommandBinding Command="{Binding OpenLogCommand}"/>
+                </StatusBarItem.CommandBindings>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Controls:MetroWindow>

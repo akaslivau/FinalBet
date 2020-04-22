@@ -7,7 +7,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using FinalBet.Other;
 using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
