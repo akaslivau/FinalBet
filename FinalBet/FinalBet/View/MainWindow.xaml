@@ -16,6 +16,20 @@
     <Controls:MetroWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Controls:MetroWindow.Resources>
+    <Controls:MetroWindow.InputBindings>
+        <KeyBinding Command="{Binding Path=Database.MarkSelectedUrlsCommand}"
+                    CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                    Key="D1" 
+                    Modifiers="Control"/>
+        <KeyBinding Command="{Binding Path=Database.MarkAutoCommand}"
+                    CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                    Key="D2" 
+                    Modifiers="Control"/>
+        <KeyBinding Command="{Binding Path=Database.UnmarkSelectedUrlsCommand}"
+                    CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                    Key="D3" 
+                    Modifiers="Control"/>
+    </Controls:MetroWindow.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -40,17 +54,69 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <DockPanel Grid.Row="0">
-                        <CheckBox Content="Только избранные" 
-                                  Margin="{StaticResource ControlMargin}"
+                        <Menu>
+                            <Menu.Resources>
+                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                    <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+                                </Style>
+                            </Menu.Resources>
+                            <MenuItem Header="Ссылки">
+                                <MenuItem Header="Загрузить для выбранной лиги" Command="{Binding LoadUrlsCommand}"/>
+                                <MenuItem Header="Загрузить всё" Command="{Binding LoadAllUrlsCommand}"/>
+                            </MenuItem>
+                            <MenuItem Header="Матчи">
+                                <MenuItem Header="Загрузить для выбранной URL" Command="{Binding LoadMatchesCommand}"/>
+                                <MenuItem Header="Загрузить все матчи"/>
+                            </MenuItem>
+                            <MenuItem Header="Отметки">
+                                <MenuItem Header="Отметить"
+                                          InputGestureText="Ctrl+1"
+                                          CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                          Command="{Binding MarkSelectedUrlsCommand}"
+                                          />
+                                <MenuItem Header="Автомат"
+                                          InputGestureText="Ctrl+2"
+                                          CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                          Command="{Binding MarkAutoCommand}"/>
+                                <Separator/>
+                                <MenuItem Header="Удалить"
+                                          InputGestureText="Ctrl+3"
+                                        CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
+                                        Command="{Binding UnmarkSelectedUrlsCommand}"/>
+
+
+                            </MenuItem>
+                            <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
+                        </Menu>
+                    </DockPanel>
+                    <DockPanel Grid.Row="1" HorizontalAlignment="Left">
+                        <CheckBox Content="Только избранные страны" 
+                                  Margin="5,5,25,5"
                                   IsChecked="{Binding OnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  />
+                        />
+
+                        <Controls:Badged x:Name="CountingBadge1"
+                                         Badge="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems.Count}"
+                                         BadgePlacementMode="Left"
+                                         BadgeBackground="LightSeaGreen"
+                                         Margin="{StaticResource ControlMargin}">
+                            <ComboBox Width="300"
+                                      Height="20"
+                                      Margin="{StaticResource ControlMargin}"
+                                      DisplayMemberPath="name"
+                                      ItemsSource="{Binding Source={x:Static model:Global.LeagueMarks}}"
+                                      SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            />
+                        </Controls:Badged>
                     </DockPanel>
 
-                    <Grid Grid.Row="1">
+
+                    <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="3*"/>
                         <ColumnDefinition Width="10*"/>
@@ -71,75 +137,6 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                        
-                        <Grid Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <GroupBox Grid.Column="0" Header="LeagueUrl" Margin="{StaticResource ControlMargin}">
-                                <StackPanel Orientation="Horizontal" >
-                                    <Button 
-                                    Style="{StaticResource Button.Usual}"
-                                    Content="Загрузить ссылки для лиги" 
-                                    Command="{Binding LoadUrlsCommand}"/>
-                                    <Button Content="Загрузить все ссылки" 
-                                        Style="{StaticResource Button.Usual}"
-                                        Command="{Binding LoadAllUrlsCommand}"
-                                />
-                                    <Button Content="Прервать загрузку" 
-                                            Style="{StaticResource Button.Usual}"
-                                            Command="{Binding BreakCommand}"/>
-                                </StackPanel>
-                            </GroupBox>
-                            <GroupBox Grid.Column="1" Header="Загрузка матчей" Margin="{StaticResource ControlMargin}">
-                                <StackPanel Orientation="Horizontal" >
-                                    <Button Content="Загрузить матчи для URL" 
-                                        Style="{StaticResource Button.Usual}"
-                                        Command="{Binding LoadMatchesCommand}"/>
-                                    <Button Content="Прервать загрузку" 
-                                            Style="{StaticResource Button.Usual}"
-                                            Command="{Binding BreakCommand}"/>
-
-                                </StackPanel>
-                            </GroupBox>
-                        </Grid>
-
-                        <GroupBox Grid.Row="1" Header="Управление отметками" Margin="{StaticResource ControlMargin}">
-                            <StackPanel Orientation="Horizontal">
-                                <ComboBox Width="300"
-                                          Height="20"
-                                          Margin="{StaticResource ControlMargin}"
-                                          DisplayMemberPath="name"
-                                          ItemsSource="{Binding Source={x:Static model:Global.LeagueMarks}}"
-                                          SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                />
-
-                                <Controls:Badged x:Name="CountingBadge"
-                                                 Badge="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems.Count}"
-                                                 BadgePlacementMode="BottomRight"
-                                                 BadgeBackground="LightSeaGreen"
-                                                 Margin="{StaticResource ControlMargin}">
-                                    <Button Content="Поставить отметку"
-                                            Style="{StaticResource Button.Usual}"
-                                            CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
-                                            Command="{Binding MarkSelectedUrlsCommand}"
-                                    />
-                                </Controls:Badged>
-                                <Button Content="Удалить отметку"
-                                        Margin="15,5,5,5"
-                                        Style="{StaticResource Button.Usual}"
-                                        CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
-                                        Command="{Binding UnmarkSelectedUrlsCommand}"
-                                />
-                                <Button Content="Автомат"
-                                        Style="{StaticResource Button.Usual}"
-                                        CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
-                                        Command="{Binding MarkAutoCommand}"
-                                />
-
-                            </StackPanel>
-                        </GroupBox>
 
                         <Grid Grid.Row="2">
                             <Grid Height="50">
