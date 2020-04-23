@@ -179,7 +179,7 @@ namespace FinalBet.Database
         //В случае, если по указанной ссылке находятся несколько Tab-вкладок
         //Например, Russia-2013, [Main, Regelation],
         //То будут возвращены все матчи
-        public static List<BeMatch> GetMatches(league country, leagueUrl leagueUrl)
+        public static async Task<List<BeMatch>> GetMatches(league country, leagueUrl leagueUrl)
         {
             var result = new List<BeMatch>();
 
@@ -207,7 +207,7 @@ namespace FinalBet.Database
                     doc.Load(Settings.Default.zipMainFilename);
                 }
             }
-            else
+            else //Загружаем из интернета
             {
                 //using for IDisposable.Dispose()
                 var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS;
@@ -215,7 +215,7 @@ namespace FinalBet.Database
                 var web = new HtmlWeb();
                 try
                 {
-                    doc = web.Load(url);
+                    doc = await web.LoadFromWebAsync(url);
                     //Zipping HTML
                     File.WriteAllText(Properties.Settings.Default.tmpHtmlFile, doc.DocumentNode.InnerHtml);
                     using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
@@ -367,30 +367,11 @@ namespace FinalBet.Database
 
                 var finalScore = tr.SelectSingleNode(".//td[@class='h-text-center']").InnerText.Trim();
 
-                var odds = new List<string>();
-                var tdNodes = tr.SelectNodes(".//td[contains(@class, 'table-main__odds')]").ToList();
-                foreach (var td in tdNodes)
-                {
-                    var str = td.GetAttributeValue("data-odd", "default").Trim();
-                    if (str != "default")
-                    {
-                        odds.Add(str);
-                    }
-                    else
-                    //<td class="table-main__odds colored"><span><span><span data-odd="2.29"></span></span></span></td>
-                    {
-                        var spanNodes = td.SelectNodes(".//span").ToList();
-                        foreach (var spanNode in spanNodes.Where(spanNode => spanNode.Attributes["data-odd"] != null))
-                        {
-                            odds.Add(spanNode.GetAttributeValue("data-odd", "default").Trim());
-                            break;
-                        }
-                    }
-                }
-                
+                //odds не парсим, так как все равно их потом подгружать
+              
                 var date = tr.SelectSingleNode(".//td[contains(@class, 'h-text-right')]").InnerText;
                 
-                var toAdd = new BeMatch(teams, matchHref, finalScore, odds, date, tag);
+                var toAdd = new BeMatch(teams, matchHref, finalScore, date, tag);
                 result.Add(toAdd);
             }
 
@@ -434,16 +415,14 @@ namespace FinalBet.Database
         public List<string> Names { get; private set; }
         public string Href { get; private set; }
         public string FinalScore { get; private set; }
-        public List<string> Odds { get; private set; }
         public string Date { get; private set; }
         public string Tag { get; private set; }
 
         public bool IsCorrect { get; private set; }
 
-        public BeMatch(List<string> names, string href, string finalScore, List<string> odds, string date, string tag)
+        public BeMatch(List<string> names, string href, string finalScore, string date, string tag)
         {
             Names = new List<string>();
-            Odds = new List<string>();
 
             Href = href;
             FinalScore = finalScore;
@@ -453,11 +432,6 @@ namespace FinalBet.Database
             foreach (var name in names)
             {
                 Names.Add(name);
-            }
-
-            foreach (var odd in odds)
-            {
-                Odds.Add(odd);
             }
 
             IsCorrect = GetIsCorrect();
@@ -470,9 +444,6 @@ namespace FinalBet.Database
 
             if (string.IsNullOrEmpty(Href)) return false;
             if (string.IsNullOrEmpty(FinalScore)) return false;
-
-            if (Odds.Any(string.IsNullOrEmpty)) return false;
-            if (Odds.Count != 3) return false;
 
             if (string.IsNullOrEmpty(Date)) return false;
             DateTime dt;

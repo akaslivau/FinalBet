@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using FinalBet.Extensions;
 using FinalBet.Framework;
 
 namespace FinalBet.ViewModel
@@ -70,7 +71,42 @@ namespace FinalBet.ViewModel
                 OnPropertyChanged("PossibleYear");
             }
         }
+
+        //Это переменная нужна, чтобы загружать матчи для завершенного сезона
+        private bool _isCurrent = false;
+        public bool IsCurrent
+        {
+            get
+            {
+                return _isCurrent;
+            }
+            set
+            {
+                if (_isCurrent == value) return;
+                _isCurrent = value;
+                OnPropertyChanged("IsCurrent");
+            }
+        }
+
+        public static bool GetIsCurrent(string url)
+        {
+            //axaxaxaxaxa
+            for (int i = 3; i < url.Length; i++)
+            {
+                var str = url.Substring(i - 3, 4);
+                if (!str.IsDigitsOnly()) continue;
+
+                int tst = int.Parse(str);
+                if (tst > 1900 && tst < DateTime.Now.Year)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         #endregion
+
+
 
         public LeagueUrlViewModel(leagueUrl item)
         {
@@ -87,7 +123,7 @@ namespace FinalBet.ViewModel
                 }
                 else
                 {
-                    var split = strYear.Substring(0,strYear.IndexOf('/'));
+                    var split = strYear.Substring(0, strYear.IndexOf('/'));
                     if (!string.IsNullOrEmpty(split))
                     {
                         int attempt2;
@@ -98,6 +134,8 @@ namespace FinalBet.ViewModel
                     }
                 }
             }
+
+            IsCurrent = GetIsCurrent(item.url);
         }
     }
 }

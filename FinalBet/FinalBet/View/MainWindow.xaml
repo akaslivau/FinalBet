@@ -70,7 +70,10 @@
                                 <MenuItem Header="Загрузить всё" Command="{Binding LoadAllUrlsCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Матчи">
+                                <MenuItem Header="Открыть директорию" Command="{Binding OpenArchiveFolderCommand}"/>
                                 <MenuItem Header="Загрузить для выбранной URL" Command="{Binding LoadMatchesCommand}"/>
+                                <MenuItem Header="Загрузить отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
+                                <Separator/>
                                 <MenuItem Header="Загрузить все матчи"/>
                             </MenuItem>
                             <MenuItem Header="Отметки">
@@ -279,15 +282,19 @@
 
                                 <DataGridTextColumn Header="Название" Width="4*"
                                                         IsReadOnly="True"
-                                                        Binding="{Binding Path=Source.name, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                                        Binding="{Binding Path=Source.url, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
 
                                 <DataGridTextColumn Header="Отметка" Width="*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.mark, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
+                                <DataGridTextColumn Header="Текущ." Width="*"
+                                                    IsReadOnly="True"
+                                                    Binding="{Binding Path=IsCurrent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                />
 
-                                <DataGridTextColumn Header="Год" Width="*"
+                                    <DataGridTextColumn Header="Год" Width="*"
                                                         IsReadOnly="True"
                                                         Binding="{Binding Path=Source.year, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
                                     />
