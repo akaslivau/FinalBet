@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using FinalBet.Database;
@@ -37,10 +34,7 @@ namespace FinalBet.ViewModel
         private ListCollectionView _table;
         public ListCollectionView Table
         {
-            get
-            {
-                return _table;
-            }
+            get => _table;
             set
             {
                 if (_table == value) return;
@@ -74,7 +68,7 @@ namespace FinalBet.ViewModel
         }
 
 
-        private league _selected = null;
+        private league _selected;
         public league Selected
         {
             get => _selected;
@@ -116,18 +110,15 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private bool _onlyFavorites = false;
-        public bool OnlyFavorites
+        private bool _showOnlyFavorites;
+        public bool ShowOnlyFavorites
         {
-            get
-            {
-                return _onlyFavorites;
-            }
+            get => _showOnlyFavorites;
             set
             {
-                if (_onlyFavorites == value) return;
-                _onlyFavorites = value;
-                OnPropertyChanged("OnlyFavorites");
+                if (_showOnlyFavorites == value) return;
+                _showOnlyFavorites = value;
+                OnPropertyChanged("ShowOnlyFavorites");
 
                 Settings.Default.onlyFavorites = value;
                 Settings.Default.Save();
@@ -143,18 +134,15 @@ namespace FinalBet.ViewModel
         
         private bool FilterLeagues(object a)
         {
-            var cntr = (league) a;
-            return cntr.isFavorite;
+            var ctr = (league) a;
+            return ctr.isFavorite;
 
         }
 
         private bool _isFavorite;
         public bool IsFavorite
         {
-            get
-            {
-                return _isFavorite;
-            }
+            get => _isFavorite;
             set
             {
                 if (_isFavorite == value) return;
@@ -170,7 +158,7 @@ namespace FinalBet.ViewModel
                     cntx.SubmitChanges();
                 }
 
-                if (OnlyFavorites)
+                if (ShowOnlyFavorites)
                 {
                     Table.Refresh();
                 }
@@ -182,7 +170,7 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region AsyncCommands
-        private bool _isBusy = false;
+        private bool _isBusy;
         public bool IsBusy
         {
             get => _isBusy;
@@ -206,13 +194,13 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private double _pBarValue = 0;
+        private double _pBarValue;
         public double ProgressBarValue
         {
             get => _pBarValue;
             set
             {
-                if (_pBarValue == value) return;
+                if (Math.Abs(_pBarValue - value) < 0.0001) return;
                 _pBarValue = value;
                 OnPropertyChanged("ProgressBarValue");
             }
@@ -237,14 +225,14 @@ namespace FinalBet.ViewModel
         public IAsyncCommand LoadMatchesCommand { get; private set; }
         public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
 
-        public async Task LoadUrls(league cntr)
+        public async Task LoadUrls(league ctr)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var table = cntx.GetTable<leagueUrl>();
-                bool anyItemExists = table.Any(x => x.parentId == cntr.id);
+                bool anyItemExists = table.Any(x => x.parentId == ctr.id);
 
-                var country = cntr.name;
+                var country = ctr.name;
                 if (anyItemExists)
                 {
                     Log.Warning("LoadUrls, table not empty! {@country}", country);
@@ -255,11 +243,11 @@ namespace FinalBet.ViewModel
                     try
                     {
                         IsBusy = true;
-                        StatusText = "Начинаю загрузку ссылок для " + cntr.name;
+                        StatusText = "Начинаю загрузку ссылок для " + ctr.name;
 
-                        var html = await BetExplorerParser.GetLeagueUrlsHtml(cntr);
+                        var html = await BetExplorerParser.GetLeagueUrlsHtml(ctr);
 
-                        var urls = BetExplorerParser.GetLeagueUrls(html, cntr.id);
+                        var urls = BetExplorerParser.GetLeagueUrls(html, ctr.id);
                         table.InsertAllOnSubmit(urls);
                         cntx.SubmitChanges();
 
@@ -389,7 +377,7 @@ namespace FinalBet.ViewModel
             {
                 IsBusy = true;
 
-                var tpl = new List<Tuple<league,leagueUrl,bool>>();
+                List<Tuple<league, leagueUrl, bool>> tpl;
 
                 using (var cntx = new SqlDataContext(Connection.ConnectionString))
                 {
@@ -406,12 +394,17 @@ namespace FinalBet.ViewModel
                     tpl = tpl.Where(x => !x.Item3).ToList();
                 }
 
+                /*File.WriteAllLines("tst.txt", tpl.Select(x=>string.Join("\t", new string[]{x.Item1.name, x.Item2.url, x.Item2.year})));
+                return;*/
+
                 var total = tpl.Count;
                 int i = 0;
                 foreach (var item in tpl)
                 {
                     if (CancelAsync) break;
 
+                    StatusText = "Парсим..." + string.Join("\t",
+                        new string[] {item.Item1.name, item.Item2.url, item.Item2.year});
                     await LoadMatches(item.Item1, item.Item2);
 
                     i++;
@@ -615,11 +608,12 @@ namespace FinalBet.ViewModel
             Table = new ListCollectionView(Items);
             if (Items.Any()) Selected = Items[0];
             
-            OnlyFavorites = Settings.Default.onlyFavorites;
-            if (OnlyFavorites)
+            ShowOnlyFavorites = Settings.Default.onlyFavorites;
+            if (ShowOnlyFavorites)
             {
                 Table.Filter = FilterLeagues;
                 Table.Refresh();
+                Selected = (league)Table.GetItemAt(0);
             }
 
             TestCommand = new RelayCommand(Test, a => Selected != null);
@@ -628,7 +622,7 @@ namespace FinalBet.ViewModel
             LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any() && !IsBusy);
             LoadMatchesCommand = new AsyncCommand(()=>LoadMatches(Selected, LeagueUrls.Selected.Source),
                 () => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null && !IsBusy);
-            LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches,() => Items.Any() && !IsBusy);
+            LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches);
             
             //Commands
             MarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, SelectedLeagueMark.name), 
