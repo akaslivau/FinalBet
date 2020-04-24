@@ -25,9 +25,12 @@
                     CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
                     Key="D2" 
                     Modifiers="Control"/>
+        <KeyBinding Command="{Binding Path=Database.CheckMarksCommand}"
+                    Key="D3" 
+                    Modifiers="Control"/>
         <KeyBinding Command="{Binding Path=Database.UnmarkSelectedUrlsCommand}"
                     CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
-                    Key="D3" 
+                    Key="D4" 
                     Modifiers="Control"/>
     </Controls:MetroWindow.InputBindings>
     <Grid>
@@ -68,6 +71,7 @@
                             <MenuItem Header="Ссылки">
                                 <MenuItem Header="Загрузить для выбранной лиги" Command="{Binding LoadUrlsCommand}"/>
                                 <MenuItem Header="Загрузить всё" Command="{Binding LoadAllUrlsCommand}"/>
+                                <MenuItem Header="Показать детали" Command="{Binding ShowFileDetailsCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Матчи">
                                 <MenuItem Header="Открыть директорию" Command="{Binding OpenArchiveFolderCommand}"/>
@@ -87,8 +91,12 @@
                                           CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
                                           Command="{Binding MarkAutoCommand}"/>
                                 <Separator/>
-                                <MenuItem Header="Удалить"
+                                <MenuItem Header="Проверить"
                                           InputGestureText="Ctrl+3"
+                                          Command="{Binding CheckMarksCommand}"
+                                          />
+                                <MenuItem Header="Удалить"
+                                          InputGestureText="Ctrl+4"
                                         CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
                                         Command="{Binding UnmarkSelectedUrlsCommand}"/>
 
@@ -100,7 +108,7 @@
                     <DockPanel Grid.Row="1" HorizontalAlignment="Left">
                         <CheckBox Content="Только избранные страны" 
                                   Margin="5,5,25,5"
-                                  IsChecked="{Binding OnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  IsChecked="{Binding ShowOnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         />
 
                         <Controls:Badged x:Name="CountingBadge1"
@@ -191,32 +199,62 @@
                                 </StackPanel>
                                     <Grid Grid.Column="2">
                                         <Grid.Resources>
-                                            <Canvas x:Key="AppBar" x:Name="appbar_star" Width="76" Height="76" Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
-                                                <Path Width="41.1667" Height="38" Canvas.Left="17.4167" Canvas.Top="18" Stretch="Fill" Fill="#FF000000" Data="F1 M 17.4167,32.25L 32.9107,32.25L 38,18L 43.0893,32.25L 58.5833,32.25L 45.6798,41.4944L 51.4583,56L 38,48.0833L 26.125,56L 30.5979,41.7104L 17.4167,32.25 Z "/>
-                                            </Canvas>
                                             <!-- StarButton Template -->
                                             <ControlTemplate x:Key="StarToggleButton" TargetType="{x:Type ToggleButton}">
                                                 <Canvas
-                                                Width="76"
-                                                Height="76"
-                                                Clip="F1 M 0,0L 76,0L 76,76L 0,76L 0,0">
+                                                Width="40"
+                                                Height="40"
+                                                >
                                                     <Path
                                                     x:Name="ButtonPath"
-                                                    Width="41.166"
-                                                    Height="38"
-                                                    Canvas.Left="17.416"
+                                                    Width="40"
+                                                    Height="40"
+                                                    Canvas.Left="0"
                                                     Canvas.Top="0"
-                                                    Data="F1 M 17.416,32.25L 32.910,32.25L 38,18L 43.089,32.25L 58.583,32.25L 45.679,41.494L 51.458,56L 38,48.083L 26.125,56L 30.597,41.710L 17.416,32.25 Z "
+                                                    Data="M 127,37 L 104,105 L 34,105 L 91,150 L 69,218 L 127,176 L 187,218 L 164,150 L 223,105 L 151,105 L 127,37"
                                                     Fill="Transparent"
-                                                    Stroke="{StaticResource AccentBaseColorBrush}"
+                                                    Stroke="{StaticResource AccentColorBrush}"
                                                     StrokeThickness="2"
-                                                    Stretch="Fill"/>
+                                                    Stretch="Fill">
+                                                        <Path.LayoutTransform>
+                                                            <RotateTransform CenterY="0.5" CenterX="0.8"/>
+                                                        </Path.LayoutTransform>
+                                                    </Path>
+                                                    
                                                 </Canvas>
                                                 <!-- When checked, fill with Yellow -->
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsChecked" Value="true">
-                                                        <Setter TargetName="ButtonPath" Property="Fill" Value="{StaticResource AccentBaseColorBrush}"/>
+                                                        <Trigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard TargetName="ButtonPath" TargetProperty="(Path.Fill).(SolidColorBrush.Color)">
+                                                                    <ColorAnimation From="Transparent" 
+                                                                                    To="{StaticResource AccentColor}"
+                                                                                    Duration="0:0:0.7"
+                                                                    >
+                                                                        <ColorAnimation.EasingFunction>
+                                                                            <BounceEase EasingMode="EaseOut"/>
+                                                                        </ColorAnimation.EasingFunction>
+                                                                    </ColorAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.EnterActions>
+                                                        <Trigger.ExitActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard TargetName="ButtonPath" TargetProperty="(Path.Fill).(SolidColorBrush.Color)">
+                                                                    <ColorAnimation From="{StaticResource AccentColor}" 
+                                                                                    To="Transparent"
+                                                                                    Duration="0:0:0.4"
+                                                                    >
+                                                                        <ColorAnimation.EasingFunction>
+                                                                            <PowerEase EasingMode="EaseInOut"/>
+                                                                        </ColorAnimation.EasingFunction>
+                                                                    </ColorAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
                                                     </Trigger>
+
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
 

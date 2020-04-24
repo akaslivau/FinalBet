@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using FinalBet.Database;
@@ -528,10 +529,15 @@ namespace FinalBet.ViewModel
                 return new RelayCommand((o => Process.Start(Settings.Default.zipFolder) ), x=> Directory.Exists(Settings.Default.zipFolder) );
             }
         }
+        public ICommand ShowFileDetailsCommand { get; private set; }
+
 
         public ICommand MarkSelectedUrlsCommand { get; private set; }
         public ICommand UnmarkSelectedUrlsCommand { get; private set; }
         public ICommand MarkAutoCommand { get; private set; }
+        public ICommand CheckMarksCommand { get; private set; }
+
+
 
 
         public void Test(object a)
@@ -585,6 +591,48 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private void CheckMarks(object a)
+        {
+            var uniqueMarks = LeagueUrls.Items.Select(x => x.Source.mark).Distinct().Where(x => x.Length > 0).ToList();
+            if (!uniqueMarks.Any()) return;
+
+            bool hasErrors = false;
+            foreach (var uniqueMark in uniqueMarks)
+            {
+                var items = LeagueUrls.Items.
+                    Where(x => x.Source.mark == uniqueMark).
+                    OrderBy(x => x.PossibleYear)
+                    .ToList();
+
+                for (int i = 1; i < items.Count; i++)
+                {
+                    if ((items[i].PossibleYear - items[i - 1].PossibleYear) != 1)
+                    {
+                        var item = items[i];
+                        Log.Warning("Problem with {@item}", item);
+                        Global.Current.Warnings++;
+                        hasErrors = true;
+                    }
+                }
+            }
+
+            StatusText = Selected.name + (hasErrors ?  ": Были обнаружены ошибки, смотри лог" : ": Ошибок нет");
+        }
+
+        private void ShowFileDetails(object a)
+        {
+            using (var cntx = new SqlDataContext(Connection.Con))
+            {
+                var matches = cntx.GetTable<match>();
+                foreach (var item in LeagueUrls.Items)
+                {
+                    var zipPath = BetExplorerParser.GetZipPath(Selected, item.Source);
+                    item.File = File.Exists(zipPath) ? Path.GetFileName(zipPath) : "-";
+                    item.MatchesCount = matches.Count(x => x.parentId == item.Source.id);
+                }
+            }
+        }
+
         #endregion
 
         public DatabaseViewModel()
@@ -629,6 +677,9 @@ namespace FinalBet.ViewModel
                                     a => LeagueUrls.Selected != null && SelectedLeagueMark != null);
             UnmarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, ""), a=>LeagueUrls.Selected != null);
             MarkAutoCommand = new RelayCommand(MarkAuto, a=> LeagueUrls.Items.Any() && SelectedLeagueMark != null);
+            CheckMarksCommand = new RelayCommand(CheckMarks);
+
+            ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a=> LeagueUrls.Items.Any());
         }
     }
 }

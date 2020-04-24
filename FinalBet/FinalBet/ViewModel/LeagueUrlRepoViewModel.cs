@@ -97,18 +97,11 @@ namespace FinalBet.ViewModel
             using (var cntx = new SqlDataContext(Connection.Con))
             {
                 var table = cntx.GetTable<leagueUrl>();
-                var matches = cntx.GetTable<match>();
-
-
                 var items = table.Where(x => x.parentId == _parent.id).ToList();
 
                 foreach (var leagueUrl in items)
                 {
                     var toAdd = new LeagueUrlViewModel(leagueUrl);
-                    var zipPath = BetExplorerParser.GetZipPath(_parent, leagueUrl);
-                    toAdd.File = File.Exists(zipPath) ? Path.GetFileName(zipPath): "-";
-                    toAdd.MatchesCount = matches.Count(x => x.parentId == leagueUrl.id);    
-
                     Items.Add(toAdd);
                 }
 
