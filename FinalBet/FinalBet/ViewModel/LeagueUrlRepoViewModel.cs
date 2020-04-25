@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using FinalBet.Database;
@@ -93,7 +94,11 @@ namespace FinalBet.ViewModel
             _parent = parent;
             if (parent == null) return;
 
-            Items.Clear();
+            Application.Current.Dispatcher.Invoke((Action)delegate // <--- HERE
+            {
+                Items.Clear();
+            });
+            
             using (var cntx = new SqlDataContext(Connection.Con))
             {
                 var table = cntx.GetTable<leagueUrl>();
@@ -102,12 +107,15 @@ namespace FinalBet.ViewModel
                 foreach (var leagueUrl in items)
                 {
                     var toAdd = new LeagueUrlViewModel(leagueUrl);
-                    Items.Add(toAdd);
+                    Application.Current.Dispatcher.Invoke((Action) delegate { Items.Add(toAdd); });
                 }
 
-                if (Items.Any()) Selected = Items[0];
+                if (Items.Any()) Application.Current.Dispatcher.Invoke(delegate { Selected = Items[0]; });
             }
+        }
 
+        public LeagueUrlRepoViewModel()
+        {
             View = new ListCollectionView(Items);
 
             SearchCommand = new RelayCommand(a =>
@@ -123,5 +131,6 @@ namespace FinalBet.ViewModel
                 View.Refresh();
             });
         }
+        
     }
 }

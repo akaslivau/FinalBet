@@ -15,50 +15,7 @@
                       Title="MainWindow" Height="450" Width="1200">
     <Controls:MetroWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <Storyboard x:Key="TestStoryBoard">
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)" Storyboard.TargetName="button">
-                <EasingDoubleKeyFrame KeyTime="0" Value="0.414">
-                    <EasingDoubleKeyFrame.EasingFunction>
-                        <ElasticEase EasingMode="EaseIn" Oscillations="10" Springiness="1"/>
-                    </EasingDoubleKeyFrame.EasingFunction>
-                </EasingDoubleKeyFrame>
-                <EasingDoubleKeyFrame KeyTime="0:0:2" Value="1.763"/>
-            </DoubleAnimationUsingKeyFrames>
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)" Storyboard.TargetName="button">
-                <EasingDoubleKeyFrame KeyTime="0" Value="0.329">
-                    <EasingDoubleKeyFrame.EasingFunction>
-                        <ElasticEase EasingMode="EaseIn" Oscillations="10" Springiness="1"/>
-                    </EasingDoubleKeyFrame.EasingFunction>
-                </EasingDoubleKeyFrame>
-                <EasingDoubleKeyFrame KeyTime="0:0:2" Value="0.884"/>
-            </DoubleAnimationUsingKeyFrames>
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.X)" Storyboard.TargetName="button">
-                <EasingDoubleKeyFrame KeyTime="0" Value="-29.167">
-                    <EasingDoubleKeyFrame.EasingFunction>
-                        <ElasticEase EasingMode="EaseIn" Oscillations="10" Springiness="1"/>
-                    </EasingDoubleKeyFrame.EasingFunction>
-                </EasingDoubleKeyFrame>
-                <EasingDoubleKeyFrame KeyTime="0:0:2" Value="38.166"/>
-            </DoubleAnimationUsingKeyFrames>
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[3].(TranslateTransform.Y)" Storyboard.TargetName="button">
-                <EasingDoubleKeyFrame KeyTime="0" Value="-13.667">
-                    <EasingDoubleKeyFrame.EasingFunction>
-                        <ElasticEase EasingMode="EaseIn" Oscillations="10" Springiness="1"/>
-                    </EasingDoubleKeyFrame.EasingFunction>
-                </EasingDoubleKeyFrame>
-                <EasingDoubleKeyFrame KeyTime="0:0:2" Value="-2"/>
-            </DoubleAnimationUsingKeyFrames>
-            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(UIElement.Opacity)" Storyboard.TargetName="button">
-                <EasingDoubleKeyFrame KeyTime="0" Value="0.2"/>
-                <EasingDoubleKeyFrame KeyTime="0:0:2" Value="1"/>
-            </DoubleAnimationUsingKeyFrames>
-        </Storyboard>
     </Controls:MetroWindow.Resources>
-    <Controls:MetroWindow.Triggers>
-        <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-            <BeginStoryboard Storyboard="{StaticResource TestStoryBoard}"/>
-        </EventTrigger>
-    </Controls:MetroWindow.Triggers>
     <Controls:MetroWindow.InputBindings>
         <KeyBinding Command="{Binding Path=Database.MarkSelectedUrlsCommand}"
                     CommandParameter="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems}"
@@ -82,18 +39,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button x:Name="button" Height="40" Width="100" Content="Test" Command="{Binding TestCommand}" RenderTransformOrigin="0.5,0.5">
-                <Button.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="0.484"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </Button.RenderTransform>
-            </Button>
-        </StackPanel>
         <TabControl Grid.Row="1">
             <TabControl.Resources>
                 <Style TargetType="{x:Type TextBlock}">
@@ -155,6 +100,7 @@
 
                             </MenuItem>
                             <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
+                            <MenuItem Header="Стресс тест БД" Command="{Binding StressTestCommand}"/>
                         </Menu>
                     </DockPanel>
                     <DockPanel Grid.Row="1" HorizontalAlignment="Left">
@@ -186,11 +132,16 @@
                         </Grid.ColumnDefinitions>
                         <GroupBox Grid.Column="0" Header="Страны" 
                                   Margin="{StaticResource ControlMargin}">
-                            <ListBox Grid.Column="0"
-                                     ItemsSource="{Binding Table}"
+                            <ListBox ItemsSource="{Binding Table}"
                                      SelectedItem="{Binding Selected}"
                                      DisplayMemberPath="name"
-                            />
+                            >
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="SelectionChanged">
+                                        <i:InvokeCommandAction Command="{Binding LoadUrlsRepoCommand}"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                            </ListBox>
                         </GroupBox>
                         <Grid Grid.Column="1">
                             <Grid.RowDefinitions>

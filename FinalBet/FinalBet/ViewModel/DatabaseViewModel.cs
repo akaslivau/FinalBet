@@ -77,13 +77,8 @@ namespace FinalBet.ViewModel
             {
                 if (_selected == value) return;
                 _selected = value;
-                FlagPath = "/Images/Flags/" + _selected.svgName;
-                LeagueUrls.Update(value);
-                IsFavorite = _selected.isFavorite;
-
                 OnPropertyChanged("Selected");
-                OnPropertyChanged("LeagueUrls");
-                OnPropertyChanged("IsFavorite");
+                //LeagueUrls.Update(Selected);
             }
         }
 
@@ -211,7 +206,7 @@ namespace FinalBet.ViewModel
         {
             get
             {
-                return new RelayCommand(x => 
+                return new RelayCommand(x =>
                     {
                         CancelAsync = true;
                         StatusText = "Операция прервана";
@@ -225,6 +220,24 @@ namespace FinalBet.ViewModel
         public IAsyncCommand LoadAllUrlsCommand { get; private set; }
         public IAsyncCommand LoadMatchesCommand { get; private set; }
         public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
+        public IAsyncCommand LoadUrlsRepoCommand { get; private set; }
+
+        public async Task LoadUrlsRepo()
+        {
+            await Task.Run(() =>
+            {
+                LeagueUrls.Update(Selected);
+
+                Application.Current.Dispatcher.Invoke(delegate
+                {
+                    FlagPath = "/Images/Flags/" + _selected.svgName;
+                    IsFavorite = _selected.isFavorite;
+                    OnPropertyChanged("LeagueUrls");
+                    OnPropertyChanged("IsFavorite");
+                });
+
+            });
+        }
 
         public async Task LoadUrls(league ctr)
         {
@@ -530,19 +543,55 @@ namespace FinalBet.ViewModel
             }
         }
         public ICommand ShowFileDetailsCommand { get; private set; }
-
-
+        
         public ICommand MarkSelectedUrlsCommand { get; private set; }
         public ICommand UnmarkSelectedUrlsCommand { get; private set; }
         public ICommand MarkAutoCommand { get; private set; }
         public ICommand CheckMarksCommand { get; private set; }
 
+        public IAsyncCommand StressTestCommand { get; private set; }
+
+        private async Task StressTest()
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var a = 3000;
+                var b = 3000;
+                var table = cntx.GetTable<odd>();
+
+                var rand = new Random();
+                var addRange = new List<odd>();
+
+                await Task.Run((() =>
+                {
+                    for (int i = 0; i < a; i++)
+                    {
+                        addRange.Clear();
+                        for (int j = 0; j < b; j++)
+                        {
+                            var rnd = rand.NextDouble();
+                            var toAdd = new odd
+                            {
+                                parentId = i,
+                                value = rnd + 2,
+                                oddType = rnd < 0.3 ? "1" : (rnd > 0.7 ? "2" : "X"),
+                                other = ""
+                            };
+                            addRange.Add(toAdd);
+                        }
+                        Application.Current.Dispatcher.Invoke(delegate { StatusText = i*1000 + " из " + a * b; });
+                        table.InsertAllOnSubmit(addRange);
+                        cntx.SubmitChanges();
+                    }
+                }));
+            }
+        }
 
 
 
         public void Test(object a)
         {
-            CancelAsync = true;
+            MessageBox.Show("!");
         }
         
         private void MarkSelectedUrls(object a, string mark)
@@ -643,6 +692,7 @@ namespace FinalBet.ViewModel
             // TODO: iMatch??? id, score, losted
             // TODO: GetOuput(iMatch, code)
             // TODO: Code => UserControl + Class
+            // TODO: Database stress test, заполни сам бд данными и посмотри чо будет
 
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -664,14 +714,16 @@ namespace FinalBet.ViewModel
                 Selected = (league)Table.GetItemAt(0);
             }
 
-            TestCommand = new RelayCommand(Test, a => Selected != null);
+            TestCommand = new RelayCommand(Test);
             //AsyncCommands
             LoadUrlsCommand = new AsyncCommand(()=> LoadUrls(Selected), () => Selected != null && !IsBusy);
             LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any() && !IsBusy);
             LoadMatchesCommand = new AsyncCommand(()=>LoadMatches(Selected, LeagueUrls.Selected.Source),
                 () => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null && !IsBusy);
             LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches);
-            
+
+            LoadUrlsRepoCommand = new AsyncCommand(LoadUrlsRepo);
+
             //Commands
             MarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, SelectedLeagueMark.name), 
                                     a => LeagueUrls.Selected != null && SelectedLeagueMark != null);
@@ -680,6 +732,10 @@ namespace FinalBet.ViewModel
             CheckMarksCommand = new RelayCommand(CheckMarks);
 
             ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a=> LeagueUrls.Items.Any());
+
+            StressTestCommand = new AsyncCommand(StressTest);
         }
+
+
     }
 }
