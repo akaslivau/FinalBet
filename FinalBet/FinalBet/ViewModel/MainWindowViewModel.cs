@@ -10,6 +10,7 @@ namespace FinalBet.ViewModel
     {
         #region Variables
         public DatabaseViewModel Database { get; set; }
+        public RedGreenViewModel RedGreenTable { get; set; }
         #endregion
 
         #region Commands
@@ -58,7 +59,10 @@ namespace FinalBet.ViewModel
 
         public MainWindowViewModel()
         {
+            base.DisplayName = "...Ту-ду-ду-ду...";
+
             Database = new DatabaseViewModel();
+            RedGreenTable = new RedGreenViewModel();
 
             //Commands
             OpenLogCommand = new RelayCommand(OpenLog);

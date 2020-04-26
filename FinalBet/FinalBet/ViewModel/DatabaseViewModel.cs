@@ -694,6 +694,7 @@ namespace FinalBet.ViewModel
             // TODO: Code => UserControl + Class
             // TODO: Database stress test, заполни сам бд данными и посмотри чо будет
 
+            base.DisplayName = "База данных";
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {

@@ -10,10 +10,18 @@
                       xmlns:local="clr-namespace:FinalBet"
                       xmlns:model="clr-namespace:FinalBet.Model"
                       xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                      xmlns:viewModel="clr-namespace:FinalBet.ViewModel"
+                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                       mc:Ignorable="d"
                       WindowState="Maximized"
-                      Title="MainWindow" Height="450" Width="1200">
+                      Title="{Binding DisplayName}" >
     <Controls:MetroWindow.Resources>
+        <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+        </Style>
+        <Style TargetType="{x:Type TextBox}">
+            <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+        </Style>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Controls:MetroWindow.Resources>
     <Controls:MetroWindow.InputBindings>
@@ -40,15 +48,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TabControl Grid.Row="1">
-            <TabControl.Resources>
-                <Style TargetType="{x:Type TextBlock}">
-                    <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
-                </Style>
-                <Style TargetType="{x:Type TextBox}">
-                    <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
-                </Style>
-            </TabControl.Resources>
-            <TabItem Header="База данных"
+            <TabItem Header="{Binding DisplayName}"
                          DataContext="{Binding Database}"
                          >
                 <Grid>
@@ -100,7 +100,6 @@
 
                             </MenuItem>
                             <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
-                            <MenuItem Header="Стресс тест БД" Command="{Binding StressTestCommand}"/>
                         </Menu>
                     </DockPanel>
                     <DockPanel Grid.Row="1" HorizontalAlignment="Left">
@@ -363,6 +362,45 @@
                             </DataGrid>
                         </Grid>
                     </Grid>
+                </Grid>
+            </TabItem>
+            <TabItem Header="{Binding DisplayName}"
+                     DataContext="{Binding RedGreenTable}"
+            >
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0">
+                        <Menu>
+                            <Menu.Resources>
+                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                    <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+                                </Style>
+                            </Menu.Resources>
+                            <MenuItem Header="Рисовать" Command="{Binding DrawCommand}"
+                                      CommandParameter="{Binding ElementName=RedGreenCanvas}"
+                                      />
+                        </Menu>
+                    </DockPanel>
+                        <viewModel:DrawingCanvas
+                            Grid.Row="1"
+                            ClipToBounds="True" x:Name="RedGreenCanvas">
+                            <i:Interaction.Triggers>
+                                <i:EventTrigger EventName="MouseLeftButtonDown">
+                                    <ei:CallMethodAction
+                                        TargetObject="{Binding}"
+                                        MethodName="OnTableMouseClick"/>
+                            </i:EventTrigger>
+                            </i:Interaction.Triggers>
+                            <viewModel:DrawingCanvas.Background>
+                            <LinearGradientBrush Opacity="0.5">
+                                <GradientStop Color="{StaticResource AccentColor4}" Offset="0.2"/>
+                                <GradientStop Color="{StaticResource AccentColor}" Offset="0.8"/>
+                            </LinearGradientBrush>
+                        </viewModel:DrawingCanvas.Background>
+                    </viewModel:DrawingCanvas>
                 </Grid>
             </TabItem>
         </TabControl>
