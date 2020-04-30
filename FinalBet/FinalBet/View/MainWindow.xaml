@@ -23,6 +23,63 @@
             <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
         </Style>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <ControlTemplate x:Key="StarToggleButton" TargetType="{x:Type ToggleButton}">
+            <Canvas
+                                                Width="40"
+                                                Height="40"
+                                                >
+                <Path
+                                                    x:Name="ButtonPath"
+                                                    Width="40"
+                                                    Height="40"
+                                                    Canvas.Left="0"
+                                                    Canvas.Top="0"
+                                                    Data="M 127,37 L 104,105 L 34,105 L 91,150 L 69,218 L 127,176 L 187,218 L 164,150 L 223,105 L 151,105 L 127,37"
+                                                    Fill="Transparent"
+                                                    Stroke="{StaticResource AccentColorBrush}"
+                                                    StrokeThickness="2"
+                                                    Stretch="Fill">
+                    <Path.LayoutTransform>
+                        <RotateTransform CenterY="0.5" CenterX="0.8"/>
+                    </Path.LayoutTransform>
+                </Path>
+
+            </Canvas>
+            <!-- When checked, fill with Yellow -->
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="true">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard TargetName="ButtonPath" TargetProperty="(Path.Fill).(SolidColorBrush.Color)">
+                                <ColorAnimation From="Transparent" 
+                                                                                    To="{StaticResource AccentColor}"
+                                                                                    Duration="0:0:0.7"
+                                                                    >
+                                    <ColorAnimation.EasingFunction>
+                                        <BounceEase EasingMode="EaseOut"/>
+                                    </ColorAnimation.EasingFunction>
+                                </ColorAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard TargetName="ButtonPath" TargetProperty="(Path.Fill).(SolidColorBrush.Color)">
+                                <ColorAnimation From="{StaticResource AccentColor}" 
+                                                                                    To="Transparent"
+                                                                                    Duration="0:0:0.4"
+                                                                    >
+                                    <ColorAnimation.EasingFunction>
+                                        <PowerEase EasingMode="EaseInOut"/>
+                                    </ColorAnimation.EasingFunction>
+                                </ColorAnimation>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
     </Controls:MetroWindow.Resources>
     <Controls:MetroWindow.InputBindings>
         <KeyBinding Command="{Binding Path=Database.MarkSelectedUrlsCommand}"
@@ -200,67 +257,6 @@
 
                                     </StackPanel>
                                     <Grid Grid.Column="2">
-                                        <Grid.Resources>
-                                            <!-- StarButton Template -->
-                                            <ControlTemplate x:Key="StarToggleButton" TargetType="{x:Type ToggleButton}">
-                                                <Canvas
-                                                Width="40"
-                                                Height="40"
-                                                >
-                                                    <Path
-                                                    x:Name="ButtonPath"
-                                                    Width="40"
-                                                    Height="40"
-                                                    Canvas.Left="0"
-                                                    Canvas.Top="0"
-                                                    Data="M 127,37 L 104,105 L 34,105 L 91,150 L 69,218 L 127,176 L 187,218 L 164,150 L 223,105 L 151,105 L 127,37"
-                                                    Fill="Transparent"
-                                                    Stroke="{StaticResource AccentColorBrush}"
-                                                    StrokeThickness="2"
-                                                    Stretch="Fill">
-                                                        <Path.LayoutTransform>
-                                                            <RotateTransform CenterY="0.5" CenterX="0.8"/>
-                                                        </Path.LayoutTransform>
-                                                    </Path>
-
-                                                </Canvas>
-                                                <!-- When checked, fill with Yellow -->
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsChecked" Value="true">
-                                                        <Trigger.EnterActions>
-                                                            <BeginStoryboard>
-                                                                <Storyboard TargetName="ButtonPath" TargetProperty="(Path.Fill).(SolidColorBrush.Color)">
-                                                                    <ColorAnimation From="Transparent" 
-                                                                                    To="{StaticResource AccentColor}"
-                                                                                    Duration="0:0:0.7"
-                                                                    >
-                                                                        <ColorAnimation.EasingFunction>
-                                                                            <BounceEase EasingMode="EaseOut"/>
-                                                                        </ColorAnimation.EasingFunction>
-                                                                    </ColorAnimation>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </Trigger.EnterActions>
-                                                        <Trigger.ExitActions>
-                                                            <BeginStoryboard>
-                                                                <Storyboard TargetName="ButtonPath" TargetProperty="(Path.Fill).(SolidColorBrush.Color)">
-                                                                    <ColorAnimation From="{StaticResource AccentColor}" 
-                                                                                    To="Transparent"
-                                                                                    Duration="0:0:0.4"
-                                                                    >
-                                                                        <ColorAnimation.EasingFunction>
-                                                                            <PowerEase EasingMode="EaseInOut"/>
-                                                                        </ColorAnimation.EasingFunction>
-                                                                    </ColorAnimation>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </Trigger.ExitActions>
-                                                    </Trigger>
-
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-
-                                        </Grid.Resources>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -370,9 +366,54 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <DockPanel Grid.Row="0">
+                    <DockPanel Grid.Row="0" HorizontalAlignment="Left">
+                        <ToggleButton DockPanel.Dock="Left" 
+                                      HorizontalAlignment="Right"
+                                      IsChecked="{Binding ShowOnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      Margin="{StaticResource ControlMargin}"
+                                      Style="{DynamicResource MahApps.Metro.Styles.MetroCircleToggleButtonStyle}"
+                                      Template="{DynamicResource StarToggleButton}"
+                        />
+                        <ComboBox Width="300" Height="25"
+                                  Margin="{StaticResource ControlMargin}"
+                                  ItemsSource="{Binding Leagues}"
+                                  SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="name"
+                                  />
+                        <ComboBox Width="200" Height="25"
+                                  Margin="{StaticResource ControlMargin}"
+                                  ItemsSource="{Binding Tournaments}"
+                                  SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        />
+                        <Grid DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                                      Width="150"
+                                      Height="25"
+                                      VerticalAlignment="Center"
+                                      Margin="{StaticResource ControlMargin}"
+                                      ItemsSource="{Binding LeagueYears}"
+                                      SelectedItem="{Binding SelectedYear}"
+                                      />
+                        </Grid>
+                        <ComboBox Width="200" Height="25"
+                                  Margin="{StaticResource ControlMargin}"
+                                  ItemsSource="{Binding SubSeasons}"
+                                  SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  Visibility="{Binding OnlyMainSeason, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        />
+                    </DockPanel>
+                    <DockPanel Grid.Row="1">
                         <Menu>
                             <Menu.Resources>
                                 <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
@@ -385,7 +426,7 @@
                         </Menu>
                     </DockPanel>
                         <viewModel:DrawingCanvas
-                            Grid.Row="1"
+                            Grid.Row="2"
                             ClipToBounds="True" x:Name="RedGreenCanvas">
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="MouseLeftButtonDown">

@@ -71,7 +71,7 @@ namespace FinalBet.ViewModel
                 );
 
                 var newVsl = new DrawingVisual();
-                DrawSquare(newVsl, topLeftCorner, SelectedCellBrush, "");
+                DrawSelectedSquare(newVsl, topLeftCorner);
                 AddVisual(newVsl);
 
                 if (selectedVisual != null && selectedVisual != visual)
@@ -90,7 +90,7 @@ namespace FinalBet.ViewModel
             }
         }
 
-        public void DrawSquare(DrawingVisual visual, Point topLeftCorner, Brush brush, string txt)
+        private void DrawSquare(DrawingVisual visual, Point topLeftCorner, Brush brush, Pen pen, string txt)
         {
             using (var dc = visual.RenderOpen())
             {
@@ -104,9 +104,19 @@ namespace FinalBet.ViewModel
                 var txtPoint = new Point(topLeftCorner.X + 0.5*(CellSize.Width - inText.Width), 
                     topLeftCorner.Y + 0.5 * (CellSize.Height - inText.Height));
 
-                dc.DrawRectangle(brush, CellPen, new Rect(topLeftCorner, CellSize));
+                dc.DrawRectangle(brush, pen, new Rect(topLeftCorner, CellSize));
                 dc.DrawText(inText, txtPoint);
             }
+        }
+
+        public void DrawCellSquare(DrawingVisual visual, Point topLeftCorner, string txt)
+        {
+            DrawSquare(visual, topLeftCorner, RedBrush, CellPen, txt);
+        }
+
+        public void DrawSelectedSquare(DrawingVisual visual, Point topLeftCorner)
+        {
+            DrawSquare(visual, topLeftCorner, Brushes.Transparent, SelectedPen, "");
         }
 
         #endregion
@@ -128,6 +138,8 @@ namespace FinalBet.ViewModel
         public Brush RedBrush => Brushes.IndianRed;
 
         private Pen CellPen = new Pen(Brushes.BlueViolet, 2);
+        private Pen SelectedPen = new Pen(Brushes.Yellow, 4);
+
         private Size CellSize = new Size(30, 30);
 
         public double CellWidth => CellSize.Width;
