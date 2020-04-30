@@ -410,6 +410,7 @@
                                   Margin="{StaticResource ControlMargin}"
                                   ItemsSource="{Binding SubSeasons}"
                                   SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="name"
                                   Visibility="{Binding OnlyMainSeason, Converter={StaticResource BooleanToVisibilityConverter}}"
                         />
                     </DockPanel>
@@ -427,7 +428,14 @@
                     </DockPanel>
                         <viewModel:DrawingCanvas
                             Grid.Row="2"
-                            ClipToBounds="True" x:Name="RedGreenCanvas">
+                            ClipToBounds="True"
+                            x:Name="RedGreenCanvas"
+                            CellBrush="Green"
+                            CellForegroundBrush="White"
+                            TeamBrush="Black"
+                            FontSize="12"
+                            CellSize="40"
+                        >
                             <i:Interaction.Triggers>
                                 <i:EventTrigger EventName="MouseLeftButtonDown">
                                     <ei:CallMethodAction

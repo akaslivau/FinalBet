@@ -114,8 +114,8 @@ namespace FinalBet.ViewModel
         }
 
 
-        private ObservableCollection<string> _subSeasons;
-        public ObservableCollection<string> SubSeasons
+        private ObservableCollection<matchTag> _subSeasons;
+        public ObservableCollection<matchTag> SubSeasons
         {
             get => _subSeasons;
             set
@@ -126,8 +126,8 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private string _selectedSubSeason;
-        public string SelectedSubSeason
+        private matchTag _selectedSubSeason;
+        public matchTag SelectedSubSeason
         {
             get => _selectedSubSeason;
             set
@@ -232,16 +232,17 @@ namespace FinalBet.ViewModel
                     Single(x => x.year == year && x.mark == SelectedTournament)
                     .id;
 
-                var tags = cntx.GetTable<matchTag>().ToDictionary(x => x.id, x => x.name);
+                var tags = cntx.GetTable<matchTag>().ToList();
 
                 var items = cntx.GetTable<match>().
                     Where(x => x.parentId == parentId).
                     Select(x => x.tagId).Distinct()
                     .ToList();
+                    
 
-                foreach (var item in items)
+                foreach (var item in tags.Where(item => items.Contains(item.id)))
                 {
-                    SubSeasons.Add(tags[item]);
+                    SubSeasons.Add(item);
                 }
 
                 if (SubSeasons.Any()) SelectedSubSeason = SubSeasons.First();
@@ -262,22 +263,53 @@ namespace FinalBet.ViewModel
 
         private void Draw(object prm)
         {
-            var canvas = (DrawingCanvas) prm;
+            var matchList = new List<match>();
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var parentId = cntx.GetTable<leagueUrl>()
+                    .Single(x => x.parentId == SelectedLeague.id && x.year == SelectedYear && x.mark == SelectedTournament).id;
 
+                matchList = cntx.GetTable<match>()
+                    .Where(x => x.parentId == parentId && x.tagId == SelectedSubSeason.id).ToList();
+            }
+
+            if(!matchList.Any()) return;
+
+            var teamNames = Soccer.GetTeamNames(matchList.Select(x => x.homeTeamId).Distinct());
+
+            
+            var canvas = (DrawingCanvas) prm;
             canvas.Clear();
 
             var shift = 4;
-            for (int i = 0; i < 50; i++)
+            int i = 0;
+            //int j = 0;
+            var teamCellWidth = DrawingCanvas.GetTeamCellSizeWidth(teamNames.Select(x => x.Value).ToList());
+            int z = 3;
+            foreach (var teamName in teamNames)
             {
-                for (int j = 0; j < 30; j++)
+                var teamId = teamName.Key;
+                var teamVisual = new DrawingVisual();
+                canvas.DrawTeamCell(teamVisual,
+                    new Point(shift, shift + i*(canvas.CellSize + shift)), 
+                    teamName.Value,
+                    new Size(teamCellWidth, canvas.CellSize));
+
+                canvas.AddVisual(teamVisual);
+
+                var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).ToList();
+
+                for (int j = 0; j < line.Count; j++)
                 {
-                    var visual = new DrawingVisual();
+                    var cellVisual = new DrawingVisual();
                     canvas.DrawCellSquare(
-                        visual, 
-                        new Point(5+ i * (canvas.CellWidth + shift) , 5+ j * (canvas.CellHeight + shift)), 
-                        j.ToString());
-                    canvas.AddVisual(visual);
+                        cellVisual,
+                        new Point(teamCellWidth + canvas.CellSize/4 + j * (canvas.CellSize + shift), shift + i * (canvas.CellSize + shift)),
+                        line[j].id.ToString());
+                    canvas.AddVisual(cellVisual);
                 }
+
+                i++;
             }
         }
 
@@ -290,13 +322,13 @@ namespace FinalBet.ViewModel
             Leagues = new ObservableCollection<league>();
             LeagueYears = new ObservableCollection<string>();
             Tournaments = new ObservableCollection<string>();
-            SubSeasons = new ObservableCollection<string>();
+            SubSeasons = new ObservableCollection<matchTag>();
 
             _showOnlyFavorites = Settings.Default.onlyFavorites;
 
             InitializeLeagues(_showOnlyFavorites);
 
-            DrawCommand = new RelayCommand(Draw);
+            DrawCommand = new RelayCommand(Draw, a => SelectedSubSeason != null);
         }
     }
 }
