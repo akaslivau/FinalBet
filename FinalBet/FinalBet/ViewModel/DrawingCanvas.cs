@@ -84,6 +84,8 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region Variables
+        public double TeamCellWidth { get; set; }
+
         private readonly ObservableCollection<Visual> _visuals = new ObservableCollection<Visual>();
 
         private DrawingVisual _selectedVisual;
@@ -142,7 +144,7 @@ namespace FinalBet.ViewModel
 
         public void TrySelectCell(MouseEventArgs eventArgs)
         {
-            if (eventArgs.GetPosition(this).X < 100) return;
+            if (eventArgs.GetPosition(this).X < TeamCellWidth + CellSize/4) return;
             
             var visual = GetVisual(eventArgs.GetPosition(this));
             if (visual != null)
@@ -156,7 +158,7 @@ namespace FinalBet.ViewModel
                 DrawSelectedSquare(newVsl, topLeftCorner);
                 AddVisual(newVsl);
 
-                if (_selectedVisual != null && _selectedVisual != visual)
+                if (_selectedVisual != null)
                 {
                     DeleteVisual(_selectedVisual);
                     _selectedVisual = null;

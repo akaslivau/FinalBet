@@ -285,7 +285,8 @@ namespace FinalBet.ViewModel
             int i = 0;
             //int j = 0;
             var teamCellWidth = DrawingCanvas.GetTeamCellSizeWidth(teamNames.Select(x => x.Value).ToList());
-            int z = 3;
+            canvas.TeamCellWidth = teamCellWidth;
+
             foreach (var teamName in teamNames)
             {
                 var teamId = teamName.Key;
