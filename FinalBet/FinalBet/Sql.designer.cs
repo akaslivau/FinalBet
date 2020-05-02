@@ -57,6 +57,9 @@ namespace FinalBet
     partial void Insertleague(league instance);
     partial void Updateleague(league instance);
     partial void Deleteleague(league instance);
+    partial void InsertsolveMode(solveMode instance);
+    partial void UpdatesolveMode(solveMode instance);
+    partial void DeletesolveMode(solveMode instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -158,6 +161,14 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<league>();
+			}
+		}
+		
+		public System.Data.Linq.Table<solveMode> solveModes
+		{
+			get
+			{
+				return this.GetTable<solveMode>();
 			}
 		}
 	}
@@ -1655,6 +1666,140 @@ namespace FinalBet
 					this._other = value;
 					this.SendPropertyChanged("other");
 					this.OnotherChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.solveModes")]
+	public partial class solveMode : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _number;
+		
+		private string _name;
+		
+		private bool _hasParameter;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnnumberChanging(int value);
+    partial void OnnumberChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OnhasParameterChanging(bool value);
+    partial void OnhasParameterChanged();
+    #endregion
+		
+		public solveMode()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_number", DbType="Int NOT NULL")]
+		public int number
+		{
+			get
+			{
+				return this._number;
+			}
+			set
+			{
+				if ((this._number != value))
+				{
+					this.OnnumberChanging(value);
+					this.SendPropertyChanging();
+					this._number = value;
+					this.SendPropertyChanged("number");
+					this.OnnumberChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
+		public string name
+		{
+			get
+			{
+				return this._name;
+			}
+			set
+			{
+				if ((this._name != value))
+				{
+					this.OnnameChanging(value);
+					this.SendPropertyChanging();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_hasParameter", DbType="Bit NOT NULL")]
+		public bool hasParameter
+		{
+			get
+			{
+				return this._hasParameter;
+			}
+			set
+			{
+				if ((this._hasParameter != value))
+				{
+					this.OnhasParameterChanging(value);
+					this.SendPropertyChanging();
+					this._hasParameter = value;
+					this.SendPropertyChanged("hasParameter");
+					this.OnhasParameterChanged();
 				}
 			}
 		}

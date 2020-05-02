@@ -12,6 +12,7 @@
                       xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                       xmlns:viewModel="clr-namespace:FinalBet.ViewModel"
                       xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+                      xmlns:usercontrols="clr-namespace:FinalBet.Usercontrols"
                       mc:Ignorable="d"
                       WindowState="Maximized"
                       Title="{Binding DisplayName}" >
@@ -367,6 +368,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <DockPanel Grid.Row="0" HorizontalAlignment="Left">
@@ -426,8 +428,13 @@
                                       />
                         </Menu>
                     </DockPanel>
-                        <viewModel:DrawingCanvas
-                            Grid.Row="2"
+                    
+                    <usercontrols:CodeSelector Grid.Row="2"
+                                               SolveMode="{Binding SolveMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                               />
+
+                    <viewModel:DrawingCanvas
+                            Grid.Row="3"
                             ClipToBounds="True"
                             x:Name="RedGreenCanvas"
                             CellBrush="Green"

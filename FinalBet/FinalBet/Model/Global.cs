@@ -37,6 +37,20 @@ namespace FinalBet.Model
             }
         }
 
+        private static ObservableCollection<solveMode> _possibleModes = null;
+        public static ObservableCollection<solveMode> PossibleModes
+        {
+            get
+            {
+                if (_possibleModes != null) return _possibleModes;
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var table = cntx.GetTable<solveMode>().ToList();
+                    _possibleModes = new ObservableCollection<solveMode>(table);
+                }
+                return _possibleModes;
+            }
+        }
 
         #region DependencyProperties
 

@@ -8,7 +8,10 @@ namespace FinalBet.Model
 {
     public static class MatchSolver
     {
-
+        public static Output Solve(IMatch match)
+        {
+            return Output.Nan;
+        }
     }
 
     public interface IMatch
@@ -21,8 +24,12 @@ namespace FinalBet.Model
         
     }
 
-    public enum Outputs
+    public enum Output
     {
-        0 
+        Win = 1,
+        Lose = 0,
+        Deuce = 4,
+        Na = -1,
+        Nan = -2
     }
 }

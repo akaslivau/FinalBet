@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using FinalBet.Database;
 using FinalBet.Framework;
+using FinalBet.Model;
 using FinalBet.Properties;
 
 namespace FinalBet.ViewModel
@@ -263,7 +264,10 @@ namespace FinalBet.ViewModel
 
         private void Draw(object prm)
         {
-            var matchList = new List<match>();
+            MessageBox.Show(SolveMode.IsHome.HasValue ? SolveMode.IsHome.Value.ToString() : "no value");
+
+
+            /*var matchList = new List<match>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var parentId = cntx.GetTable<leagueUrl>()
@@ -311,10 +315,20 @@ namespace FinalBet.ViewModel
                 }
 
                 i++;
-            }
+            }*/
         }
 
-
+        private SolveMode _solveMode = new SolveMode();
+        public SolveMode SolveMode
+        {
+            get => _solveMode;
+            set
+            {
+                if (_solveMode == value) return;
+                _solveMode = value;
+                OnPropertyChanged("SolveMode");
+            }
+        }
 
 
         public RedGreenViewModel()
@@ -329,7 +343,9 @@ namespace FinalBet.ViewModel
 
             InitializeLeagues(_showOnlyFavorites);
 
-            DrawCommand = new RelayCommand(Draw, a => SelectedSubSeason != null);
+            DrawCommand = new RelayCommand(Draw
+                //, a => SelectedSubSeason != null
+                );
         }
     }
 }

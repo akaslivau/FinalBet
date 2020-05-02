@@ -16,4 +16,7 @@
         <Setter Property="FontWeight" Value="Medium"/>
     </Style>
 
+    <Style TargetType="{x:Type TextBlock}" x:Key="Textblock.H5" BasedOn="{StaticResource Textblock.base}">
+        <Setter Property="FontSize" Value="10"/>
+    </Style>
 </ResourceDictionary>

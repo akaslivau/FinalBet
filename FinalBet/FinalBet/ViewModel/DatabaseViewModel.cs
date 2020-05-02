@@ -691,8 +691,6 @@ namespace FinalBet.ViewModel
             // TODO: удалить other где точно не нужно
             // TODO: iMatch??? id, score, losted
             // TODO: GetOuput(iMatch, code)
-            // TODO: Code => UserControl + Class
-            // TODO: Database stress test, заполни сам бд данными и посмотри чо будет
 
             base.DisplayName = "База данных";
 
