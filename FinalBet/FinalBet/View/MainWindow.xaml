@@ -368,52 +368,64 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <DockPanel Grid.Row="0" HorizontalAlignment="Left">
-                        <ToggleButton DockPanel.Dock="Left" 
-                                      HorizontalAlignment="Right"
-                                      IsChecked="{Binding ShowOnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                      Margin="{StaticResource ControlMargin}"
-                                      Style="{DynamicResource MahApps.Metro.Styles.MetroCircleToggleButtonStyle}"
-                                      Template="{DynamicResource StarToggleButton}"
-                        />
-                        <ComboBox Width="300" Height="25"
-                                  Margin="{StaticResource ControlMargin}"
-                                  ItemsSource="{Binding Leagues}"
-                                  SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  DisplayMemberPath="name"
-                                  />
-                        <ComboBox Width="200" Height="25"
-                                  Margin="{StaticResource ControlMargin}"
-                                  ItemsSource="{Binding Tournaments}"
-                                  SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        />
-                        <Grid DockPanel.Dock="Left" VerticalAlignment="Center">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <ComboBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
-                                      Width="150"
-                                      Height="25"
-                                      VerticalAlignment="Center"
-                                      Margin="{StaticResource ControlMargin}"
-                                      ItemsSource="{Binding LeagueYears}"
-                                      SelectedItem="{Binding SelectedYear}"
-                                      />
-                        </Grid>
-                        <ComboBox Width="200" Height="25"
-                                  Margin="{StaticResource ControlMargin}"
-                                  ItemsSource="{Binding SubSeasons}"
-                                  SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  DisplayMemberPath="name"
-                                  Visibility="{Binding OnlyMainSeason, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    <DockPanel Grid.Row="0" HorizontalAlignment="Stretch">
+                        <GroupBox DockPanel.Dock="Left" Header="Выбор турнира" Margin="{StaticResource ControlMargin}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ToggleButton Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
+                                              HorizontalAlignment="Right"
+                                              IsChecked="{Binding ShowOnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Margin="{StaticResource ControlMargin}"
+                                              Style="{DynamicResource MahApps.Metro.Styles.MetroCircleToggleButtonStyle}"
+                                              Template="{DynamicResource StarToggleButton}"
+                                />
+
+                                <ComboBox Grid.Row="0" Grid.Column="1"
+                                          Width="200" Height="25"
+                                          Margin="{StaticResource ControlMargin}"
+                                          ItemsSource="{Binding Leagues}"
+                                          SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          DisplayMemberPath="name"
+                                />
+                                <ComboBox  Grid.Row="1" Grid.Column="1"
+                                           Width="200" Height="25"
+                                           Margin="{StaticResource ControlMargin}"
+                                           ItemsSource="{Binding Tournaments}"
+                                           SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                />
+
+                                <ComboBox Grid.Row="0" Grid.Column="2"
+                                          Width="200"
+                                          Height="25"
+                                          VerticalAlignment="Center"
+                                          Margin="{StaticResource ControlMargin}"
+                                          ItemsSource="{Binding LeagueYears}"
+                                          SelectedItem="{Binding SelectedYear}"
+                                />
+
+                                <ComboBox Grid.Row="1" Grid.Column="2"
+                                          Width="200" Height="25"
+                                          Margin="{StaticResource ControlMargin}"
+                                          ItemsSource="{Binding SubSeasons}"
+                                          SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          DisplayMemberPath="name"
+                                          Visibility="{Binding OnlyMainSeason, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                />
+                            </Grid>
+                        </GroupBox>
+
+                        <usercontrols:CodeSelector DockPanel.Dock="Right"
+                                                   SolveMode="{Binding SolveMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         />
                     </DockPanel>
                     <DockPanel Grid.Row="1">
@@ -429,12 +441,9 @@
                         </Menu>
                     </DockPanel>
                     
-                    <usercontrols:CodeSelector Grid.Row="2"
-                                               SolveMode="{Binding SolveMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                               />
 
                     <viewModel:DrawingCanvas
-                            Grid.Row="3"
+                            Grid.Row="2"
                             ClipToBounds="True"
                             x:Name="RedGreenCanvas"
                             CellBrush="Green"

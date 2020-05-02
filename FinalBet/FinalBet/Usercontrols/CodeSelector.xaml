@@ -8,7 +8,7 @@
              xmlns:model="clr-namespace:FinalBet.Model"
              Name="_this"
              mc:Ignorable="d" >
-    <GroupBox Header="Выбор режима для расчета">
+    <GroupBox Header="Выбор режима для расчета" Margin="{StaticResource ControlMargin}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
