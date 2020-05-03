@@ -370,8 +370,13 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <DockPanel Grid.Row="0" HorizontalAlignment="Stretch">
-                        <GroupBox DockPanel.Dock="Left" Header="Выбор турнира" Margin="{StaticResource ControlMargin}">
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <GroupBox Grid.Column="0" Header="Выбор турнира" Margin="{StaticResource ControlMargin}">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -424,10 +429,15 @@
                             </Grid>
                         </GroupBox>
 
-                        <usercontrols:CodeSelector DockPanel.Dock="Right"
+                        <usercontrols:CodeSelector Grid.Column="1"
                                                    SolveMode="{Binding SolveMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         />
-                    </DockPanel>
+
+                        <usercontrols:MatchDetailsUserControl Grid.Column="2"
+                                                              MatchId="{Binding SelectedMatchId, UpdateSourceTrigger=PropertyChanged}"
+                        />
+                    </Grid>
+
                     <DockPanel Grid.Row="1">
                         <Menu>
                             <Menu.Resources>
@@ -446,7 +456,6 @@
                             Grid.Row="2"
                             ClipToBounds="True"
                             x:Name="RedGreenCanvas"
-                            CellBrush="Green"
                             CellForegroundBrush="White"
                             TeamBrush="Black"
                             FontSize="12"

@@ -307,6 +307,7 @@ namespace FinalBet.Database
         private static List<BeMatch> GetMatches(HtmlDocument doc, string tag)
         {
             var result = new List<BeMatch>();
+            return result;
 
             //< table class="table-main h-mb15
             var tableNode = doc.DocumentNode.SelectSingleNode(".//table[contains(@class, 'table-main h-mb15')]");

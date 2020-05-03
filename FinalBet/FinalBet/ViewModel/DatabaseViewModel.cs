@@ -321,6 +321,9 @@ namespace FinalBet.ViewModel
             }
 
             var matches = await BetExplorerParser.GetMatches(country, url);
+
+            int z = 3;
+            return;
             
             //Базовая информативная проверка на некорректные записи
             var notCorrect = matches.Where(x => !x.IsCorrect).ToList();
@@ -689,8 +692,6 @@ namespace FinalBet.ViewModel
             // TODO: leagueUrl: ShowMatches 
             // TODO: loadMatches for allLeagues (marked or separate list)
             // TODO: удалить other где точно не нужно
-            // TODO: iMatch??? id, score, losted
-            // TODO: GetOuput(iMatch, code)
 
             base.DisplayName = "База данных";
 

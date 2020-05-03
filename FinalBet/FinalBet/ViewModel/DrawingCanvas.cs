@@ -18,11 +18,6 @@ namespace FinalBet.ViewModel
 
         static DrawingCanvas()
         {
-            CellBrushProperty = DependencyProperty.Register("CellBrushProperty", 
-                typeof(Brush), 
-                typeof(DrawingCanvas),
-                new PropertyMetadata(Brushes.White));
-
             CellForegroundBrushProperty = DependencyProperty.Register("CellForegroundBrushProperty", 
                 typeof(Brush), 
                 typeof(DrawingCanvas),
@@ -42,20 +37,11 @@ namespace FinalBet.ViewModel
                 new FrameworkPropertyMetadata(30D));
         }
 
-        public static DependencyProperty CellBrushProperty;
         public static DependencyProperty CellForegroundBrushProperty;
         public static readonly DependencyProperty TeamBrushProperty;
         
         public static DependencyProperty FontSizeProperty;
         public static DependencyProperty CellSizeProperty;
-
-
-
-        public Brush CellBrush
-        {
-            get => (Brush) GetValue(CellBrushProperty);
-            set => SetValue(CellBrushProperty, value);
-        }
 
         public Brush CellForegroundBrush
         {
@@ -84,11 +70,13 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region Variables
+        public int MatchId { get; private set; }
+
         public double TeamCellWidth { get; set; }
 
-        private readonly ObservableCollection<Visual> _visuals = new ObservableCollection<Visual>();
+        private readonly ObservableCollection<VisualWithTag> _visuals = new ObservableCollection<VisualWithTag>();
 
-        private DrawingVisual _selectedVisual;
+        private VisualWithTag _selectedVisual;
         #endregion
         
         #region Brushes, Pens and other shit
@@ -98,9 +86,9 @@ namespace FinalBet.ViewModel
             FontWeights.Bold,
             FontStretch.FromOpenTypeStretch(1));
 
-        private Pen CellPen = new Pen(Brushes.LightGray, 2);
-        private Pen SelectedPen = new Pen(Brushes.Yellow, 4);
-        private Pen TeamPen = new Pen(Brushes.LightGray, 2);
+        private Pen CellPen = new Pen(Brushes.White, 2);
+        private Pen SelectedPen = new Pen(Brushes.DarkOrchid, 3);
+        private Pen TeamPen = new Pen(Brushes.PeachPuff, 2);
         #endregion
 
         #region Methods
@@ -111,7 +99,7 @@ namespace FinalBet.ViewModel
             return _visuals[index];
         }
 
-        public void AddVisual(Visual visual)
+        public void AddVisual(VisualWithTag visual)
         {
             _visuals.Add(visual);
 
@@ -119,7 +107,7 @@ namespace FinalBet.ViewModel
             base.AddLogicalChild(visual);
         }
 
-        public void DeleteVisual(Visual visual)
+        public void DeleteVisual(VisualWithTag visual)
         {
             _visuals.Remove(visual);
 
@@ -135,13 +123,12 @@ namespace FinalBet.ViewModel
             }
         }
 
-        public DrawingVisual GetVisual(Point point)
+        public VisualWithTag GetVisual(Point point)
         {
             var hitResult = VisualTreeHelper.HitTest(this, point);
-            return hitResult.VisualHit as DrawingVisual;
+            return hitResult.VisualHit as VisualWithTag;
         }
-
-
+        
         public void TrySelectCell(MouseEventArgs eventArgs)
         {
             if (eventArgs.GetPosition(this).X < TeamCellWidth + CellSize/4) return;
@@ -154,7 +141,7 @@ namespace FinalBet.ViewModel
                     visual.ContentBounds.TopLeft.Y + CellPen.Thickness / 2
                 );
 
-                var newVsl = new DrawingVisual();
+                var newVsl = new VisualWithTag();
                 DrawSelectedSquare(newVsl, topLeftCorner);
                 AddVisual(newVsl);
 
@@ -165,6 +152,9 @@ namespace FinalBet.ViewModel
                 }
 
                 _selectedVisual = newVsl;
+
+                OnSelectedCellChanged();
+                MatchId = (int?) visual.Tag ?? -1;
             }
             else
             {
@@ -174,7 +164,7 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private void DrawSquare(DrawingVisual visual, Point topLeftCorner, Brush brush, Pen pen, string txt)
+        private void DrawSquare(VisualWithTag visual, Point topLeftCorner, Brush brush, Pen pen, string txt)
         {
             using (var dc = visual.RenderOpen())
             {
@@ -193,17 +183,17 @@ namespace FinalBet.ViewModel
             }
         }
 
-        public void DrawCellSquare(DrawingVisual visual, Point topLeftCorner, string txt)
+        public void DrawCellSquare(VisualWithTag visual, Point topLeftCorner, Brush brush, string txt)
         {
-            DrawSquare(visual, topLeftCorner, CellBrush, CellPen, txt);
+            DrawSquare(visual, topLeftCorner, brush, CellPen, txt);
         }
 
-        public void DrawSelectedSquare(DrawingVisual visual, Point topLeftCorner)
+        public void DrawSelectedSquare(VisualWithTag visual, Point topLeftCorner)
         {
             DrawSquare(visual, topLeftCorner, Brushes.Transparent, SelectedPen, "");
         }
 
-        public void DrawTeamCell(DrawingVisual visual, Point topLeftCorner, string txt, Size cellSize)
+        public void DrawTeamCell(VisualWithTag visual, Point topLeftCorner, string txt, Size cellSize)
         {
             using (var dc = visual.RenderOpen())
             {
@@ -224,6 +214,15 @@ namespace FinalBet.ViewModel
 
         #endregion
 
+        #region Events
+        public event EventHandler SelectedCellChangedEvent;
+
+        public void OnSelectedCellChanged()
+        {
+            SelectedCellChangedEvent?.Invoke(this, EventArgs.Empty);
+        }
+        #endregion
+
         #region Static
         public static double GetTeamCellSizeWidth(IEnumerable<string> teamNames)
         {
@@ -239,7 +238,10 @@ namespace FinalBet.ViewModel
         }
         #endregion
         
-
     }
 
+    public class VisualWithTag : DrawingVisual
+    {
+        public object Tag { get; set; }
+    }
 }

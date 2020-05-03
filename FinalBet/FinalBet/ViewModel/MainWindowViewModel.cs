@@ -29,6 +29,11 @@ namespace FinalBet.ViewModel
             {
                 Process.Start("notepad.exe", fileNames.First());
             }
+            else
+            {
+                fileNames = fileNames.OrderBy(File.GetCreationTime).ToList();
+                Process.Start("notepad.exe", fileNames.Last());
+            }
         }
 
         #endregion

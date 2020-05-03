@@ -80,6 +80,10 @@ namespace FinalBet.ViewModel
         private bool Filter(object obj)
         {
             var item = (LeagueUrlViewModel) obj;
+            if (_searchText == "#mark")
+            {
+                return item.Source.mark.Length > 0;
+            }
             return item.Source.name.IndexOf(_searchText, StringComparison.OrdinalIgnoreCase) > -1;
         }
 

@@ -132,6 +132,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Usercontrols\MatchDetailsUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -159,6 +163,9 @@
     </Compile>
     <Compile Include="Usercontrols\CodeSelector.xaml.cs">
       <DependentUpon>CodeSelector.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Usercontrols\MatchDetailsUserControl.xaml.cs">
+      <DependentUpon>MatchDetailsUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModel\DatabaseViewModel.cs" />
     <Compile Include="ViewModel\DrawingCanvas.cs" />

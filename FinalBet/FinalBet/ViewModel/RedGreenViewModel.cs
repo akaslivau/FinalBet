@@ -17,6 +17,20 @@ namespace FinalBet.ViewModel
     public class RedGreenViewModel:ViewModelBase
     {
         #region Variables
+        private int _selectedMatchId = -1;
+        public int SelectedMatchId
+        {
+            get
+            {
+                return _selectedMatchId;
+            }
+            set
+            {
+                if (_selectedMatchId == value) return;
+                _selectedMatchId = value;
+                OnPropertyChanged("SelectedMatchId");
+            }
+        }
 
         private ObservableCollection<league> _leagues;
         public ObservableCollection<league> Leagues
@@ -216,10 +230,7 @@ namespace FinalBet.ViewModel
                 if (LeagueYears.Any()) SelectedYear = LeagueYears.First();
             }
         }
-
-
-
-
+        
         private void InitializeSubSeasons(league league, string year)
         {
             SubSeasons.Clear();
@@ -256,6 +267,11 @@ namespace FinalBet.ViewModel
         {
             var canvas = (DrawingCanvas)sender;
             canvas.TrySelectCell(eventArgs);
+
+            if (canvas.MatchId != -1)
+            {
+                SelectedMatchId = canvas.MatchId;
+            }
         }
 
         #endregion
@@ -264,10 +280,7 @@ namespace FinalBet.ViewModel
 
         private void Draw(object prm)
         {
-            MessageBox.Show(SolveMode.IsHome.HasValue ? SolveMode.IsHome.Value.ToString() : "no value");
-
-
-            /*var matchList = new List<match>();
+            var matchList = new List<match>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var parentId = cntx.GetTable<leagueUrl>()
@@ -280,42 +293,65 @@ namespace FinalBet.ViewModel
             if(!matchList.Any()) return;
 
             var teamNames = Soccer.GetTeamNames(matchList.Select(x => x.homeTeamId).Distinct());
-
             
+
             var canvas = (DrawingCanvas) prm;
             canvas.Clear();
-
             var shift = 4;
             int i = 0;
-            //int j = 0;
             var teamCellWidth = DrawingCanvas.GetTeamCellSizeWidth(teamNames.Select(x => x.Value).ToList());
             canvas.TeamCellWidth = teamCellWidth;
 
-            foreach (var teamName in teamNames)
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var teamId = teamName.Key;
-                var teamVisual = new DrawingVisual();
-                canvas.DrawTeamCell(teamVisual,
-                    new Point(shift, shift + i*(canvas.CellSize + shift)), 
-                    teamName.Value,
-                    new Size(teamCellWidth, canvas.CellSize));
+                var possibleResults = cntx.GetTable<possibleResult>();
 
-                canvas.AddVisual(teamVisual);
+                var matchesId = matchList.Select(x => x.id).ToList();
+                var results = cntx.GetTable<result>().Where(x => matchesId.Contains(x.id)).ToList();
 
-                var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).ToList();
-
-                for (int j = 0; j < line.Count; j++)
+                foreach (var teamName in teamNames)
                 {
-                    var cellVisual = new DrawingVisual();
-                    canvas.DrawCellSquare(
-                        cellVisual,
-                        new Point(teamCellWidth + canvas.CellSize/4 + j * (canvas.CellSize + shift), shift + i * (canvas.CellSize + shift)),
-                        line[j].id.ToString());
-                    canvas.AddVisual(cellVisual);
-                }
+                    var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).ToList();
 
-                i++;
-            }*/
+                    var tst = new List<RGmatch>();
+                    foreach (var match in line)
+                    {
+                        var resId = results.SingleOrDefault(x => x.parentId == match.id && x.matchPeriod == SolveMode.MatchPeriod);
+                        if(resId == null) tst.Add(RGmatch.GetEmpty());
+
+                        var res = possibleResults.Single(x => x.id == resId.resultId);
+                        
+                        tst.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff));
+                    }
+
+                    var outputs = tst.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();
+                    
+                    //Отрисовка
+                    var teamVisual = new VisualWithTag();
+                    canvas.DrawTeamCell(teamVisual,
+                        new Point(shift, shift + i * (canvas.CellSize + shift)),
+                        teamName.Value,
+                        new Size(teamCellWidth, canvas.CellSize));
+
+                    canvas.AddVisual(teamVisual);
+                    
+                    for (int j = 0; j < line.Count; j++)
+                    {
+                       var txt = MatchSolver.OutputStrings[outputs[j]];
+                       var brush = MatchSolver.OutputBrushes[outputs[j]];
+                       var cellVisual = new VisualWithTag();
+                       cellVisual.Tag = line[j].id;
+
+                        canvas.DrawCellSquare(
+                            cellVisual,
+                            new Point(teamCellWidth + canvas.CellSize / 4 + j * (canvas.CellSize + shift), shift + i * (canvas.CellSize + shift)),
+                            brush,
+                            txt);
+                        canvas.AddVisual(cellVisual);
+                    }
+                    i++;
+                }
+            }
         }
 
         private SolveMode _solveMode = new SolveMode();
@@ -343,9 +379,7 @@ namespace FinalBet.ViewModel
 
             InitializeLeagues(_showOnlyFavorites);
 
-            DrawCommand = new RelayCommand(Draw
-                //, a => SelectedSubSeason != null
-                );
+            DrawCommand = new RelayCommand(Draw, a => SelectedSubSeason != null);
         }
     }
 }
