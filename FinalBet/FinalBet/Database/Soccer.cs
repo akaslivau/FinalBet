@@ -12,7 +12,8 @@ namespace FinalBet.Database
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                return cntx.GetTable<teamName>().Where(x => uniqueIds.Contains(x.id))
+                return cntx.GetTable<teamName>().Where(x => uniqueIds.Contains(x.id)).
+                    OrderBy(x=>x.name)
                     .ToDictionary(x => x.id, x => x.name);
             }
         }

@@ -132,8 +132,6 @@
                                 <MenuItem Header="Открыть директорию" Command="{Binding OpenArchiveFolderCommand}"/>
                                 <MenuItem Header="Загрузить для выбранной URL" Command="{Binding LoadMatchesCommand}"/>
                                 <MenuItem Header="Загрузить отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
-                                <Separator/>
-                                <MenuItem Header="Загрузить все матчи"/>
                             </MenuItem>
                             <MenuItem Header="Отметки">
                                 <MenuItem Header="Отметить"
@@ -195,7 +193,7 @@
                             >
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="SelectionChanged">
-                                        <i:InvokeCommandAction Command="{Binding LoadUrlsRepoCommand}"/>
+                                        <i:InvokeCommandAction Command="{Binding SetUrlsRepoCommand}"/>
                                     </i:EventTrigger>
                                 </i:Interaction.Triggers>
                             </ListBox>
@@ -450,10 +448,13 @@
                                       />
                         </Menu>
                     </DockPanel>
-                    
 
-                    <viewModel:DrawingCanvas
-                            Grid.Row="2"
+                    <ScrollViewer Grid.Row="2" 
+                                  HorizontalAlignment="Left"
+                                  VerticalAlignment="Top"
+                                  HorizontalScrollBarVisibility="Auto" 
+                                  VerticalScrollBarVisibility="Auto">
+                        <viewModel:DrawingCanvas
                             ClipToBounds="True"
                             x:Name="RedGreenCanvas"
                             CellForegroundBrush="White"
@@ -466,15 +467,17 @@
                                     <ei:CallMethodAction
                                         TargetObject="{Binding}"
                                         MethodName="OnTableMouseClick"/>
-                            </i:EventTrigger>
+                                </i:EventTrigger>
                             </i:Interaction.Triggers>
                             <viewModel:DrawingCanvas.Background>
-                            <LinearGradientBrush Opacity="0.5">
-                                <GradientStop Color="{StaticResource AccentColor4}" Offset="0.2"/>
-                                <GradientStop Color="{StaticResource AccentColor}" Offset="0.8"/>
-                            </LinearGradientBrush>
-                        </viewModel:DrawingCanvas.Background>
-                    </viewModel:DrawingCanvas>
+                                <LinearGradientBrush Opacity="0.5">
+                                    <GradientStop Color="{StaticResource AccentColor4}" Offset="0.2"/>
+                                    <GradientStop Color="{StaticResource AccentColor}" Offset="0.8"/>
+                                </LinearGradientBrush>
+                            </viewModel:DrawingCanvas.Background>
+                        </viewModel:DrawingCanvas>
+                    </ScrollViewer>
+
                 </Grid>
             </TabItem>
         </TabControl>

@@ -30,36 +30,36 @@ namespace FinalBet
 		
     #region Extensibility Method Definitions
     partial void OnCreated();
-    partial void InsertteamName(teamName instance);
-    partial void UpdateteamName(teamName instance);
-    partial void DeleteteamName(teamName instance);
-    partial void InsertpossibleResult(possibleResult instance);
-    partial void UpdatepossibleResult(possibleResult instance);
-    partial void DeletepossibleResult(possibleResult instance);
-    partial void InsertmatchTag(matchTag instance);
-    partial void UpdatematchTag(matchTag instance);
-    partial void DeletematchTag(matchTag instance);
-    partial void Insertmatch(match instance);
-    partial void Updatematch(match instance);
-    partial void Deletematch(match instance);
-    partial void Insertodd(odd instance);
-    partial void Updateodd(odd instance);
-    partial void Deleteodd(odd instance);
-    partial void Insertresult(result instance);
-    partial void Updateresult(result instance);
-    partial void Deleteresult(result instance);
-    partial void InsertleagueUrl(leagueUrl instance);
-    partial void UpdateleagueUrl(leagueUrl instance);
-    partial void DeleteleagueUrl(leagueUrl instance);
     partial void InsertleagueMark(leagueMark instance);
     partial void UpdateleagueMark(leagueMark instance);
     partial void DeleteleagueMark(leagueMark instance);
-    partial void Insertleague(league instance);
-    partial void Updateleague(league instance);
-    partial void Deleteleague(league instance);
     partial void InsertsolveMode(solveMode instance);
     partial void UpdatesolveMode(solveMode instance);
     partial void DeletesolveMode(solveMode instance);
+    partial void Insertleague(league instance);
+    partial void Updateleague(league instance);
+    partial void Deleteleague(league instance);
+    partial void InsertleagueUrl(leagueUrl instance);
+    partial void UpdateleagueUrl(leagueUrl instance);
+    partial void DeleteleagueUrl(leagueUrl instance);
+    partial void Insertmatch(match instance);
+    partial void Updatematch(match instance);
+    partial void Deletematch(match instance);
+    partial void InsertmatchTag(matchTag instance);
+    partial void UpdatematchTag(matchTag instance);
+    partial void DeletematchTag(matchTag instance);
+    partial void Insertodd(odd instance);
+    partial void Updateodd(odd instance);
+    partial void Deleteodd(odd instance);
+    partial void InsertpossibleResult(possibleResult instance);
+    partial void UpdatepossibleResult(possibleResult instance);
+    partial void DeletepossibleResult(possibleResult instance);
+    partial void Insertresult(result instance);
+    partial void Updateresult(result instance);
+    partial void Deleteresult(result instance);
+    partial void InsertteamName(teamName instance);
+    partial void UpdateteamName(teamName instance);
+    partial void DeleteteamName(teamName instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -92,67 +92,19 @@ namespace FinalBet
 			OnCreated();
 		}
 		
-		public System.Data.Linq.Table<teamName> teamNames
-		{
-			get
-			{
-				return this.GetTable<teamName>();
-			}
-		}
-		
-		public System.Data.Linq.Table<possibleResult> possibleResults
-		{
-			get
-			{
-				return this.GetTable<possibleResult>();
-			}
-		}
-		
-		public System.Data.Linq.Table<matchTag> matchTags
-		{
-			get
-			{
-				return this.GetTable<matchTag>();
-			}
-		}
-		
-		public System.Data.Linq.Table<match> matches
-		{
-			get
-			{
-				return this.GetTable<match>();
-			}
-		}
-		
-		public System.Data.Linq.Table<odd> odds
-		{
-			get
-			{
-				return this.GetTable<odd>();
-			}
-		}
-		
-		public System.Data.Linq.Table<result> results
-		{
-			get
-			{
-				return this.GetTable<result>();
-			}
-		}
-		
-		public System.Data.Linq.Table<leagueUrl> leagueUrls
-		{
-			get
-			{
-				return this.GetTable<leagueUrl>();
-			}
-		}
-		
 		public System.Data.Linq.Table<leagueMark> leagueMarks
 		{
 			get
 			{
 				return this.GetTable<leagueMark>();
+			}
+		}
+		
+		public System.Data.Linq.Table<solveMode> solveModes
+		{
+			get
+			{
+				return this.GetTable<solveMode>();
 			}
 		}
 		
@@ -164,28 +116,72 @@ namespace FinalBet
 			}
 		}
 		
-		public System.Data.Linq.Table<solveMode> solveModes
+		public System.Data.Linq.Table<leagueUrl> leagueUrls
 		{
 			get
 			{
-				return this.GetTable<solveMode>();
+				return this.GetTable<leagueUrl>();
+			}
+		}
+		
+		public System.Data.Linq.Table<match> matches
+		{
+			get
+			{
+				return this.GetTable<match>();
+			}
+		}
+		
+		public System.Data.Linq.Table<matchTag> matchTags
+		{
+			get
+			{
+				return this.GetTable<matchTag>();
+			}
+		}
+		
+		public System.Data.Linq.Table<odd> odds
+		{
+			get
+			{
+				return this.GetTable<odd>();
+			}
+		}
+		
+		public System.Data.Linq.Table<possibleResult> possibleResults
+		{
+			get
+			{
+				return this.GetTable<possibleResult>();
+			}
+		}
+		
+		public System.Data.Linq.Table<result> results
+		{
+			get
+			{
+				return this.GetTable<result>();
+			}
+		}
+		
+		public System.Data.Linq.Table<teamName> teamNames
+		{
+			get
+			{
+				return this.GetTable<teamName>();
 			}
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.teamNames")]
-	public partial class teamName : INotifyPropertyChanging, INotifyPropertyChanged
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagueMarks")]
+	public partial class leagueMark : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _id;
 		
-		private int _leagueId;
-		
 		private string _name;
-		
-		private string _other;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -193,15 +189,11 @@ namespace FinalBet
     partial void OnCreated();
     partial void OnidChanging(int value);
     partial void OnidChanged();
-    partial void OnleagueIdChanging(int value);
-    partial void OnleagueIdChanged();
     partial void OnnameChanging(string value);
     partial void OnnameChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
     #endregion
 		
-		public teamName()
+		public leagueMark()
 		{
 			OnCreated();
 		}
@@ -226,27 +218,7 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_leagueId", DbType="Int NOT NULL")]
-		public int leagueId
-		{
-			get
-			{
-				return this._leagueId;
-			}
-			set
-			{
-				if ((this._leagueId != value))
-				{
-					this.OnleagueIdChanging(value);
-					this.SendPropertyChanging();
-					this._leagueId = value;
-					this.SendPropertyChanged("leagueId");
-					this.OnleagueIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
 		public string name
 		{
 			get
@@ -266,26 +238,6 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
-		{
-			get
-			{
-				return this._other;
-			}
-			set
-			{
-				if ((this._other != value))
-				{
-					this.OnotherChanging(value);
-					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
-				}
-			}
-		}
-		
 		public event PropertyChangingEventHandler PropertyChanging;
 		
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -307,27 +259,19 @@ namespace FinalBet
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.possibleResults")]
-	public partial class possibleResult : INotifyPropertyChanging, INotifyPropertyChanged
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.solveModes")]
+	public partial class solveMode : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _id;
 		
-		private string _value;
+		private int _number;
 		
-		private bool _isCorrect;
+		private string _name;
 		
-		private int _scored;
-		
-		private int _missed;
-		
-		private int _total;
-		
-		private int _diff;
-		
-		private string _other;
+		private bool _hasParameter;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -335,23 +279,15 @@ namespace FinalBet
     partial void OnCreated();
     partial void OnidChanging(int value);
     partial void OnidChanged();
-    partial void OnvalueChanging(string value);
-    partial void OnvalueChanged();
-    partial void OnisCorrectChanging(bool value);
-    partial void OnisCorrectChanged();
-    partial void OnscoredChanging(int value);
-    partial void OnscoredChanged();
-    partial void OnmissedChanging(int value);
-    partial void OnmissedChanged();
-    partial void OntotalChanging(int value);
-    partial void OntotalChanged();
-    partial void OndiffChanging(int value);
-    partial void OndiffChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
+    partial void OnnumberChanging(int value);
+    partial void OnnumberChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OnhasParameterChanging(bool value);
+    partial void OnhasParameterChanged();
     #endregion
 		
-		public possibleResult()
+		public solveMode()
 		{
 			OnCreated();
 		}
@@ -376,142 +312,62 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_value", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string value
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_number", DbType="Int NOT NULL")]
+		public int number
 		{
 			get
 			{
-				return this._value;
+				return this._number;
 			}
 			set
 			{
-				if ((this._value != value))
+				if ((this._number != value))
 				{
-					this.OnvalueChanging(value);
+					this.OnnumberChanging(value);
 					this.SendPropertyChanging();
-					this._value = value;
-					this.SendPropertyChanged("value");
-					this.OnvalueChanged();
+					this._number = value;
+					this.SendPropertyChanged("number");
+					this.OnnumberChanged();
 				}
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_isCorrect", DbType="Bit NOT NULL")]
-		public bool isCorrect
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
+		public string name
 		{
 			get
 			{
-				return this._isCorrect;
+				return this._name;
 			}
 			set
 			{
-				if ((this._isCorrect != value))
+				if ((this._name != value))
 				{
-					this.OnisCorrectChanging(value);
+					this.OnnameChanging(value);
 					this.SendPropertyChanging();
-					this._isCorrect = value;
-					this.SendPropertyChanged("isCorrect");
-					this.OnisCorrectChanged();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
 				}
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_scored", DbType="Int NOT NULL")]
-		public int scored
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_hasParameter", DbType="Bit NOT NULL")]
+		public bool hasParameter
 		{
 			get
 			{
-				return this._scored;
+				return this._hasParameter;
 			}
 			set
 			{
-				if ((this._scored != value))
+				if ((this._hasParameter != value))
 				{
-					this.OnscoredChanging(value);
+					this.OnhasParameterChanging(value);
 					this.SendPropertyChanging();
-					this._scored = value;
-					this.SendPropertyChanged("scored");
-					this.OnscoredChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_missed", DbType="Int NOT NULL")]
-		public int missed
-		{
-			get
-			{
-				return this._missed;
-			}
-			set
-			{
-				if ((this._missed != value))
-				{
-					this.OnmissedChanging(value);
-					this.SendPropertyChanging();
-					this._missed = value;
-					this.SendPropertyChanged("missed");
-					this.OnmissedChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_total", DbType="Int NOT NULL")]
-		public int total
-		{
-			get
-			{
-				return this._total;
-			}
-			set
-			{
-				if ((this._total != value))
-				{
-					this.OntotalChanging(value);
-					this.SendPropertyChanging();
-					this._total = value;
-					this.SendPropertyChanged("total");
-					this.OntotalChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_diff", DbType="Int NOT NULL")]
-		public int diff
-		{
-			get
-			{
-				return this._diff;
-			}
-			set
-			{
-				if ((this._diff != value))
-				{
-					this.OndiffChanging(value);
-					this.SendPropertyChanging();
-					this._diff = value;
-					this.SendPropertyChanged("diff");
-					this.OndiffChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
-		{
-			get
-			{
-				return this._other;
-			}
-			set
-			{
-				if ((this._other != value))
-				{
-					this.OnotherChanging(value);
-					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
+					this._hasParameter = value;
+					this.SendPropertyChanged("hasParameter");
+					this.OnhasParameterChanged();
 				}
 			}
 		}
@@ -537,8 +393,8 @@ namespace FinalBet
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.matchTags")]
-	public partial class matchTag : INotifyPropertyChanging, INotifyPropertyChanged
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagues")]
+	public partial class league : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
@@ -547,9 +403,11 @@ namespace FinalBet
 		
 		private string _name;
 		
-		private string _other;
+		private string _url;
 		
-		private string _caption;
+		private string _svgName;
+		
+		private bool _isFavorite;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -559,13 +417,15 @@ namespace FinalBet
     partial void OnidChanged();
     partial void OnnameChanging(string value);
     partial void OnnameChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
-    partial void OncaptionChanging(string value);
-    partial void OncaptionChanged();
+    partial void OnurlChanging(string value);
+    partial void OnurlChanged();
+    partial void OnsvgNameChanging(string value);
+    partial void OnsvgNameChanged();
+    partial void OnisFavoriteChanging(bool value);
+    partial void OnisFavoriteChanged();
     #endregion
 		
-		public matchTag()
+		public league()
 		{
 			OnCreated();
 		}
@@ -610,42 +470,244 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string url
 		{
 			get
 			{
-				return this._other;
+				return this._url;
 			}
 			set
 			{
-				if ((this._other != value))
+				if ((this._url != value))
 				{
-					this.OnotherChanging(value);
+					this.OnurlChanging(value);
 					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
+					this._url = value;
+					this.SendPropertyChanged("url");
+					this.OnurlChanged();
 				}
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_caption", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string caption
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_svgName", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string svgName
 		{
 			get
 			{
-				return this._caption;
+				return this._svgName;
 			}
 			set
 			{
-				if ((this._caption != value))
+				if ((this._svgName != value))
 				{
-					this.OncaptionChanging(value);
+					this.OnsvgNameChanging(value);
 					this.SendPropertyChanging();
-					this._caption = value;
-					this.SendPropertyChanged("caption");
-					this.OncaptionChanged();
+					this._svgName = value;
+					this.SendPropertyChanged("svgName");
+					this.OnsvgNameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_isFavorite", DbType="Bit NOT NULL")]
+		public bool isFavorite
+		{
+			get
+			{
+				return this._isFavorite;
+			}
+			set
+			{
+				if ((this._isFavorite != value))
+				{
+					this.OnisFavoriteChanging(value);
+					this.SendPropertyChanging();
+					this._isFavorite = value;
+					this.SendPropertyChanged("isFavorite");
+					this.OnisFavoriteChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagueUrls")]
+	public partial class leagueUrl : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _parentId;
+		
+		private string _year;
+		
+		private string _name;
+		
+		private string _url;
+		
+		private string _mark;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnparentIdChanging(int value);
+    partial void OnparentIdChanged();
+    partial void OnyearChanging(string value);
+    partial void OnyearChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OnurlChanging(string value);
+    partial void OnurlChanged();
+    partial void OnmarkChanging(string value);
+    partial void OnmarkChanged();
+    #endregion
+		
+		public leagueUrl()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
+		public int parentId
+		{
+			get
+			{
+				return this._parentId;
+			}
+			set
+			{
+				if ((this._parentId != value))
+				{
+					this.OnparentIdChanging(value);
+					this.SendPropertyChanging();
+					this._parentId = value;
+					this.SendPropertyChanged("parentId");
+					this.OnparentIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_year", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string year
+		{
+			get
+			{
+				return this._year;
+			}
+			set
+			{
+				if ((this._year != value))
+				{
+					this.OnyearChanging(value);
+					this.SendPropertyChanging();
+					this._year = value;
+					this.SendPropertyChanged("year");
+					this.OnyearChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string name
+		{
+			get
+			{
+				return this._name;
+			}
+			set
+			{
+				if ((this._name != value))
+				{
+					this.OnnameChanging(value);
+					this.SendPropertyChanging();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string url
+		{
+			get
+			{
+				return this._url;
+			}
+			set
+			{
+				if ((this._url != value))
+				{
+					this.OnurlChanging(value);
+					this.SendPropertyChanging();
+					this._url = value;
+					this.SendPropertyChanged("url");
+					this.OnurlChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_mark", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
+		public string mark
+		{
+			get
+			{
+				return this._mark;
+			}
+			set
+			{
+				if ((this._mark != value))
+				{
+					this.OnmarkChanging(value);
+					this.SendPropertyChanging();
+					this._mark = value;
+					this.SendPropertyChanged("mark");
+					this.OnmarkChanged();
 				}
 			}
 		}
@@ -691,8 +753,6 @@ namespace FinalBet
 		
 		private System.DateTime _date;
 		
-		private string _other;
-		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -711,8 +771,6 @@ namespace FinalBet
     partial void OnhrefChanged();
     partial void OndateChanging(System.DateTime value);
     partial void OndateChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
     #endregion
 		
 		public match()
@@ -860,22 +918,112 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.matchTags")]
+	public partial class matchTag : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private string _name;
+		
+		private string _caption;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnnameChanging(string value);
+    partial void OnnameChanged();
+    partial void OncaptionChanging(string value);
+    partial void OncaptionChanged();
+    #endregion
+		
+		public matchTag()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
 		{
 			get
 			{
-				return this._other;
+				return this._id;
 			}
 			set
 			{
-				if ((this._other != value))
+				if ((this._id != value))
 				{
-					this.OnotherChanging(value);
+					this.OnidChanging(value);
 					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string name
+		{
+			get
+			{
+				return this._name;
+			}
+			set
+			{
+				if ((this._name != value))
+				{
+					this.OnnameChanging(value);
+					this.SendPropertyChanging();
+					this._name = value;
+					this.SendPropertyChanged("name");
+					this.OnnameChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_caption", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string caption
+		{
+			get
+			{
+				return this._caption;
+			}
+			set
+			{
+				if ((this._caption != value))
+				{
+					this.OncaptionChanging(value);
+					this.SendPropertyChanging();
+					this._caption = value;
+					this.SendPropertyChanged("caption");
+					this.OncaptionChanged();
 				}
 			}
 		}
@@ -915,8 +1063,6 @@ namespace FinalBet
 		
 		private double _value;
 		
-		private string _other;
-		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -929,8 +1075,6 @@ namespace FinalBet
     partial void OnoddTypeChanged();
     partial void OnvalueChanging(double value);
     partial void OnvalueChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
     #endregion
 		
 		public odd()
@@ -1018,22 +1162,208 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.possibleResults")]
+	public partial class possibleResult : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private string _value;
+		
+		private bool _isCorrect;
+		
+		private int _scored;
+		
+		private int _missed;
+		
+		private int _total;
+		
+		private int _diff;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnvalueChanging(string value);
+    partial void OnvalueChanged();
+    partial void OnisCorrectChanging(bool value);
+    partial void OnisCorrectChanged();
+    partial void OnscoredChanging(int value);
+    partial void OnscoredChanged();
+    partial void OnmissedChanging(int value);
+    partial void OnmissedChanged();
+    partial void OntotalChanging(int value);
+    partial void OntotalChanged();
+    partial void OndiffChanging(int value);
+    partial void OndiffChanged();
+    #endregion
+		
+		public possibleResult()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
 		{
 			get
 			{
-				return this._other;
+				return this._id;
 			}
 			set
 			{
-				if ((this._other != value))
+				if ((this._id != value))
 				{
-					this.OnotherChanging(value);
+					this.OnidChanging(value);
 					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_value", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string value
+		{
+			get
+			{
+				return this._value;
+			}
+			set
+			{
+				if ((this._value != value))
+				{
+					this.OnvalueChanging(value);
+					this.SendPropertyChanging();
+					this._value = value;
+					this.SendPropertyChanged("value");
+					this.OnvalueChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_isCorrect", DbType="Bit NOT NULL")]
+		public bool isCorrect
+		{
+			get
+			{
+				return this._isCorrect;
+			}
+			set
+			{
+				if ((this._isCorrect != value))
+				{
+					this.OnisCorrectChanging(value);
+					this.SendPropertyChanging();
+					this._isCorrect = value;
+					this.SendPropertyChanged("isCorrect");
+					this.OnisCorrectChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_scored", DbType="Int NOT NULL")]
+		public int scored
+		{
+			get
+			{
+				return this._scored;
+			}
+			set
+			{
+				if ((this._scored != value))
+				{
+					this.OnscoredChanging(value);
+					this.SendPropertyChanging();
+					this._scored = value;
+					this.SendPropertyChanged("scored");
+					this.OnscoredChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_missed", DbType="Int NOT NULL")]
+		public int missed
+		{
+			get
+			{
+				return this._missed;
+			}
+			set
+			{
+				if ((this._missed != value))
+				{
+					this.OnmissedChanging(value);
+					this.SendPropertyChanging();
+					this._missed = value;
+					this.SendPropertyChanged("missed");
+					this.OnmissedChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_total", DbType="Int NOT NULL")]
+		public int total
+		{
+			get
+			{
+				return this._total;
+			}
+			set
+			{
+				if ((this._total != value))
+				{
+					this.OntotalChanging(value);
+					this.SendPropertyChanging();
+					this._total = value;
+					this.SendPropertyChanged("total");
+					this.OntotalChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_diff", DbType="Int NOT NULL")]
+		public int diff
+		{
+			get
+			{
+				return this._diff;
+			}
+			set
+			{
+				if ((this._diff != value))
+				{
+					this.OndiffChanging(value);
+					this.SendPropertyChanging();
+					this._diff = value;
+					this.SendPropertyChanged("diff");
+					this.OndiffChanged();
 				}
 			}
 		}
@@ -1073,8 +1403,6 @@ namespace FinalBet
 		
 		private int _resultId;
 		
-		private string _other;
-		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -1087,8 +1415,6 @@ namespace FinalBet
     partial void OnmatchPeriodChanged();
     partial void OnresultIdChanging(int value);
     partial void OnresultIdChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
     #endregion
 		
 		public result()
@@ -1176,26 +1502,6 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
-		{
-			get
-			{
-				return this._other;
-			}
-			set
-			{
-				if ((this._other != value))
-				{
-					this.OnotherChanging(value);
-					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
-				}
-			}
-		}
-		
 		public event PropertyChangingEventHandler PropertyChanging;
 		
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -1217,25 +1523,17 @@ namespace FinalBet
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagueUrls")]
-	public partial class leagueUrl : INotifyPropertyChanging, INotifyPropertyChanged
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.teamNames")]
+	public partial class teamName : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
 		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _id;
 		
-		private int _parentId;
-		
-		private string _year;
+		private int _leagueId;
 		
 		private string _name;
-		
-		private string _url;
-		
-		private string _mark;
-		
-		private string _other;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -1243,21 +1541,13 @@ namespace FinalBet
     partial void OnCreated();
     partial void OnidChanging(int value);
     partial void OnidChanged();
-    partial void OnparentIdChanging(int value);
-    partial void OnparentIdChanged();
-    partial void OnyearChanging(string value);
-    partial void OnyearChanged();
+    partial void OnleagueIdChanging(int value);
+    partial void OnleagueIdChanged();
     partial void OnnameChanging(string value);
     partial void OnnameChanged();
-    partial void OnurlChanging(string value);
-    partial void OnurlChanged();
-    partial void OnmarkChanging(string value);
-    partial void OnmarkChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
     #endregion
 		
-		public leagueUrl()
+		public teamName()
 		{
 			OnCreated();
 		}
@@ -1282,42 +1572,22 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
-		public int parentId
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_leagueId", DbType="Int NOT NULL")]
+		public int leagueId
 		{
 			get
 			{
-				return this._parentId;
+				return this._leagueId;
 			}
 			set
 			{
-				if ((this._parentId != value))
+				if ((this._leagueId != value))
 				{
-					this.OnparentIdChanging(value);
+					this.OnleagueIdChanging(value);
 					this.SendPropertyChanging();
-					this._parentId = value;
-					this.SendPropertyChanged("parentId");
-					this.OnparentIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_year", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string year
-		{
-			get
-			{
-				return this._year;
-			}
-			set
-			{
-				if ((this._year != value))
-				{
-					this.OnyearChanging(value);
-					this.SendPropertyChanging();
-					this._year = value;
-					this.SendPropertyChanged("year");
-					this.OnyearChanged();
+					this._leagueId = value;
+					this.SendPropertyChanged("leagueId");
+					this.OnleagueIdChanged();
 				}
 			}
 		}
@@ -1338,468 +1608,6 @@ namespace FinalBet
 					this._name = value;
 					this.SendPropertyChanged("name");
 					this.OnnameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string url
-		{
-			get
-			{
-				return this._url;
-			}
-			set
-			{
-				if ((this._url != value))
-				{
-					this.OnurlChanging(value);
-					this.SendPropertyChanging();
-					this._url = value;
-					this.SendPropertyChanged("url");
-					this.OnurlChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_mark", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
-		public string mark
-		{
-			get
-			{
-				return this._mark;
-			}
-			set
-			{
-				if ((this._mark != value))
-				{
-					this.OnmarkChanging(value);
-					this.SendPropertyChanging();
-					this._mark = value;
-					this.SendPropertyChanged("mark");
-					this.OnmarkChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
-		{
-			get
-			{
-				return this._other;
-			}
-			set
-			{
-				if ((this._other != value))
-				{
-					this.OnotherChanging(value);
-					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagueMarks")]
-	public partial class leagueMark : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private string _name;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnnameChanging(string value);
-    partial void OnnameChanged();
-    #endregion
-		
-		public leagueMark()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
-		{
-			get
-			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
-		public string name
-		{
-			get
-			{
-				return this._name;
-			}
-			set
-			{
-				if ((this._name != value))
-				{
-					this.OnnameChanging(value);
-					this.SendPropertyChanging();
-					this._name = value;
-					this.SendPropertyChanged("name");
-					this.OnnameChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagues")]
-	public partial class league : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private string _name;
-		
-		private string _url;
-		
-		private string _svgName;
-		
-		private bool _isFavorite;
-		
-		private string _other;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnnameChanging(string value);
-    partial void OnnameChanged();
-    partial void OnurlChanging(string value);
-    partial void OnurlChanged();
-    partial void OnsvgNameChanging(string value);
-    partial void OnsvgNameChanged();
-    partial void OnisFavoriteChanging(bool value);
-    partial void OnisFavoriteChanged();
-    partial void OnotherChanging(string value);
-    partial void OnotherChanged();
-    #endregion
-		
-		public league()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
-		{
-			get
-			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string name
-		{
-			get
-			{
-				return this._name;
-			}
-			set
-			{
-				if ((this._name != value))
-				{
-					this.OnnameChanging(value);
-					this.SendPropertyChanging();
-					this._name = value;
-					this.SendPropertyChanged("name");
-					this.OnnameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_url", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string url
-		{
-			get
-			{
-				return this._url;
-			}
-			set
-			{
-				if ((this._url != value))
-				{
-					this.OnurlChanging(value);
-					this.SendPropertyChanging();
-					this._url = value;
-					this.SendPropertyChanged("url");
-					this.OnurlChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_svgName", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string svgName
-		{
-			get
-			{
-				return this._svgName;
-			}
-			set
-			{
-				if ((this._svgName != value))
-				{
-					this.OnsvgNameChanging(value);
-					this.SendPropertyChanging();
-					this._svgName = value;
-					this.SendPropertyChanged("svgName");
-					this.OnsvgNameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_isFavorite", DbType="Bit NOT NULL")]
-		public bool isFavorite
-		{
-			get
-			{
-				return this._isFavorite;
-			}
-			set
-			{
-				if ((this._isFavorite != value))
-				{
-					this.OnisFavoriteChanging(value);
-					this.SendPropertyChanging();
-					this._isFavorite = value;
-					this.SendPropertyChanged("isFavorite");
-					this.OnisFavoriteChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_other", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string other
-		{
-			get
-			{
-				return this._other;
-			}
-			set
-			{
-				if ((this._other != value))
-				{
-					this.OnotherChanging(value);
-					this.SendPropertyChanging();
-					this._other = value;
-					this.SendPropertyChanged("other");
-					this.OnotherChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.solveModes")]
-	public partial class solveMode : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private int _number;
-		
-		private string _name;
-		
-		private bool _hasParameter;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnnumberChanging(int value);
-    partial void OnnumberChanged();
-    partial void OnnameChanging(string value);
-    partial void OnnameChanged();
-    partial void OnhasParameterChanging(bool value);
-    partial void OnhasParameterChanged();
-    #endregion
-		
-		public solveMode()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
-		{
-			get
-			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_number", DbType="Int NOT NULL")]
-		public int number
-		{
-			get
-			{
-				return this._number;
-			}
-			set
-			{
-				if ((this._number != value))
-				{
-					this.OnnumberChanging(value);
-					this.SendPropertyChanging();
-					this._number = value;
-					this.SendPropertyChanged("number");
-					this.OnnumberChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_name", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
-		public string name
-		{
-			get
-			{
-				return this._name;
-			}
-			set
-			{
-				if ((this._name != value))
-				{
-					this.OnnameChanging(value);
-					this.SendPropertyChanging();
-					this._name = value;
-					this.SendPropertyChanged("name");
-					this.OnnameChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_hasParameter", DbType="Bit NOT NULL")]
-		public bool hasParameter
-		{
-			get
-			{
-				return this._hasParameter;
-			}
-			set
-			{
-				if ((this._hasParameter != value))
-				{
-					this.OnhasParameterChanging(value);
-					this.SendPropertyChanging();
-					this._hasParameter = value;
-					this.SendPropertyChanged("hasParameter");
-					this.OnhasParameterChanged();
 				}
 			}
 		}

@@ -33,6 +33,9 @@ namespace FinalBet.Model
         
         public static Output Solve(IMatch match, SolveMode mode, bool useCache = false)
         {
+            if (match.IsNaN) return Output.Nan;
+            if (match.IsNa) return Output.Na;
+            
             //Тут жесткая привязка к режимам, че поделаешь
             var num = mode.SelectedMode.number;
 
@@ -94,6 +97,9 @@ namespace FinalBet.Model
 
     public interface IMatch
     {
+        bool IsNa { get; set; }
+        bool IsNaN { get; set; }
+
         bool IsHome { get; set; }
 
         int Scored { get; set; }
@@ -107,6 +113,9 @@ namespace FinalBet.Model
 
     public class RGmatch:IMatch
     {
+        public bool IsNa { get; set; }
+        public bool IsNaN { get; set; }
+
         public bool IsHome { get; set; }
         public int Scored { get; set; }
         public int Missed { get; set; }
@@ -115,6 +124,7 @@ namespace FinalBet.Model
 
         public RGmatch(bool isHome, int scored, int missed, int total, int dif)
         {
+            IsNa = false;
             IsHome = isHome;
             Scored = scored;
             Missed = missed;
@@ -124,7 +134,14 @@ namespace FinalBet.Model
 
         public static RGmatch GetEmpty()
         {
-            return new RGmatch(true, -1, -1, -1, -1);
+            var res = new RGmatch(true, -1, -1, -1, -1) {IsNa = true};
+            return res;
+        }
+
+        public static RGmatch GetNanMatch()
+        {
+            var res = new RGmatch(true, -1, -1, -1, -1) {IsNaN = true, IsNa = false};
+            return res;
         }
     }
 }

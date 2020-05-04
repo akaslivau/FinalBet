@@ -33,7 +33,7 @@ namespace FinalBet.Usercontrols
         {
             var control = d as MatchDetailsUserControl;
             if (control == null) return;
-            if(control.MatchId<0) return;
+            if(control.MatchId<=0) return;
 
             control.Header = "Информация о матче, id № " + control.MatchId;
             using (var cntx = new SqlDataContext(Connection.ConnectionString))

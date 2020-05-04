@@ -83,8 +83,7 @@ namespace FinalBet.Database
                     {
                         name = captions[i],
                         url = links[i],
-                        svgName = flagNames[i],
-                        other = ""
+                        svgName = flagNames[i]
                     };
                     leagueTable.InsertOnSubmit(toAdd);
                 }
@@ -124,10 +123,8 @@ namespace FinalBet.Database
         public static List<leagueUrl> GetLeagueUrls(string html, int countryId)
         {
             var result = new List<leagueUrl>();
-            int z = 3;
             if (string.IsNullOrEmpty(html)) return result;
-
-
+            
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
             
@@ -165,8 +162,7 @@ namespace FinalBet.Database
                         name = names[i],
                         url = urls[i],
                         year = year,
-                        mark = "",
-                        other = ""
+                        mark = ""
                     };
                     result.Add(toAdd);
                 }
@@ -307,12 +303,10 @@ namespace FinalBet.Database
         private static List<BeMatch> GetMatches(HtmlDocument doc, string tag)
         {
             var result = new List<BeMatch>();
-            return result;
 
             //< table class="table-main h-mb15
             var tableNode = doc.DocumentNode.SelectSingleNode(".//table[contains(@class, 'table-main h-mb15')]");
-
-
+            
             //Это вариант при ручнос сохранении:)
             //<tr>
             //  <td class="h-text-left">

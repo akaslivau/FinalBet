@@ -212,7 +212,7 @@ namespace FinalBet.ViewModel
         {
             LeagueYears.Clear();
 
-            if(SelectedTournament.Length<1) return;
+            if(string.IsNullOrEmpty(SelectedTournament)) return;
             
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -309,22 +309,32 @@ namespace FinalBet.ViewModel
                 var matchesId = matchList.Select(x => x.id).ToList();
                 var results = cntx.GetTable<result>().Where(x => matchesId.Contains(x.id)).ToList();
 
+                bool canvasSizesSetted = false;
                 foreach (var teamName in teamNames)
                 {
                     var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).ToList();
 
-                    var tst = new List<RGmatch>();
+                    var rGmatches = new List<RGmatch>();
                     foreach (var match in line)
                     {
                         var resId = results.SingleOrDefault(x => x.parentId == match.id && x.matchPeriod == SolveMode.MatchPeriod);
-                        if(resId == null) tst.Add(RGmatch.GetEmpty());
+                        if (resId == null)
+                        {
+                            rGmatches.Add(RGmatch.GetEmpty());
+                            continue;
+                        }
 
                         var res = possibleResults.Single(x => x.id == resId.resultId);
-                        
-                        tst.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff));
+                        if (!res.isCorrect)
+                        {
+                            rGmatches.Add(RGmatch.GetNanMatch());
+                            continue;
+                        }
+
+                        rGmatches.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff));
                     }
 
-                    var outputs = tst.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();
+                    var outputs = rGmatches.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();
                     
                     //Отрисовка
                     var teamVisual = new VisualWithTag();
@@ -334,6 +344,14 @@ namespace FinalBet.ViewModel
                         new Size(teamCellWidth, canvas.CellSize));
 
                     canvas.AddVisual(teamVisual);
+
+
+                    if (!canvasSizesSetted)
+                    {
+                        canvas.Width = teamCellWidth + +canvas.CellSize / 4 + line.Count * (canvas.CellSize + shift);
+                        canvas.Height = teamNames.Count * (canvas.CellSize + shift) + shift;
+                        canvasSizesSetted = true;
+                    }
                     
                     for (int j = 0; j < line.Count; j++)
                     {
