@@ -222,11 +222,12 @@ namespace FinalBet.ViewModel
         public IAsyncCommand LoadUrlsCommand { get; private set; }
         public IAsyncCommand LoadAllUrlsCommand { get; private set; }
         public IAsyncCommand LoadMatchesCommand { get; private set; }
+        public IAsyncCommand LoadLeagueMatchesCommand { get; private set; }
         public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
         public IAsyncCommand SetUrlsRepoCommand { get; private set; }
 
         //Загружает список ссылок для выбранной страны
-        public async Task SetUrlsRepo()
+        private async Task SetUrlsRepo()
         {
             await Task.Run(() =>
             {
@@ -244,7 +245,7 @@ namespace FinalBet.ViewModel
         }
 
         //Для выбранной страны. Загружает ссылки с сайта и добавляет их в БД, если она пуста
-        public async Task LoadUrls(league ctr)
+        private async Task LoadUrls(league ctr)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -289,7 +290,7 @@ namespace FinalBet.ViewModel
         }
 
         //Загрузка ссылок для всех стран с сайта и добавление их в БД (если она пуста)
-        public async Task LoadAllUrls()
+        private async Task LoadAllUrls()
         {
             try
             {
@@ -315,7 +316,7 @@ namespace FinalBet.ViewModel
         //Загружает матчи (/results) для выбранной ссылки
         //+ добавление в БД
         //+ сохранение в .zip файл
-        public async Task LoadMatches(league country, leagueUrl url)
+        private async Task LoadMatches(league country, leagueUrl url)
         {
             //Проверка на наличие матчей
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -395,7 +396,7 @@ namespace FinalBet.ViewModel
         // Б - имеют непустую отметку #mark#
         //+ добавление в БД
         //+ сохранение в .zip файл
-        public async Task LoadMarkedMatches()
+        private async Task LoadMarkedMatches()
         {
             //Загружаем только те URL, Для которых mark != ""
             try
@@ -427,6 +428,58 @@ namespace FinalBet.ViewModel
 
                     StatusText = "Парсим..." + string.Join("\t",
                         new string[] {item.Item1.name, item.Item2.url, item.Item2.year});
+                    await LoadMatches(item.Item1, item.Item2);
+
+                    i++;
+                    ProgressBarValue = 100 * ((double)i / (double)total);
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+                CancelAsync = false;
+            }
+        }
+
+
+        //Загружает матчи (/results) для всех leagueUrl ВЫБРАННОЙ страны, которые
+        // A - принадлежат #isFavorite# стране
+        // Б - имеют непустую отметку #mark#
+        //+ добавление в БД
+        //+ сохранение в .zip файл
+        private async Task LoadLeagueMatches()
+        {
+            //Загружаем только те URL, Для которых mark != ""
+            try
+            {
+                IsBusy = true;
+
+                List<Tuple<league, leagueUrl, bool>> tpl;
+
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var countries = cntx.GetTable<league>();
+                    var urlTable = cntx.GetTable<leagueUrl>();
+
+                    tpl =
+                        (from league in countries
+                            join leagueUrl in urlTable on league.id equals leagueUrl.parentId
+                            where league.isFavorite && leagueUrl.mark.Length > 1
+                            let isCur = LeagueUrlViewModel.GetIsCurrent(leagueUrl.url)
+                            select new Tuple<league, leagueUrl, bool>(league, leagueUrl, isCur)).ToList();
+
+                    tpl = tpl.Where(x => !x.Item3).ToList();
+                    tpl = tpl.Where(x => x.Item1.id == Selected.id).ToList();
+                }
+
+                var total = tpl.Count;
+                int i = 0;
+                foreach (var item in tpl)
+                {
+                    if (CancelAsync) break;
+
+                    StatusText = "Парсим..." + string.Join("\t",
+                        new string[] { item.Item1.name, item.Item2.url, item.Item2.year });
                     await LoadMatches(item.Item1, item.Item2);
 
                     i++;
@@ -640,6 +693,86 @@ namespace FinalBet.ViewModel
         }
         #endregion
 
+        public ICommand TestCommand { get; set; }
+
+        private void Test(object a)
+        {
+            var country = Selected;
+            var url = LeagueUrls.Selected;
+
+            //Проверка на наличие матчей
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<match>();
+                if (table.Count(x => x.parentId == url.Source.id) > 0)
+                {
+                    Log.Information("Матчи для выбранной ссылки уже существуют {@url}", url);
+                    Global.Current.Infos++;
+                    return;
+                }
+            }
+
+            var matches = BetExplorerParser.GetMatches(country, url.Source).Result;
+
+            //Базовая информативная проверка на некорректные записи, чисто дяя лога
+            var notCorrect = matches.Where(x => !x.IsCorrect).ToList();
+            foreach (var beMatch in notCorrect)
+            {
+                Log.Information("Not correct! {@item}", beMatch);
+                Global.Current.Infos++;
+            }
+
+            //Добавляем новые значения в соответствующие таблицы
+            AddNewTeamnamesToDb(matches); //dbo.teamNames
+            AddNewResultsToDb(matches); //dbo.possibleResults
+            AddNewMatchTagsToDb(matches); //dbo.matchTags
+
+            var parentId = url.Source.id;
+
+            //Добавляем матчи в базу данных
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var teamsDict = cntx.GetTable<teamName>().
+                    Where(x => x.leagueId == country.id).
+                    ToDictionary(teamName => teamName.name, teamName => teamName.id);
+
+                var tagsDict = cntx.GetTable<matchTag>()
+                    .ToDictionary(matchTag => matchTag.name, matchTag => matchTag.id);
+
+
+                var matchesTable = cntx.GetTable<match>();
+
+                var toAddMatches = matches.Select(x => new match()
+                {
+                    parentId = parentId,
+                    date = DateTime.Parse(x.Date),
+                    homeTeamId = teamsDict[x.Names[0]],
+                    guestTeamId = teamsDict[x.Names[1]],
+                    tagId = tagsDict[x.Tag],
+                    href = x.Href
+                }).ToList();
+
+                matchesTable.InsertAllOnSubmit(toAddMatches);
+                cntx.SubmitChanges();
+
+                //Adding results
+                var resultsTable = cntx.GetTable<result>();
+                var resultsDict = cntx.GetTable<possibleResult>().ToDictionary(possibleResult => possibleResult.value,
+                    possibleResult => possibleResult.id);
+
+                var toAddResults = toAddMatches.
+                    Select((t, i) => new result()
+                    {
+                        parentId = t.id,
+                        matchPeriod = 0,
+                        resultId = resultsDict[matches[i].FinalScore]
+                    }).ToList();
+
+                resultsTable.InsertAllOnSubmit(toAddResults);
+                cntx.SubmitChanges();
+            }
+        }
+
         public DatabaseViewModel()
         {
             base.DisplayName = "База данных";
@@ -672,6 +805,7 @@ namespace FinalBet.ViewModel
             LoadMatchesCommand = new AsyncCommand(()=>LoadMatches(Selected, LeagueUrls.Selected.Source),
                 () => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null && !IsBusy);
             LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches);
+            LoadLeagueMatchesCommand = new AsyncCommand(LoadLeagueMatches, () => Selected != null);
 
             //Commands
             ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a => LeagueUrls.Items.Any());
@@ -681,6 +815,8 @@ namespace FinalBet.ViewModel
             UnmarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, ""), a=>LeagueUrls.Selected != null);
             MarkAutoCommand = new RelayCommand(MarkAuto, a=> LeagueUrls.Items.Any() && SelectedLeagueMark != null);
             CheckMarksCommand = new RelayCommand(CheckMarks);
+
+            TestCommand = new RelayCommand(Test);
         }
 
 

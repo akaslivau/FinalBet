@@ -178,7 +178,6 @@ namespace FinalBet.Database
         public static async Task<List<BeMatch>> GetMatches(league country, leagueUrl leagueUrl)
         {
             var result = new List<BeMatch>();
-
             var doc = new HtmlDocument();
 
             //Проверяем, есть ли загруженный html в архиве
@@ -237,66 +236,173 @@ namespace FinalBet.Database
             {
                return GetMatches(doc, NO_TABS_TAG);
             }
-            else
+
+            //Иначе получаем список новых ссылок и их названий
+            //И тут может быть совсем по ебанутому, когда ТАБы идут в 2 ряда...или 3...
+            //Например чемпионат Европы, Кубок Азии, Кубок Мира с тремя уровнями и т.д.
+            var tabListNode = doc.DocumentNode.
+                SelectNodes(".//ul[contains(@class, 'list-tabs--secondary')]")
+                .ToList();
+
+            // ***********************************************************   ОДИН РЯД ТАБОВ  **************************
+            //Значит один ряд Табов и просто его парсим
+            if (tabListNode.Count == 1)
             {
-                //Иначе получаем список новых ссылок и их названий
-                var tabListNode = doc.DocumentNode.SelectSingleNode(".//ul[contains(@class, 'list-tabs--secondary')]");
+                var urls = tabListNode.First().
+                    SelectNodes(".//li[@class='list-tabs__item']")
+                    .Select(x => x.SelectSingleNode(".//a")).
+                    Select(x => new StageUrl(x, "", country, leagueUrl)).ToList();
 
-                //<li class="list-tabs__item">
-                var urls = tabListNode.SelectNodes(".//li[@class='list-tabs__item']")
-                    .Select(x => x.SelectSingleNode(".//a")).ToList();
+                return GetMatchesFromUrlsList(urls);
+            }
+            //Иначе у нас больше одного ряда
+            //Находим главный div  //< div class="h-mb15">
+            var mainDiv = doc.DocumentNode.SelectSingleNode(".//div[@class='h-mb15']");
+            //Получаем первый ряд
+            var main_li_ids = tabListNode.First().
+                SelectNodes(".//li[contains(@id, 'sm-a')]").
+                Select(x=>x.GetAttributeValue("id", default(string))).
+                Where(x=>!string.IsNullOrEmpty(x)).
+                ToList();
 
-                for (int i = 0; i < urls.Count; i++)
+            //<div class="box-overflow">
+            var div_s = mainDiv.SelectNodes(".//div[@class='box-overflow']")
+                .ToList();
+
+            // ***********************************************************   ДВА РЯДА ТАБОВ  **************************
+            //Это в теории значит, что у нас всего 2 ряда табов, и можно их так херануть
+            if (div_s.Count == (main_li_ids.Count + 1))
+            {
+                var itemsCaseTwoTabs = tabListNode.First().SelectNodes(".//li[contains(@id, 'sm-a')]")
+                    .Select(
+                        x =>
+                            new
+                            {
+                                mainTag = x.InnerText.Trim(),
+                                id = x.GetAttributeValue("id", default(string)).Replace("a-","")
+                            }).ToList();
+
+                var stageUrlsTwoTabs = new List<StageUrl>();
+                foreach (var item in itemsCaseTwoTabs)
                 {
-                    //<a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/results/?stage=baGxDORM"
-                    var href = urls[i].GetAttributeValue("href", "default");
-                    var tag = urls[i].InnerText;
+                    var div_id_node = mainDiv.SelectSingleNode(".//div[@id='"+item.id+"']");
 
-                    var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS + href;
+                    var toAdd = div_id_node.
+                        SelectNodes(".//li[@class='list-tabs__item']")
+                        .Select(x => x.SelectSingleNode(".//a")).
+                        Select(x => new StageUrl(x, item.mainTag, country, leagueUrl)).ToList();
 
-                    //Загружаем документ по полученным ссылкам
-                    var doc2 = new HtmlDocument();
-
-                    var stagePos = href.IndexOf("?stage=") + "?stage=".Length;
-                    var stage = href.Substring(stagePos, href.Length - stagePos);
-
-                    var stageFileName = stage + ".html";
-
-                    var isStageHtmlExists = false;
-
-                    using (ZipArchive zip = ZipFile.OpenRead(zipPath))
-                    {
-                        isStageHtmlExists = zip.Entries.Any(x => x.Name == stageFileName);
-                    }
-
-                    if (isStageHtmlExists)
-                    {
-                        using (ZipArchive zip = ZipFile.OpenRead(zipPath))
-                        {
-                            var entry = zip.Entries.Single(x => x.Name == stageFileName);
-                            entry.ExtractToFile("stage" + i + ".html", true);
-                        }
-                        //Загружаем html из извлеченного файла
-                        doc2.Load("stage" + i + ".html");
-                    }
-                    else
-                    {
-                        var web2 = new HtmlWeb();
-                        doc2 = web2.Load(url);
-                        File.WriteAllText("stage" + i + ".html", doc2.DocumentNode.InnerHtml);
-
-                        using (ZipArchive zip = ZipFile.Open(zipPath, ZipArchiveMode.Update))
-                        {
-                            zip.CreateEntryFromFile("stage" + i + ".html", stageFileName);
-                        }
-                    }
-
-                    //Распарсиваем список матчей и добавляем к результату
-                    var matches = GetMatches(doc2, tag);
-                    result.AddRange(matches);
+                    stageUrlsTwoTabs.AddRange(toAdd);
                 }
+                return GetMatchesFromUrlsList(stageUrlsTwoTabs);
             }
 
+            // ***********************************************************   ТРИ РЯДА ТАБОВ  **************************
+            //АХАХАХХАХА-АХАХАХАХАХ
+            var itemsCaseThreeTabs = tabListNode.First().SelectNodes(".//li[contains(@id, 'sm-a')]")
+                .Select(
+                    x =>
+                        new
+                        {
+                            mainTag = x.InnerText.Trim(),
+                            id = x.GetAttributeValue("id", default(string)).Replace("a-", "")
+                        }).ToList();
+
+            var stageUrlsThreeTabs = new List<StageUrl>();
+            foreach (var item in itemsCaseThreeTabs)
+            {
+                var div_id_node = mainDiv.SelectSingleNode(".//div[@id='" + item.id + "']");
+
+                //Значит тут реально только 2 ряда табов
+                if (div_id_node != null)
+                {
+                    var toAdd = div_id_node.
+                        SelectNodes(".//li[@class='list-tabs__item']")
+                        .Select(x => x.SelectSingleNode(".//a")).
+                        Select(x => new StageUrl(x, item.mainTag, country, leagueUrl)).ToList();
+
+                    stageUrlsThreeTabs.AddRange(toAdd);
+                }
+                else
+                {
+                    var shortId = item.id.Substring(0, 4);
+                    var div_lvl2_node = mainDiv.SelectSingleNode(".//div[@id='" + shortId + "']");
+                    if (div_lvl2_node != null)
+                    {
+                        var lvl_two_tabs = div_lvl2_node.SelectNodes(".//li[contains(@id, 'sm-a')]")
+                            .Select(
+                                x =>
+                                    new
+                                    {
+                                        mainTag = x.InnerText.Trim(),
+                                        id = x.GetAttributeValue("id", default(string)).Replace("a-", "")
+                                    }).ToList();
+
+                        foreach (var lvlTwoTab in lvl_two_tabs)
+                        {
+                            var div_lvl3_node = mainDiv.SelectSingleNode(".//div[@id='" + lvlTwoTab.id + "']");
+                            if (div_lvl3_node != null)
+                            {
+                                var toAdd = div_lvl3_node.
+                                    SelectNodes(".//li[@class='list-tabs__item']")
+                                    .Select(x => x.SelectSingleNode(".//a")).
+                                    Select(x => new StageUrl(x, item.mainTag + " - " + lvlTwoTab.mainTag, country, leagueUrl)).ToList();
+
+                                stageUrlsThreeTabs.AddRange(toAdd);
+                            }
+                        }
+                    }
+                }
+            }
+            return GetMatchesFromUrlsList(stageUrlsThreeTabs);
+
+            throw new Exception("Impossible!");
+        }
+
+        private static List<BeMatch> GetMatchesFromUrlsList(List<StageUrl> urls)
+        {
+            var result = new List<BeMatch>();
+            for (int i = 0; i < urls.Count; i++)
+            {
+                if (!urls[i].HasStage) continue;
+
+                //Загружаем документ по полученным ссылкам
+                var doc2 = new HtmlDocument();
+                var stageFileName = urls[i].Stage + ".html";
+
+                var isStageHtmlExists = false;
+                using (ZipArchive zip = ZipFile.OpenRead(urls[i].ZipPath))
+                {
+                    isStageHtmlExists = zip.Entries.Any(x => x.Name == stageFileName);
+                }
+
+                if (isStageHtmlExists)
+                {
+                    using (ZipArchive zip = ZipFile.OpenRead(urls[i].ZipPath))
+                    {
+                        var entry = zip.Entries.Single(x => x.Name == stageFileName);
+                        entry.ExtractToFile("stage" + i + ".html", true);
+                    }
+
+                    //Загружаем html из извлеченного файла
+                    doc2.Load("stage" + i + ".html");
+                }
+                else
+                {
+                    var web2 = new HtmlWeb();
+                    doc2 = web2.Load(urls[i].WebUrl);
+                    File.WriteAllText("stage" + i + ".html", doc2.DocumentNode.InnerHtml);
+
+                    using (ZipArchive zip = ZipFile.Open(urls[i].ZipPath, ZipArchiveMode.Update))
+                    {
+                        zip.CreateEntryFromFile("stage" + i + ".html", stageFileName);
+                    }
+                }
+
+                //Распарсиваем список матчей и добавляем к результату
+                var matches = GetMatches(doc2, urls[i].GetFinalTag());
+                result.AddRange(matches);
+            }
             return result;
         }
 
@@ -346,13 +452,11 @@ namespace FinalBet.Database
             var trNodes = tableNode.SelectNodes(".//tr").ToList();
             foreach (var tr in trNodes)
             {
-                if(tr.InnerText.Contains("Round") || tr.InnerText.Length < 10) continue; //<tr><th class="h-text-left" colspan="2">1. Round</th><th class="h-text-center">1</th><th class="h-text-center">X</th><th class="h-text-center">2</th><th>&nbsp;</th></tr>
+                if(tr.InnerText.Contains("Round")) continue; //<tr><th class="h-text-left" colspan="2">1. Round</th><th class="h-text-center">1</th><th class="h-text-center">X</th><th class="h-text-center">2</th><th>&nbsp;</th></tr>
 
                 var names = tr.SelectSingleNode(".//td[@class='h-text-left']");
                 if (names == null)
                 {
-                    Log.Information("GetMatches. Tr node parse. Null td node with names. " + tr.InnerText);
-                    Global.Current.Infos++;
                     continue;
                 }
 
@@ -372,8 +476,7 @@ namespace FinalBet.Database
 
             return result;
         }
-
-
+        
         public static void ParseMatchResult(string matchResult, out bool isCorrect, out int scored, out int missed)
         {
             isCorrect = false;
@@ -448,5 +551,44 @@ namespace FinalBet.Database
         }
     }
 
-    
+    public class StageUrl
+    {
+        //<a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/results/?stage=baGxDORM"
+        #region Variables
+        public string Href { get; private set; }
+        public string SelfTag { get; private set; }
+        public bool HasStage { get; private set; }
+        public string Stage { get; private set; }
+        public HtmlNode Node { get; private set; }
+        public string WebUrl { get; private set; }
+        public string ZipPath { get; private set; }
+        #endregion
+
+        public string OuterTag { get; private set; }
+
+        public string GetFinalTag()
+        {
+            return string.IsNullOrEmpty(OuterTag) ? SelfTag : OuterTag + "-" + SelfTag;
+        }
+        
+        public StageUrl(HtmlNode node, string outerTag, league country, leagueUrl leagueUrl)
+        {
+            ZipPath = BetExplorerParser.GetZipPath(country, leagueUrl);
+            
+            Node = node;
+            OuterTag = outerTag;
+
+            SelfTag = node.InnerText;
+            Href = node.GetAttributeValue("href", "");
+            HasStage = !string.IsNullOrEmpty(Href) && Href.Contains("?stage=");
+
+            if (HasStage)
+            {
+                var stagePos = Href.IndexOf("?stage=") + "?stage=".Length;
+                Stage = Href.Substring(stagePos, Href.Length - stagePos);
+            }
+
+            WebUrl = Settings.Default.soccerUrl + country.url + leagueUrl.url + BetExplorerParser.RESULTS + Href;
+        }
+    }
 }

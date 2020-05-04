@@ -131,7 +131,9 @@
                             <MenuItem Header="Матчи">
                                 <MenuItem Header="Открыть директорию" Command="{Binding OpenArchiveFolderCommand}"/>
                                 <MenuItem Header="Загрузить для выбранной URL" Command="{Binding LoadMatchesCommand}"/>
-                                <MenuItem Header="Загрузить отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
+                                <MenuItem Header="Загрузить для страны" Command="{Binding LoadLeagueMatchesCommand}"/>
+                                <Separator/>
+                                <MenuItem Header="Загрузить все отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Отметки">
                                 <MenuItem Header="Отметить"

@@ -312,7 +312,8 @@ namespace FinalBet.ViewModel
                 bool canvasSizesSetted = false;
                 foreach (var teamName in teamNames)
                 {
-                    var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).ToList();
+                    var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).
+                        OrderBy(x=>x.date).ToList();
 
                     var rGmatches = new List<RGmatch>();
                     foreach (var match in line)
