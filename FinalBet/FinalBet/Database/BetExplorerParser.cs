@@ -177,7 +177,6 @@ namespace FinalBet.Database
         //То будут возвращены все матчи
         public static async Task<List<BeMatch>> GetMatches(league country, leagueUrl leagueUrl)
         {
-            var result = new List<BeMatch>();
             var doc = new HtmlDocument();
 
             //Проверяем, есть ли загруженный html в архиве

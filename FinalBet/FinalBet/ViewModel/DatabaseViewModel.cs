@@ -13,6 +13,7 @@ using FinalBet.Framework;
 using FinalBet.Model;
 using FinalBet.Properties;
 using Serilog;
+// ReSharper disable All
 
 namespace FinalBet.ViewModel
 {
@@ -332,7 +333,7 @@ namespace FinalBet.ViewModel
 
             var matches = await BetExplorerParser.GetMatches(country, url);
             
-            //Базовая информативная проверка на некорректные записи, чисто дяя лога
+            //Базовая информативная проверка на некорректные записи, чисто для лога
             var notCorrect = matches.Where(x => !x.IsCorrect).ToList();
             foreach (var beMatch in notCorrect)
             {
@@ -484,6 +485,7 @@ namespace FinalBet.ViewModel
 
                     i++;
                     ProgressBarValue = 100 * ((double)i / (double)total);
+                    await Task.Delay(300);
                 }
             }
             finally
