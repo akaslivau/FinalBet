@@ -506,6 +506,14 @@ namespace FinalBet.Database
             return Settings.Default.zipFolder + zipFileName;
         }
 
+        public static async Task<string> GetMatchDetailHtml(match match)
+        {
+            var web = new HtmlWeb();
+            var url = Settings.Default.beUrl + match.href.Substring(1, match.href.Length - 1);
+            var doc = await web.LoadFromWebAsync(url);
+            return doc.DocumentNode.InnerHtml;
+        }
+
 
         public static MatchDetail GetMatchDetails(string html)
         {
@@ -535,8 +543,7 @@ namespace FinalBet.Database
 
 
             #endregion
-
-
+            
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -604,7 +611,7 @@ namespace FinalBet.Database
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Accept = "application/json, text/javascript, #1#*; q=0.01";
             request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36";
-            request.Referer = (Settings.Default.beUrl + href).Replace("//", "/");
+            request.Referer = Settings.Default.beUrl + href.Substring(1,href.Length-1);
             request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
 
             request.Headers.Add("method", "GET");
@@ -729,6 +736,16 @@ namespace FinalBet.Database
             }
         }
 
+        public override string ToString()
+        {
+            var list = new List<string>
+            {
+                AreResultsCorrect.ToString(),
+                FirstTimePossibleResult.value,
+                SecondTimePossibleResult.value
+            };
+            return string.Join("\n", list);
+        }
     }
 
     public class StageUrl

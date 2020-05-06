@@ -12,6 +12,8 @@ using FinalBet.Database;
 using FinalBet.Framework;
 using FinalBet.Model;
 using FinalBet.Properties;
+using HtmlAgilityPack;
+using MahApps.Metro.Controls;
 using Serilog;
 // ReSharper disable All
 
@@ -226,7 +228,7 @@ namespace FinalBet.ViewModel
         public IAsyncCommand LoadLeagueMatchesCommand { get; private set; }
         public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
         public IAsyncCommand SetUrlsRepoCommand { get; private set; }
-        public IAsyncCommand TestAsyncCommand { get; private set; }
+        public ICommand TestAsyncCommand { get; private set; }
 
         //Загружает список ссылок для выбранной страны
         private async Task SetUrlsRepo()
@@ -443,7 +445,6 @@ namespace FinalBet.ViewModel
             }
         }
 
-
         //Загружает матчи (/results) для всех leagueUrl ВЫБРАННОЙ страны, которые
         // A - принадлежат #isFavorite# стране
         // Б - имеют непустую отметку #mark#
@@ -498,9 +499,38 @@ namespace FinalBet.ViewModel
 
         private async Task TestAsyncTask()
         {
-            var ap = await BetExplorerParser.GetBeOddHtml("/soccer/argentina/superliga-2018-2019/aldosivi-boca-juniors/WUstI522/", BeOddType.OU);
-               
-            File.WriteAllText(@"D:\\success.txt", ap);
+            //TODO: Parse Odd Html for 4 types
+            //TODO: async Task for getting data
+            //TODO: coerce result if need (ET, PEN)
+            var sWatch = new Stopwatch();
+            sWatch.Start();
+
+            match toTest;
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var matches = cntx.GetTable<match>();
+                toTest = matches.First(x => x.date > new DateTime(2014, 12, 1));
+            }
+
+            var matchHtmlTask = BetExplorerParser.GetMatchDetailHtml(toTest);
+            var ouHtmlTask = BetExplorerParser.GetBeOddHtml(toTest, BeOddType.OU);
+            var _1x2HtmlTask = BetExplorerParser.GetBeOddHtml(toTest, BeOddType._1X2);
+            var ahHtmlTask = BetExplorerParser.GetBeOddHtml(toTest, BeOddType.AH);
+            var btsHtmlTask =  BetExplorerParser.GetBeOddHtml(toTest, BeOddType.BTS);
+            
+            await Task.WhenAll(matchHtmlTask, ouHtmlTask, _1x2HtmlTask, ahHtmlTask, btsHtmlTask);
+
+            sWatch.Stop();
+            var matchDetail = BetExplorerParser.GetMatchDetails(matchHtmlTask.Result);
+            File.WriteAllText(@"D:\\1.txt", matchDetail.ToString());
+            File.WriteAllText(@"D:\\2.txt", ouHtmlTask.Result);
+            File.WriteAllText(@"D:\\3.txt", _1x2HtmlTask.Result);
+            File.WriteAllText(@"D:\\4.txt", ahHtmlTask.Result);
+            File.WriteAllText(@"D:\\5.txt", btsHtmlTask.Result);
+
+
+            MessageBox.Show(sWatch.ElapsedMilliseconds.ToString());
+
         }
 
         //Вспомогательные методы, используемые при Task LoadMatches
@@ -817,7 +847,7 @@ namespace FinalBet.ViewModel
             LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches);
             LoadLeagueMatchesCommand = new AsyncCommand(LoadLeagueMatches, () => Selected != null);
 
-            TestAsyncCommand = new AsyncCommand(TestAsyncTask);
+            TestAsyncCommand = new RelayCommand(a=>TestAsyncTask());
 
             //Commands
             ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a => LeagueUrls.Items.Any());

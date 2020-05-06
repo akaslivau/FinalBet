@@ -409,24 +409,7 @@ namespace FinalBet.ViewModel
 
         private void Test(object obj)
         {
-
-            return;
-            ;
-            var names = new string[] {"41313", "170366", "165387", "416387", "416377" };
-
-            foreach (var name in names)
-            {
-                var html = File.ReadAllText(@"D:\\" + name + ".html");
-                var op = BetExplorerParser.GetMatchDetails(html);
-                if (op == null)
-                {
-                    MessageBox.Show(name + " is null");
-                }
-                else
-                {
-                    MessageBox.Show(name + " ::" + op.SecondTimePossibleResult.value);
-                }
-            }
+            
         }
     }
 }
