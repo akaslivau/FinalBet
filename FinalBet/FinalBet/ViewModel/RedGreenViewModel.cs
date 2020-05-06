@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -277,6 +278,7 @@ namespace FinalBet.ViewModel
         #endregion
 
         public ICommand DrawCommand { get; private set; }
+        public ICommand TestCommand { get; private set; }
 
         private void Draw(object prm)
         {
@@ -292,7 +294,9 @@ namespace FinalBet.ViewModel
 
             if(!matchList.Any()) return;
 
-            var teamNames = Soccer.GetTeamNames(matchList.Select(x => x.homeTeamId).Distinct());
+            var teamNames = Soccer.GetTeamNames(
+                (matchList.Select(x => x.homeTeamId).
+                Union(matchList.Select(x => x.guestTeamId))).Distinct());
             
 
             var canvas = (DrawingCanvas) prm;
@@ -309,7 +313,7 @@ namespace FinalBet.ViewModel
                 var matchesId = matchList.Select(x => x.id).ToList();
                 var results = cntx.GetTable<result>().Where(x => matchesId.Contains(x.id)).ToList();
 
-                bool canvasSizesSetted = false;
+                canvas.Width = 1;
                 foreach (var teamName in teamNames)
                 {
                     var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).
@@ -347,12 +351,13 @@ namespace FinalBet.ViewModel
                     canvas.AddVisual(teamVisual);
 
 
-                    if (!canvasSizesSetted)
+                    var cWidth = teamCellWidth + +canvas.CellSize / 4 + line.Count * (canvas.CellSize + shift);
+                    if (canvas.Width < cWidth)
                     {
-                        canvas.Width = teamCellWidth + +canvas.CellSize / 4 + line.Count * (canvas.CellSize + shift);
-                        canvas.Height = teamNames.Count * (canvas.CellSize + shift) + shift;
-                        canvasSizesSetted = true;
+                        canvas.Width = cWidth;
                     }
+                    canvas.Height = teamNames.Count * (canvas.CellSize + shift) + shift;
+                   
                     
                     for (int j = 0; j < line.Count; j++)
                     {
@@ -399,6 +404,29 @@ namespace FinalBet.ViewModel
             InitializeLeagues(_showOnlyFavorites);
 
             DrawCommand = new RelayCommand(Draw, a => SelectedSubSeason != null);
+            TestCommand = new RelayCommand(Test);
+        }
+
+        private void Test(object obj)
+        {
+
+            return;
+            ;
+            var names = new string[] {"41313", "170366", "165387", "416387", "416377" };
+
+            foreach (var name in names)
+            {
+                var html = File.ReadAllText(@"D:\\" + name + ".html");
+                var op = BetExplorerParser.GetMatchDetails(html);
+                if (op == null)
+                {
+                    MessageBox.Show(name + " is null");
+                }
+                else
+                {
+                    MessageBox.Show(name + " ::" + op.SecondTimePossibleResult.value);
+                }
+            }
         }
     }
 }

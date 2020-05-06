@@ -158,6 +158,7 @@
 
                             </MenuItem>
                             <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
+                            <MenuItem Header="Тестовая команда"  Command="{Binding TestAsyncCommand}"/>
                         </Menu>
                     </DockPanel>
                     <DockPanel Grid.Row="1" HorizontalAlignment="Left">
@@ -447,6 +448,8 @@
                             </Menu.Resources>
                             <MenuItem Header="Рисовать" Command="{Binding DrawCommand}"
                                       CommandParameter="{Binding ElementName=RedGreenCanvas}"
+                                      />
+                            <MenuItem Header="Загрузить детали" Command="{Binding TestCommand}"
                                       />
                         </Menu>
                     </DockPanel>

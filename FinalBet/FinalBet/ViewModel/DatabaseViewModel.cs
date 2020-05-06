@@ -226,6 +226,7 @@ namespace FinalBet.ViewModel
         public IAsyncCommand LoadLeagueMatchesCommand { get; private set; }
         public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
         public IAsyncCommand SetUrlsRepoCommand { get; private set; }
+        public IAsyncCommand TestAsyncCommand { get; private set; }
 
         //Загружает список ссылок для выбранной страны
         private async Task SetUrlsRepo()
@@ -493,6 +494,13 @@ namespace FinalBet.ViewModel
                 IsBusy = false;
                 CancelAsync = false;
             }
+        }
+
+        private async Task TestAsyncTask()
+        {
+            var ap = await BetExplorerParser.GetBeOddHtml("/soccer/argentina/superliga-2018-2019/aldosivi-boca-juniors/WUstI522/", BeOddType.OU);
+               
+            File.WriteAllText(@"D:\\success.txt", ap);
         }
 
         //Вспомогательные методы, используемые при Task LoadMatches
@@ -808,6 +816,8 @@ namespace FinalBet.ViewModel
                 () => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null && !IsBusy);
             LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches);
             LoadLeagueMatchesCommand = new AsyncCommand(LoadLeagueMatches, () => Selected != null);
+
+            TestAsyncCommand = new AsyncCommand(TestAsyncTask);
 
             //Commands
             ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a => LeagueUrls.Items.Any());

@@ -93,5 +93,17 @@ namespace FinalBet.Properties {
                 this["onlyFavorites"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://www.betexplorer.com/")]
+        public string beUrl {
+            get {
+                return ((string)(this["beUrl"]));
+            }
+            set {
+                this["beUrl"] = value;
+            }
+        }
     }
 }

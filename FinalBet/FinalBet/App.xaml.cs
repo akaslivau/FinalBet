@@ -5,6 +5,7 @@ using System.Configuration;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -39,9 +40,11 @@ namespace FinalBet
             {
                 DateTimeFormat = { ShortDatePattern = "dd.MM.yyyy", LongTimePattern = "" }
             };
-
+            
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
 
             base.OnStartup(e);
             

@@ -11,6 +11,7 @@ using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
 using System.Linq.Expressions;
+using System.Net.Http;
 using FinalBet.Model;
 using FinalBet.Properties;
 using Serilog.Core;
@@ -505,17 +506,153 @@ namespace FinalBet.Database
             return Settings.Default.zipFolder + zipFileName;
         }
 
+
+        public static MatchDetail GetMatchDetails(string html)
+        {
+            #region Html
+
+            /*< li class="list-details__item">
+    <figure class="list-details__item__team"><div>
+    <a href = "/soccer/team/russia/hrgrswHh/" >< img src="/res/images/team-logo/ny81SOoh-WQE2Dwu6.png" alt="Russia">
+    </a>
+    </div></figure>
+    <h2 class="list-details__item__title"><a href = "/soccer/team/russia/hrgrswHh/" > Russia </ a ></ h2 >
+    </ li >
+    <li class="list-details__item">
+
+< p class="list-details__item__date" id="match-date" data-dt="7,7,2018,20,00"></p>
+    <p class="list-details__item__score" id="js-score">2:3</p>
+    <h2 class="list-details__item__eventstage" id="js-eventstage">After Penalties</h2>
+    <h2 class="list-details__item__partial" id="js-partial">(1:1, 0:0, 1:1, 3:4)</h2></li>
+    <li class="list-details__item">
+    <figure class="list-details__item__team"><div>
+    <a href = "/soccer/team/croatia/K8aznggo/" >< img src="/res/images/team-logo/dWUpPN93-pEdsWetM.png" alt="Croatia">
+    </a>
+    </div></figure>
+    <h2 class="list-details__item__title"><a href = "/soccer/team/croatia/K8aznggo/" > Croatia </ a ></ h2 >
+    </ li >
+    */
+
+
+            #endregion
+
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            //< ul class="list-details">
+            var node = doc.DocumentNode.SelectSingleNode(".//ul[@class='list-details']");
+
+            //Final score
+            //<p class="list-details__item__score" id="js-score">2:2</p>
+
+            //< h2 class="list-details__item__partial" id="js-partial">(1:1, 0:0, 1:1, 3:4)</h2></li>
+            var scoresString = node.SelectSingleNode(".//h2[@class='list-details__item__partial']").InnerText;
+            bool hasScores = scoresString.Any(x => x == ':');
+            if (!hasScores) return null;
+
+
+            var scores = scoresString.Split(',', '(', ')').
+                Where(x=>!string.IsNullOrEmpty(x)).
+                Select(x => x.Trim()).ToList();
+            if (scores.Count < 2) return null;
+
+            var details = new MatchDetail(scores[0], scores[1]);
+            return details;
+
+
+            /*string url = "";
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<match>();
+
+                var match = table.Single(x => x.id == id);
+                url =  Settings.Default.beUrl + match.href;
+            }
+
+            if(string.IsNullOrEmpty(url)) return;
+
+            var web = new HtmlWeb();
+            var doc = web.Load(url);
+            File.WriteAllText(@"D:\\" + id + ".html", doc.DocumentNode.InnerHtml);*/
+        }
+        
+        public static async Task<string> GetBeOddHtml(string href, BeOddType oddType)
+        {
+            //PowerShell Web Request
+            /*Invoke - WebRequest - Uri "https://www.betexplorer.com/match-odds/WEqpywFK/1/ou/" - Headers @{
+                "method" = "GET"
+                "authority" = "www.betexplorer.com"
+                "scheme" = "https"
+                "path" = "/match-odds/WEqpywFK/1/ou/"
+                "accept" = "application/json, text/javascript, #1#*; q=0.01"
+                "user-agent" = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"
+                "x-requested-with" = "XMLHttpRequest"
+                "sec-fetch-site" = "same-origin"
+                "sec-fetch-mode" = "cors"
+                "sec-fetch-dest" = "empty"
+                "referer" = "https://www.betexplorer.com/soccer/world/world-cup-2018/russia-croatia/WEqpywFK/"
+                "accept-encoding" = "gzip, deflate, br"
+                "accept-language" = "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7"
+                "cookie" = "_ga=GA1.2.11540757.1585916447; _hjid=b91dbff5-1411-47cc-bb61-195432b8ea14; my_timezone=%2B1; my_cookie_id=110484032; my_cookie_hash=3822e9f84dd7c28bc9f5bab57f88526f; _gid=GA1.2.1671225560.1588507164; js_cookie=1; _session_UA-191939-1=true; _hjIncludedInSample=1; page_cached=1; widget_pageViewCount=6"
+            }
+            -OutFile D:\out_wr.txt*/
+
+            var matchId = href.Split('/').Last(x => !string.IsNullOrEmpty(x));
+            string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddType + "/";
+
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            request.Accept = "application/json, text/javascript, #1#*; q=0.01";
+            request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36";
+            request.Referer = (Settings.Default.beUrl + href).Replace("//", "/");
+            request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+
+            request.Headers.Add("method", "GET");
+            request.Headers.Add("authority", "www.betexplorer.com");
+            request.Headers.Add("scheme", "https");
+            request.Headers.Add("path", "/match-odds/"+matchId+"/1/" + oddType);
+            request.Headers.Add("x-requested-with", "XMLHttpRequest");
+            request.Headers.Add("sec-fetch-site", "same-origin");
+            request.Headers.Add("sec-fetch-mode", "cors");
+            request.Headers.Add("sec-fetch-dest", "empty");
+            request.Headers.Add("accept-language", "en-US;q=0.8,ru-RU,ru;q=0.9,en;q=0.7");
+            //request.Headers.Add("cookie", "_ga=GA1.2.11540757.1585916447; _hjid=b91dbff5-1411-47cc-bb61-195432b8ea14; my_timezone=%2B1; my_cookie_id=110484032; my_cookie_hash=3822e9f84dd7c28bc9f5bab57f88526f; _gid=GA1.2.1671225560.1588507164; js_cookie=1; _session_UA-191939-1=true; _hjIncludedInSample=1; page_cached=1; widget_pageViewCount=6");
+
+            try
+            {
+                var response = await request.GetResponseAsync();
+                return ReadStreamFromResponse(response);
+            }
+            catch (Exception e)
+            {
+                return string.Empty;
+            }
+        }
+
+        public static async Task<string> GetBeOddHtml(match match, BeOddType oddType)
+        {
+            return await GetBeOddHtml(match.href, oddType);
+        }
+
+        private static string ReadStreamFromResponse(WebResponse response)
+        {
+            using (Stream responseStream = response.GetResponseStream())
+            using (StreamReader sr = new StreamReader(responseStream ?? throw new InvalidOperationException()))
+            {
+                return sr.ReadToEnd();
+            }
+        }
     }
 
     public class BeMatch
     {
-        public List<string> Names { get; private set; }
-        public string Href { get; private set; }
-        public string FinalScore { get; private set; }
-        public string Date { get; private set; }
-        public string Tag { get; private set; }
+        public List<string> Names { get; }
+        public string Href { get; }
+        public string FinalScore { get; }
+        public string Date { get; }
+        public string Tag { get; }
 
-        public bool IsCorrect { get; private set; }
+        public bool IsCorrect { get; }
 
         public BeMatch(List<string> names, string href, string finalScore, string date, string tag)
         {
@@ -550,20 +687,64 @@ namespace FinalBet.Database
         }
     }
 
+    public class MatchDetail
+    {
+        public bool AreResultsCorrect { get; set; }
+
+        public possibleResult FirstTimePossibleResult { get; set; }
+        public possibleResult SecondTimePossibleResult { get; set; }
+
+        public MatchDetail(string fTimeResult, string sTimeResult)
+        {
+            bool isCorrect1, isCorrect2;
+            int scored1, scored2;
+            int missed1, missed2;
+
+            BetExplorerParser.ParseMatchResult(fTimeResult, out isCorrect1, out scored1, out missed1);
+            BetExplorerParser.ParseMatchResult(sTimeResult, out isCorrect2, out scored2, out missed2);
+
+            AreResultsCorrect = isCorrect1 && isCorrect2;
+
+            if (AreResultsCorrect)
+            {
+                FirstTimePossibleResult = new possibleResult()
+                {
+                    isCorrect = isCorrect1,
+                    value = fTimeResult,
+                    scored = scored1,
+                    missed = missed1,
+                    total = scored1 + missed1,
+                    diff = scored1 - missed1
+                };
+
+               SecondTimePossibleResult = new possibleResult()
+                {
+                    isCorrect = isCorrect2,
+                    value = sTimeResult,
+                    scored = scored2,
+                    missed = missed2,
+                    total = scored2 + missed2,
+                    diff = scored2 - missed2
+                };
+            }
+        }
+
+    }
+
     public class StageUrl
     {
         //<a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/results/?stage=baGxDORM"
         #region Variables
-        public string Href { get; private set; }
-        public string SelfTag { get; private set; }
-        public bool HasStage { get; private set; }
-        public string Stage { get; private set; }
-        public HtmlNode Node { get; private set; }
-        public string WebUrl { get; private set; }
-        public string ZipPath { get; private set; }
+        public string Href { get; }
+        public string SelfTag { get; }
+        public bool HasStage { get; }
+        public string Stage { get; }
+        public HtmlNode Node { get; }
+        public string WebUrl { get; }
+        public string ZipPath { get; }
         #endregion
 
-        public string OuterTag { get; private set; }
+        public string OuterTag { get; }
 
         public string GetFinalTag()
         {
@@ -589,5 +770,28 @@ namespace FinalBet.Database
 
             WebUrl = Settings.Default.soccerUrl + country.url + leagueUrl.url + BetExplorerParser.RESULTS + Href;
         }
+    }
+
+    public sealed class BeOddType
+    {
+        private readonly string name;
+        private readonly int value;
+
+        public static readonly BeOddType _1X2 = new BeOddType(1, "1x2");
+        public static readonly BeOddType OU = new BeOddType(1, "ou");
+        public static readonly BeOddType AH = new BeOddType(1, "ah");
+        public static readonly BeOddType BTS = new BeOddType(1, "bts");
+
+        private BeOddType(int value, string name)
+        {
+            this.name = name;
+            this.value = value;
+        }
+
+        public override string ToString()
+        {
+            return name;
+        }
+
     }
 }
