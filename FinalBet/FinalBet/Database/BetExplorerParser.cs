@@ -34,7 +34,7 @@ namespace FinalBet.Database
             doc.Load(path);*/
 
             //getting html from url
-            var url = Properties.Settings.Default.soccerUrl;
+            var url = Settings.Default.soccerUrl;
             var doc = new HtmlDocument();
             
             var web = new HtmlWeb();
@@ -47,8 +47,7 @@ namespace FinalBet.Database
                 Log.Error(ex, "ParseSoccerPage can't load html");
             }
 
-
-
+            
             //Начинаем парсить
             // В комментариях обозначен тэг, по которому идет разборка html
             //<ul class="list-events list-events--secondary js-divlinks" id="countries-select">
@@ -101,7 +100,7 @@ namespace FinalBet.Database
             bool hasError = false;
 
             //using for IDisposable.Dispose()
-            var url = Properties.Settings.Default.soccerUrl + country.url;
+            var url = Settings.Default.soccerUrl + country.url;
 
             var web = new HtmlWeb();
             try
@@ -124,7 +123,7 @@ namespace FinalBet.Database
         public static List<leagueUrl> GetLeagueUrls(string html, int countryId)
         {
             var result = new List<leagueUrl>();
-            if (string.IsNullOrEmpty(html)) return result;
+            if (String.IsNullOrEmpty(html)) return result;
             
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
@@ -205,17 +204,17 @@ namespace FinalBet.Database
             else //Загружаем из интернета
             {
                 //using for IDisposable.Dispose()
-                var url = Properties.Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS;
+                var url = Settings.Default.soccerUrl + country.url + leagueUrl.url + RESULTS;
 
                 var web = new HtmlWeb();
                 try
                 {
                     doc = await web.LoadFromWebAsync(url);
                     //Zipping HTML
-                    File.WriteAllText(Properties.Settings.Default.tmpHtmlFile, doc.DocumentNode.InnerHtml);
+                    File.WriteAllText(Settings.Default.tmpHtmlFile, doc.DocumentNode.InnerHtml);
                     using (var zip = ZipFile.Open(zipPath, ZipArchiveMode.Create))
                     {
-                        zip.CreateEntryFromFile(Properties.Settings.Default.tmpHtmlFile,
+                        zip.CreateEntryFromFile(Settings.Default.tmpHtmlFile,
                             Settings.Default.zipMainFilename,
                             CompressionLevel.Optimal);
                     }
@@ -262,7 +261,7 @@ namespace FinalBet.Database
             var main_li_ids = tabListNode.First().
                 SelectNodes(".//li[contains(@id, 'sm-a')]").
                 Select(x=>x.GetAttributeValue("id", default(string))).
-                Where(x=>!string.IsNullOrEmpty(x)).
+                Where(x=>!String.IsNullOrEmpty(x)).
                 ToList();
 
             //<div class="box-overflow">
@@ -484,7 +483,7 @@ namespace FinalBet.Database
             missed = -1;
 
             //Contains any letter == notCorrect
-            bool hasAnyLetter = matchResult.Any(char.IsLetter);
+            bool hasAnyLetter = matchResult.Any(Char.IsLetter);
             if (hasAnyLetter) return;
 
             //Parsing
@@ -494,8 +493,8 @@ namespace FinalBet.Database
             var strScore = matchResult.Substring(0, pos).Trim();
             var strMissed = matchResult.Substring(pos + 1).Trim();
 
-            if (!int.TryParse(strScore, out scored)) return;
-            if (!int.TryParse(strMissed, out missed)) return;
+            if (!Int32.TryParse(strScore, out scored)) return;
+            if (!Int32.TryParse(strMissed, out missed)) return;
 
             isCorrect = true;
         }
@@ -506,16 +505,14 @@ namespace FinalBet.Database
             return Settings.Default.zipFolder + zipFileName;
         }
 
-        public static async Task<string> GetMatchDetailHtml(match match)
+        private static async Task<string> GetMatchDetailHtml(match match)
         {
             var web = new HtmlWeb();
             var url = Settings.Default.beUrl + match.href.Substring(1, match.href.Length - 1);
             var doc = await web.LoadFromWebAsync(url);
             return doc.DocumentNode.InnerHtml;
         }
-
-
-        public static MatchDetail GetMatchDetails(string html)
+        private static MatchDetail GetMatchDetails(string html, int matchId)
         {
             #region Html
 
@@ -543,7 +540,7 @@ namespace FinalBet.Database
 
 
             #endregion
-            
+
             var doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -560,31 +557,71 @@ namespace FinalBet.Database
 
 
             var scores = scoresString.Split(',', '(', ')').
-                Where(x=>!string.IsNullOrEmpty(x)).
+                Where(x => !String.IsNullOrEmpty(x)).
                 Select(x => x.Trim()).ToList();
             if (scores.Count < 2) return null;
 
-            var details = new MatchDetail(scores[0], scores[1]);
-            return details;
-
-
-            /*string url = "";
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var table = cntx.GetTable<match>();
-
-                var match = table.Single(x => x.id == id);
-                url =  Settings.Default.beUrl + match.href;
-            }
-
-            if(string.IsNullOrEmpty(url)) return;
-
-            var web = new HtmlWeb();
-            var doc = web.Load(url);
-            File.WriteAllText(@"D:\\" + id + ".html", doc.DocumentNode.InnerHtml);*/
+            return new MatchDetail(scores[0], scores[1], matchId);
         }
-        
-        public static async Task<string> GetBeOddHtml(string href, BeOddType oddType)
+        public static async Task<MatchDetail> GetMatchDetais(match match)
+        {
+            var html = await GetMatchDetailHtml(match);
+            return GetMatchDetails(html, match.id);
+        }
+
+
+        private static string[] possibleTotals = new[] {"0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5", "5.5", "6", "6.5", "7", "7.5", "8","8.5","9"};
+
+
+
+        public static List<odd> GetOddsFromHtml(string html)
+        {
+            var result = new List<odd>();
+            if (string.IsNullOrEmpty(html)) return result;
+
+            var doc = new HtmlDocument();
+
+            //var htm = html.Replace("\"", @"""");
+
+            doc.LoadHtml(html);
+
+            //<table class="table-main h-mb15 sortable" id="sortable-1">
+            var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+
+            foreach (var tableNode in tableNodes)
+            {
+                //<td class="table-main__doubleparameter">0.5</td>
+                var totalStrings = tableNode.SelectNodes(".//td[@class='table-main__doubleparameter']")
+                    .Select(x => x.InnerText).ToList();
+
+                if(totalStrings.Any(x => x != totalStrings.First())) continue;
+                if(!possibleTotals.Contains(totalStrings.First())) continue;
+
+                var total = double.Parse(totalStrings.First());
+                
+                //<td class="table-main__detail-odds" data-odd="1.07"></td>
+                var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
+                    .Select(x => x.GetAttributeValue("data-odd","")).
+                    Where(x=>!string.IsNullOrEmpty(x)).
+                    ToList();
+
+                oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
+                if(oddsStrings.Count!=2) continue;
+
+                var odds = oddsStrings.Select(double.Parse).ToList();
+
+                result.AddRange(odds.Select(x=>new odd()
+                {
+                    oddType = "",
+                    parentId = 1,
+                    value = x
+                }));
+            }
+            
+            return result;
+        }
+
+        private static async Task<string> GetBeOddHtml(string href, BeOddType oddType)
         {
             //PowerShell Web Request
             /*Invoke - WebRequest - Uri "https://www.betexplorer.com/match-odds/WEqpywFK/1/ou/" - Headers @{
@@ -605,7 +642,7 @@ namespace FinalBet.Database
             }
             -OutFile D:\out_wr.txt*/
 
-            var matchId = href.Split('/').Last(x => !string.IsNullOrEmpty(x));
+            var matchId = href.Split('/').Last(x => !String.IsNullOrEmpty(x));
             string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddType + "/";
 
             var request = (HttpWebRequest)WebRequest.Create(url);
@@ -628,11 +665,23 @@ namespace FinalBet.Database
             try
             {
                 var response = await request.GetResponseAsync();
-                return ReadStreamFromResponse(response);
+
+                var res = ReadStreamFromResponse(response);
+                // {"odds":"
+                // \"   =>  "
+                // <\/   =>  </
+                // "}
+                //res = res.Replace(@"{""odds"":""", "");
+                res = res.Replace("{\"odds\":\"", "");
+                res = res.Replace("\"}", "");
+                res = res.Replace(new string(new[] {'\\', '"'}), new string(new[] { '"' }));
+                res = res.Replace(new string(new[] { '<', '\\', '/' }), new string(new[] { '<', '/' }));
+
+                return res;
             }
             catch (Exception e)
             {
-                return string.Empty;
+                return String.Empty;
             }
         }
 
@@ -697,18 +746,17 @@ namespace FinalBet.Database
     public class MatchDetail
     {
         public bool AreResultsCorrect { get; set; }
+        public int MatchId { get; private set; }
 
         public possibleResult FirstTimePossibleResult { get; set; }
         public possibleResult SecondTimePossibleResult { get; set; }
 
-        public MatchDetail(string fTimeResult, string sTimeResult)
+        public MatchDetail(string fTimeResult, string sTimeResult,int matchId)
         {
-            bool isCorrect1, isCorrect2;
-            int scored1, scored2;
-            int missed1, missed2;
+            MatchId = matchId;
 
-            BetExplorerParser.ParseMatchResult(fTimeResult, out isCorrect1, out scored1, out missed1);
-            BetExplorerParser.ParseMatchResult(sTimeResult, out isCorrect2, out scored2, out missed2);
+            BetExplorerParser.ParseMatchResult(fTimeResult, out var isCorrect1, out var scored1, out var missed1);
+            BetExplorerParser.ParseMatchResult(sTimeResult, out var isCorrect2, out var scored2, out var missed2);
 
             AreResultsCorrect = isCorrect1 && isCorrect2;
 
@@ -792,17 +840,35 @@ namespace FinalBet.Database
     public sealed class BeOddType
     {
         private readonly string name;
-        private readonly int value;
 
-        public static readonly BeOddType _1X2 = new BeOddType(1, "1x2");
-        public static readonly BeOddType OU = new BeOddType(1, "ou");
-        public static readonly BeOddType AH = new BeOddType(1, "ah");
-        public static readonly BeOddType BTS = new BeOddType(1, "bts");
+        public static readonly BeOddType _1X2 = new BeOddType("1x2");
+        public static readonly BeOddType OU = new BeOddType("ou");
+        public static readonly BeOddType AH = new BeOddType("ah");
+        public static readonly BeOddType BTS = new BeOddType("bts");
 
-        private BeOddType(int value, string name)
+        private BeOddType(string name)
         {
             this.name = name;
-            this.value = value;
+        }
+
+        public override string ToString()
+        {
+            return name;
+        }
+
+    }
+
+    public sealed class OddType
+    {
+        private readonly string name;
+
+        public static readonly OddType _1 = new OddType("1");
+        public static readonly OddType X = new OddType("X");
+        public static readonly OddType _2 = new OddType("2");
+        
+        private OddType(string name)
+        {
+            this.name = name;
         }
 
         public override string ToString()

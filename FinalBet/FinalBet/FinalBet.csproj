@@ -147,6 +147,7 @@
     <Compile Include="Database\BetExplorerParser.cs" />
     <Compile Include="Database\Connection.cs" />
     <Compile Include="Database\Soccer.cs" />
+    <Compile Include="Extensions\LinqExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\SvgViewboxAttachedProperties.cs" />
     <Compile Include="Framework\CommandViewModel.cs" />

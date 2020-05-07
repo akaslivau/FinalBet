@@ -135,6 +135,11 @@
                                 <Separator/>
                                 <MenuItem Header="Загрузить все отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
                             </MenuItem>
+                            <MenuItem Header="Детали матчей">
+                                <MenuItem Header="Загрузить счета таймов"
+                                          Command="{Binding LoadMatchDetailsCommand}"
+                                />
+                            </MenuItem>
                             <MenuItem Header="Отметки">
                                 <MenuItem Header="Отметить"
                                           InputGestureText="Ctrl+1"
@@ -209,7 +214,22 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-
+                            <GroupBox Grid.Row="1" Header="Async progress info" 
+                                      Visibility="{Binding Path=IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      Margin="{StaticResource ControlMargin}">
+                                <StackPanel  Orientation="Vertical" HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding Path=StatusText}" 
+                                               Style="{StaticResource Textblock.H3}"/>
+                                    <Controls:MetroProgressBar 
+                                        Margin="{StaticResource ControlMargin}"
+                                        Width="400"
+                                        Height="15"
+                                        Value="{Binding Path=ProgressBarValue}"
+                                        Background="{StaticResource ControlBorderBrush}"
+                                        
+                                    />
+                                </StackPanel>
+                            </GroupBox>
                             <Grid Grid.Row="2">
                                 <Grid Height="50">
                                     <Grid.ColumnDefinitions>
@@ -245,19 +265,6 @@
                                         </TextBox>
                                     </StackPanel>
 
-                                    <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center">
-                                        <TextBlock Text="{Binding Path=StatusText}" 
-                                               Style="{StaticResource Textblock.H3}"/>
-                                        <Controls:MetroProgressBar 
-                                        Margin="{StaticResource ControlMargin}"
-                                        Width="200"
-                                        Height="10"
-                                        Value="{Binding Path=ProgressBarValue}"
-                                        Background="{StaticResource ControlBorderBrush}"
-                                        Visibility="{Binding Path=IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                    />
-
-                                    </StackPanel>
                                     <Grid Grid.Column="2">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
