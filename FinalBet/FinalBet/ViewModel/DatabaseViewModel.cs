@@ -231,6 +231,7 @@ namespace FinalBet.ViewModel
         public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
         public IAsyncCommand SetUrlsRepoCommand { get; private set; }
         public IAsyncCommand LoadMatchDetailsCommand { get; private set; }
+        public IAsyncCommand LoadMatchOddsCommand { get; private set; }
         public ICommand TestAsyncCommand { get; private set; }
 
         //Загружает список ссылок для выбранной страны
@@ -502,6 +503,8 @@ namespace FinalBet.ViewModel
 
         private async Task LoadMatchDetails()
         {
+            //Установи batchSize
+            //Помни про take(N)
             var batches = new List<List<match>>();
 
             int batchSize = 1;
@@ -522,24 +525,16 @@ namespace FinalBet.ViewModel
                 string elapsed = "";
                 var cnt = batches.Count;
                 var sWatch = new Stopwatch();
-                for (int i = 0; i < 2; i++)
+
+                for (int i = 0; i < cnt; i++)
                 {
-                    var tasks = batches[i].Select(x => BetExplorerParser.GetBeOddHtml(x, BeOddType.OU)).ToList();
-                    var matchDetails = await Task.WhenAll(tasks);
-
-                    foreach (var matchDetail in matchDetails)
-                    {
-                        File.WriteAllText(@"D:\\" + i + ".html", matchDetail);
-                    }
-
-                    /*sWatch.Reset();
+                    sWatch.Reset();
                     sWatch.Start();
                     var tasks = batches[i].Select(x => BetExplorerParser.GetMatchDetais(x)).ToList();
                     var matchDetails = await Task.WhenAll(tasks);
-                   
-
-                    StatusText = "Chunk size: " + batchSize + 
-                                 ". Number " + i + " from " + cnt + "." 
+                    
+                    StatusText = "Chunk size: " + batchSize +
+                                 ". Number " + i + " from " + cnt + "."
                                  + "Last time: " + elapsed + " s.";
 
                     ProgressBarValue = 100 * ((double)i / (double)cnt);
@@ -547,13 +542,12 @@ namespace FinalBet.ViewModel
                     sWatch.Stop();
                     elapsed = sWatch.Elapsed.Seconds.ToString();
 
-                    if (CancelAsync) break;*/
+                    if (CancelAsync) break;
                 }
-
             }
             catch (Exception e)
             {
-                Log.Fatal(e,"LoadMatchDetails");
+                Log.Fatal(e, "LoadMatchDetails");
                 Global.Current.Errors++;
             }
             finally
@@ -562,30 +556,64 @@ namespace FinalBet.ViewModel
                 CancelAsync = false;
             }
         }
-        
-        private void TestAsyncTask()
+
+        private async Task LoadMatchOdds()
         {
-            //TODO: Parse Odd Html for 4 types
-            //TODO: async Task for getting data
-            //TODO: coerce result if need (ET, PEN)
-            /*match toTest;
+            //Помни про take(N)
+            var matches = new List<match>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var matches = cntx.GetTable<match>();
-                toTest = matches.First(x => x.date > new DateTime(2014, 12, 1));
+                var parsedResults = cntx.GetTable<parsedResult>().Select(x => x.matchId).ToList(); //Таблица содержит id матчей, для которых уже были попытки сделать парсинг
+                matches = cntx.GetTable<match>().
+                    Where(x => !parsedResults.Contains(x.id)).
+                    Take(6).
+                    ToList();
             }
 
-            var ouHtmlTask = BetExplorerParser.GetBeOddHtml(toTest, BeOddType.OU);
-            var _1x2HtmlTask = BetExplorerParser.GetBeOddHtml(toTest, BeOddType._1X2);
-            var ahHtmlTask = BetExplorerParser.GetBeOddHtml(toTest, BeOddType.AH);
-            var btsHtmlTask =  BetExplorerParser.GetBeOddHtml(toTest, BeOddType.BTS);
-            
-            await Task.WhenAll(ouHtmlTask, _1x2HtmlTask, ahHtmlTask, btsHtmlTask);*/
+            try
+            {
+                IsBusy = true;
 
-            var doc = new HtmlDocument();
-            doc.Load(@"D:\\1.html");
-            var op = BetExplorerParser.GetOddsFromHtml(doc.DocumentNode.InnerHtml);
+                string elapsed = "";
+                var cnt = matches.Count;
+                var sWatch = new Stopwatch();
 
+                for (int i = 0; i < cnt; i++)
+                {
+                    sWatch.Reset();
+                    sWatch.Start();
+
+                    var matchOdds = await BetExplorerParser.GetMatchOdds(matches[i]);
+
+
+
+                    StatusText = "Number " + i + " from " + cnt + "."
+                                 + "Last time: " + elapsed + " s.";
+
+                    ProgressBarValue = 100 * ((double)i / (double)cnt);
+
+                    sWatch.Stop();
+                    elapsed = sWatch.Elapsed.Seconds.ToString();
+
+                    if (CancelAsync) break;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Fatal(e, "LoadMatchDetails");
+                Global.Current.Errors++;
+            }
+            finally
+            {
+                IsBusy = false;
+                CancelAsync = false;
+            }
+        }
+
+        private void TestAsyncTask()
+        {
+            //TODO: coerce result if need (ET, PEN)
+            //TODO: fill Sql Tables parsedResults
         }
 
         //Вспомогательные методы, используемые при Task LoadMatches
@@ -903,6 +931,7 @@ namespace FinalBet.ViewModel
             LoadLeagueMatchesCommand = new AsyncCommand(LoadLeagueMatches, () => Selected != null);
 
             LoadMatchDetailsCommand = new AsyncCommand(LoadMatchDetails);
+            LoadMatchOddsCommand = new AsyncCommand(LoadMatchOdds);
 
             TestAsyncCommand = new RelayCommand(a=>TestAsyncTask());
 

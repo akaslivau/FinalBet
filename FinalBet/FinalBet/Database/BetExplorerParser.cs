@@ -92,8 +92,7 @@ namespace FinalBet.Database
 
 
         }
-
-
+        
         public static async Task<string> GetLeagueUrlsHtml(league country)
         {
             var doc = new HtmlDocument();
@@ -117,7 +116,6 @@ namespace FinalBet.Database
 
             return hasError ? "" : doc.DocumentNode.InnerHtml;
         }
-        
         
         //Возвращает список URL с сезонами для выбранной лиги
         public static List<leagueUrl> GetLeagueUrls(string html, int countryId)
@@ -563,61 +561,31 @@ namespace FinalBet.Database
 
             return new MatchDetail(scores[0], scores[1], matchId);
         }
+
         public static async Task<MatchDetail> GetMatchDetais(match match)
         {
             var html = await GetMatchDetailHtml(match);
             return GetMatchDetails(html, match.id);
         }
 
-
-        private static string[] possibleTotals = new[] {"0.5", "1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5", "5.5", "6", "6.5", "7", "7.5", "8","8.5","9"};
-
-
-
-        public static List<odd> GetOddsFromHtml(string html)
+        public static async Task<List<odd>> GetMatchOdds(match match)
         {
             var result = new List<odd>();
-            if (string.IsNullOrEmpty(html)) return result;
-
-            var doc = new HtmlDocument();
-
-            //var htm = html.Replace("\"", @"""");
-
-            doc.LoadHtml(html);
-
-            //<table class="table-main h-mb15 sortable" id="sortable-1">
-            var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
-
-            foreach (var tableNode in tableNodes)
+            var tasks = new List<Task<string>>
             {
-                //<td class="table-main__doubleparameter">0.5</td>
-                var totalStrings = tableNode.SelectNodes(".//td[@class='table-main__doubleparameter']")
-                    .Select(x => x.InnerText).ToList();
+                GetBeOddHtml(match, BeOddType._1X2),
+                GetBeOddHtml(match, BeOddType.OU),
+                GetBeOddHtml(match, BeOddType.AH),
+                GetBeOddHtml(match, BeOddType.BTS)
+            };
 
-                if(totalStrings.Any(x => x != totalStrings.First())) continue;
-                if(!possibleTotals.Contains(totalStrings.First())) continue;
+            var html = await Task.WhenAll(tasks);
 
-                var total = double.Parse(totalStrings.First());
-                
-                //<td class="table-main__detail-odds" data-odd="1.07"></td>
-                var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
-                    .Select(x => x.GetAttributeValue("data-odd","")).
-                    Where(x=>!string.IsNullOrEmpty(x)).
-                    ToList();
+            result.AddRange(GetOddsFromHtml(match.id, html[0], BeOddType._1X2));
+            result.AddRange(GetOddsFromHtml(match.id, html[1], BeOddType.OU));
+            result.AddRange(GetOddsFromHtml(match.id, html[2], BeOddType.AH));
+            result.AddRange(GetOddsFromHtml(match.id, html[3], BeOddType.BTS));
 
-                oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
-                if(oddsStrings.Count!=2) continue;
-
-                var odds = oddsStrings.Select(double.Parse).ToList();
-
-                result.AddRange(odds.Select(x=>new odd()
-                {
-                    oddType = "",
-                    parentId = 1,
-                    value = x
-                }));
-            }
-            
             return result;
         }
 
@@ -648,13 +616,13 @@ namespace FinalBet.Database
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Accept = "application/json, text/javascript, #1#*; q=0.01";
             request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36";
-            request.Referer = Settings.Default.beUrl + href.Substring(1,href.Length-1);
+            request.Referer = Settings.Default.beUrl + href.Substring(1, href.Length - 1);
             request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
 
             request.Headers.Add("method", "GET");
             request.Headers.Add("authority", "www.betexplorer.com");
             request.Headers.Add("scheme", "https");
-            request.Headers.Add("path", "/match-odds/"+matchId+"/1/" + oddType);
+            request.Headers.Add("path", "/match-odds/" + matchId + "/1/" + oddType);
             request.Headers.Add("x-requested-with", "XMLHttpRequest");
             request.Headers.Add("sec-fetch-site", "same-origin");
             request.Headers.Add("sec-fetch-mode", "cors");
@@ -674,7 +642,7 @@ namespace FinalBet.Database
                 //res = res.Replace(@"{""odds"":""", "");
                 res = res.Replace("{\"odds\":\"", "");
                 res = res.Replace("\"}", "");
-                res = res.Replace(new string(new[] {'\\', '"'}), new string(new[] { '"' }));
+                res = res.Replace(new string(new[] { '\\', '"' }), new string(new[] { '"' }));
                 res = res.Replace(new string(new[] { '<', '\\', '/' }), new string(new[] { '<', '/' }));
 
                 return res;
@@ -685,11 +653,141 @@ namespace FinalBet.Database
             }
         }
 
-        public static async Task<string> GetBeOddHtml(match match, BeOddType oddType)
+        private static async Task<string> GetBeOddHtml(match match, BeOddType oddType)
         {
             return await GetBeOddHtml(match.href, oddType);
         }
 
+        private static List<odd> GetOddsFromHtml(int parentId, string html, BeOddType oddParseType)
+        {
+            if (string.IsNullOrEmpty(html)) return new List<odd>();
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            if (oddParseType == BeOddType.OU) return GetTotalOddsFromHtml(doc, parentId);
+            if (oddParseType == BeOddType._1X2) return Get1x2OddsFromHtml(doc, parentId);
+            if (oddParseType == BeOddType.AH) return GetAhOddsFromHtml(doc, parentId);
+            if (oddParseType == BeOddType.BTS) return GetBtsOddsFromHtml(doc, parentId);
+
+            throw new NotImplementedException("Ty 4o, pes?");
+        }
+
+        private static List<odd> GetAhOddsFromHtml(HtmlDocument doc, int parentId)
+        {
+            var result = new List<odd>();
+            //<table class="table-main h-mb15 sortable" id="sortable-1">
+            var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+
+            foreach (var tableNode in tableNodes)
+            {
+                //<td class="table-main__doubleparameter">0.5</td>
+                var foraStrings = tableNode.SelectNodes(".//td[@class='table-main__doubleparameter']")
+                    .Select(x => x.InnerText).ToList();
+
+                if (foraStrings.Any(x => x != foraStrings.First())) continue;
+
+                var fora = foraStrings.First();
+
+                if(!double.TryParse(fora, out var doubleFora)) continue;
+
+                //<td class="table-main__detail-odds" data-odd="1.07"></td>
+                var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
+                    .Select(x => x.GetAttributeValue("data-odd", "")).
+                    Where(x => !string.IsNullOrEmpty(x)).
+                    ToList();
+
+                oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
+                if (oddsStrings.Count != 2) continue;
+                var odds = oddsStrings.Select(double.Parse).ToList();
+
+                result.Add(new odd() { oddType = "1(" + fora + ")", parentId = parentId, value = odds[0] });
+                result.Add(new odd() { oddType = "2(" + fora + ")", parentId = parentId, value = odds[1] });
+            }
+            return result;
+        }
+
+        private static List<odd> Get1x2OddsFromHtml(HtmlDocument doc, int parentId)
+        {
+            var result = new List<odd>();
+            //<table class="table-main h-mb15 sortable" id="sortable-1">
+            var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+            var node = tableNodes.Last(); //А по сути, он там один, но похеру уж
+
+            //<td class="table-main__detail-odds" data-odd="3.35"></td>
+
+            var oddsStrings = node.SelectNodes(".//td[@class='table-main__detail-odds']")
+                .Select(x => x.GetAttributeValue("data-odd", "")).
+                Where(x => !string.IsNullOrEmpty(x)).
+                ToList();
+
+            oddsStrings = oddsStrings.Skip(oddsStrings.Count - 3).ToList();
+
+            if (oddsStrings.Count != 3) return new List<odd>();
+
+            result.Add(new odd() { oddType = "1", parentId = parentId, value = double.Parse(oddsStrings[0]) });
+            result.Add(new odd() { oddType = "X ", parentId = parentId, value = double.Parse(oddsStrings[1]) });
+            result.Add(new odd() { oddType = "2 ", parentId = parentId, value = double.Parse(oddsStrings[2]) });
+
+            return result;
+        }
+
+        private static List<odd> GetTotalOddsFromHtml(HtmlDocument doc, int parentId)
+        {
+            var result = new List<odd>();
+            //<table class="table-main h-mb15 sortable" id="sortable-1">
+            var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+
+            foreach (var tableNode in tableNodes)
+            {
+                //<td class="table-main__doubleparameter">0.5</td>
+                var totalStrings = tableNode.SelectNodes(".//td[@class='table-main__doubleparameter']")
+                    .Select(x => x.InnerText).ToList();
+
+                if (totalStrings.Any(x => x != totalStrings.First())) continue;
+
+                if(!double.TryParse(totalStrings.First(), out var total)) continue;
+
+                //<td class="table-main__detail-odds" data-odd="1.07"></td>
+                var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
+                    .Select(x => x.GetAttributeValue("data-odd", "")).
+                    Where(x => !string.IsNullOrEmpty(x)).
+                    ToList();
+
+                oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
+                if (oddsStrings.Count != 2) continue;
+                var odds = oddsStrings.Select(double.Parse).ToList();
+
+                result.Add(new odd(){oddType = "Over " + total, parentId = parentId, value = odds[0]});
+                result.Add(new odd() { oddType = "Under " + total, parentId = parentId, value = odds[1]});
+            }
+            return result;
+        }
+
+        private static List<odd> GetBtsOddsFromHtml(HtmlDocument doc, int parentId)
+        {
+            var result = new List<odd>();
+            //<table class="table-main h-mb15 sortable" id="sortable-1">
+            var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+            var node = tableNodes.Last(); //А по сути, он там один, но похеру уж
+
+            //<td class="table-main__detail-odds" data-odd="3.35"></td>
+
+            var oddsStrings = node.SelectNodes(".//td[@class='table-main__detail-odds']")
+                .Select(x => x.GetAttributeValue("data-odd", "")).
+                Where(x => !string.IsNullOrEmpty(x)).
+                ToList();
+
+            oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
+
+            if (oddsStrings.Count != 2) return new List<odd>();
+
+            result.Add(new odd() { oddType = "BTS_YES", parentId = parentId, value = double.Parse(oddsStrings[0]) });
+            result.Add(new odd() { oddType = "BTS_NO ", parentId = parentId, value = double.Parse(oddsStrings[1]) });
+
+            return result;
+        }
+        
         private static string ReadStreamFromResponse(WebResponse response)
         {
             using (Stream responseStream = response.GetResponseStream())
