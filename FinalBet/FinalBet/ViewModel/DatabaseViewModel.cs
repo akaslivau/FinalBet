@@ -350,7 +350,7 @@ namespace FinalBet.ViewModel
 
             //Добавляем новые значения в соответствующие таблицы
             AddNewTeamnamesToDb(matches); //dbo.teamNames
-            AddNewResultsToDb(matches); //dbo.possibleResults
+            AddNewPossibleResultsToDb(matches); //dbo.possibleResults
             AddNewMatchTagsToDb(matches); //dbo.matchTags
 
             var parentId = url.id;
@@ -507,23 +507,24 @@ namespace FinalBet.ViewModel
             //Помни про take(N)
             var batches = new List<List<match>>();
 
-            int batchSize = 1;
+            int batchSize = 5;
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var parsedResults = cntx.GetTable<parsedResult>().Select(x=>x.matchId).ToList(); //Таблица содержит id матчей, для которых уже были попытки сделать парсинг
                 var matches = cntx.GetTable<match>().
                     Where(x => !parsedResults.Contains(x.id)).
-                    Take(6).
+                    Take(10000).
                     ToList();
                 batches = matches.Split(batchSize).ToList();
             }
-
+            
             try
             {
                 IsBusy = true;
 
                 string elapsed = "";
                 var cnt = batches.Count;
+                var totalTime = 0D;
                 var sWatch = new Stopwatch();
 
                 for (int i = 0; i < cnt; i++)
@@ -532,15 +533,70 @@ namespace FinalBet.ViewModel
                     sWatch.Start();
                     var tasks = batches[i].Select(x => BetExplorerParser.GetMatchDetais(x)).ToList();
                     var matchDetails = await Task.WhenAll(tasks);
+
+                    using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                    {
+                        //parsed results
+                        var parsedResults = cntx.GetTable<parsedResult>();
+                        var toAddParsed = batches[i].Select((x, j) =>
+                            new parsedResult()
+                            {
+                                matchId = batches[i][j].id,
+                                resultsLoaded = matchDetails[j] == null ? false : matchDetails[j].AreResultsCorrect
+                            });
+
+                        parsedResults.InsertAllOnSubmit(toAddParsed);
+                        cntx.SubmitChanges();
+
+                        //possibleResults
+                        AddNewPossibleResultsToDb(matchDetails.ToList());
+
+                        //Adding results
+                        var resultsTable = cntx.GetTable<result>();
+                        var resultsDict = cntx.GetTable<possibleResult>().ToDictionary(possibleResult => possibleResult.value,
+                            possibleResult => possibleResult.id);
+
+                        var toAddResults = new List<result>();
+                        for (int k = 0; k < matchDetails.Length; k++)
+                        {
+                            if (matchDetails[k] == null)
+                            {
+                                Log.Warning(batches[i][k].id + " was not parsed");
+                                Global.Current.Warnings++;
+                                continue;
+                            }
+                            
+                            if (!matchDetails[k].AreResultsCorrect) continue;
+
+                            var toAdd1 = new result()
+                            {
+                                matchPeriod = 1,
+                                parentId = batches[i][k].id,
+                                resultId = resultsDict[matchDetails[k].FirstTimePossibleResult.value]
+                            };
+                            var toAdd2 = new result()
+                            {
+                                matchPeriod = 2,
+                                parentId = batches[i][k].id,
+                                resultId = resultsDict[matchDetails[k].SecondTimePossibleResult.value]
+                            };
+                            toAddResults.Add(toAdd1);
+                            toAddResults.Add(toAdd2);
+                        }
+                        resultsTable.InsertAllOnSubmit(toAddResults);
+                        cntx.SubmitChanges();
+                    }
                     
                     StatusText = "Chunk size: " + batchSize +
                                  ". Number " + i + " from " + cnt + "."
-                                 + "Last time: " + elapsed + " s.";
+                                 + "Last time: " + elapsed + " s."
+                                 + " Finished in: " +  (((double)totalTime * ((double)(cnt-i))/i/3600D)).ToString("F2") + " h.";
 
                     ProgressBarValue = 100 * ((double)i / (double)cnt);
 
                     sWatch.Stop();
                     elapsed = sWatch.Elapsed.Seconds.ToString();
+                    totalTime += sWatch.Elapsed.Seconds;
 
                     if (CancelAsync) break;
                 }
@@ -614,6 +670,7 @@ namespace FinalBet.ViewModel
         {
             //TODO: coerce result if need (ET, PEN)
             //TODO: fill Sql Tables parsedResults
+            //TODO: check and coerce dbo.Results ==> ET, PEN, simple check F+S=FinalScore
         }
 
         //Вспомогательные методы, используемые при Task LoadMatches
@@ -640,7 +697,7 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private void AddNewResultsToDb(List<BeMatch> matches)
+        private void AddNewPossibleResultsToDb(List<BeMatch> matches)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -681,6 +738,36 @@ namespace FinalBet.ViewModel
                     }
 
                     resultsTable.InsertAllOnSubmit(toAddRange);
+                    cntx.SubmitChanges();
+                }
+            }
+        }
+
+        private void AddNewPossibleResultsToDb(List<MatchDetail> matchDetails)
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var resultsTable = cntx.GetTable<possibleResult>();
+                var existingResults = resultsTable.Select(x => x.value).ToList();
+
+                var newResults = new List<possibleResult>();
+                foreach (var matchDetail in matchDetails)
+                {
+                    if(matchDetail==null) continue;
+
+                    if (matchDetail.FirstTimePossibleResult != null && !existingResults.Any(x=>x == matchDetail.FirstTimePossibleResult.value))
+                    {
+                       newResults.Add(matchDetail.FirstTimePossibleResult);
+                    }
+                    if (matchDetail.SecondTimePossibleResult != null && !existingResults.Any(x => x == matchDetail.SecondTimePossibleResult.value))
+                    {
+                        newResults.Add(matchDetail.SecondTimePossibleResult);
+                    }
+                }
+
+                if (newResults.Any())
+                {
+                    resultsTable.InsertAllOnSubmit(newResults);
                     cntx.SubmitChanges();
                 }
             }
@@ -847,7 +934,7 @@ namespace FinalBet.ViewModel
 
             //Добавляем новые значения в соответствующие таблицы
             AddNewTeamnamesToDb(matches); //dbo.teamNames
-            AddNewResultsToDb(matches); //dbo.possibleResults
+            AddNewPossibleResultsToDb(matches); //dbo.possibleResults
             AddNewMatchTagsToDb(matches); //dbo.matchTags
 
             var parentId = url.Source.id;

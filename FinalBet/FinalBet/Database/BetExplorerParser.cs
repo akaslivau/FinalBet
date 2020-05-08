@@ -852,6 +852,8 @@ namespace FinalBet.Database
         public MatchDetail(string fTimeResult, string sTimeResult,int matchId)
         {
             MatchId = matchId;
+            FirstTimePossibleResult = null;
+            SecondTimePossibleResult = null;
 
             BetExplorerParser.ParseMatchResult(fTimeResult, out var isCorrect1, out var scored1, out var missed1);
             BetExplorerParser.ParseMatchResult(sTimeResult, out var isCorrect2, out var scored2, out var missed2);

@@ -311,7 +311,7 @@ namespace FinalBet.ViewModel
                 var possibleResults = cntx.GetTable<possibleResult>();
 
                 var matchesId = matchList.Select(x => x.id).ToList();
-                var results = cntx.GetTable<result>().Where(x => matchesId.Contains(x.id)).ToList();
+                var results = cntx.GetTable<result>().Where(x => matchesId.Contains(x.parentId)).ToList();
 
                 canvas.Width = 1;
                 foreach (var teamName in teamNames)
@@ -358,7 +358,6 @@ namespace FinalBet.ViewModel
                     }
                     canvas.Height = teamNames.Count * (canvas.CellSize + shift) + shift;
                    
-                    
                     for (int j = 0; j < line.Count; j++)
                     {
                        var txt = MatchSolver.OutputStrings[outputs[j]];
