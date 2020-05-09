@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
@@ -510,11 +512,19 @@ namespace FinalBet.ViewModel
             int batchSize = 5;
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var parsedResults = cntx.GetTable<parsedResult>().Select(x=>x.matchId).ToList(); //Таблица содержит id матчей, для которых уже были попытки сделать парсинг
+                var lastParsedId = cntx.GetTable<parsedResult>().Any()?
+                    cntx.GetTable<parsedResult>().Max(x=>x.matchId):
+                    0; //Таблица содержит id матчей, для которых уже были попытки сделать парсинг
+
                 var matches = cntx.GetTable<match>().
-                    Where(x => !parsedResults.Contains(x.id)).
-                    Take(10000).
+                    Where(x => x.id > lastParsedId).
+                    Take(20000).
                     ToList();
+
+                //
+                /*var date = new DateTime(2010,3,1);
+                matches = matches.Where(x => x.date > date).ToList();*/
+                //
                 batches = matches.Split(batchSize).ToList();
             }
             
@@ -907,7 +917,8 @@ namespace FinalBet.ViewModel
 
         private void Test(object a)
         {
-            var country = Selected;
+
+            /*var country = Selected;
             var url = LeagueUrls.Selected;
 
             //Проверка на наличие матчей
@@ -980,7 +991,7 @@ namespace FinalBet.ViewModel
 
                 resultsTable.InsertAllOnSubmit(toAddResults);
                 cntx.SubmitChanges();
-            }
+            }*/
         }
 
         public DatabaseViewModel()

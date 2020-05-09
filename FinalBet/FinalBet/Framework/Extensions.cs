@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FinalBet.Model;
+using Serilog;
 
 namespace FinalBet.Framework
 {
@@ -19,6 +21,8 @@ namespace FinalBet.Framework
             catch (Exception ex)
             {
                 handler?.HandleError(ex);
+                Log.Fatal(ex, "AsyncTask");
+                Global.Current.Errors++;
             }
         }
     }

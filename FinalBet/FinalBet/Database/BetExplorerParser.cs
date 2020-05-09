@@ -507,8 +507,17 @@ namespace FinalBet.Database
         {
             var web = new HtmlWeb();
             var url = Settings.Default.beUrl + match.href.Substring(1, match.href.Length - 1);
-            var doc = await web.LoadFromWebAsync(url);
-            return doc.DocumentNode.InnerHtml;
+            try
+            {
+                var doc = await web.LoadFromWebAsync(url);
+                return doc.DocumentNode.InnerHtml;
+            }
+            catch (Exception e)
+            {
+                Log.Fatal(e, "GetMatchDetailHtml-Task");
+                Global.Current.Errors++;
+                return string.Empty;
+            }
         }
         private static MatchDetail GetMatchDetails(string html, int matchId)
         {
@@ -538,6 +547,7 @@ namespace FinalBet.Database
 
 
             #endregion
+            if (string.IsNullOrEmpty(html)) return null;
 
             var doc = new HtmlDocument();
             doc.LoadHtml(html);

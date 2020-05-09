@@ -166,7 +166,7 @@
 
                             </MenuItem>
                             <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
-                            <MenuItem Header="Тестовая команда"  Command="{Binding TestAsyncCommand}"/>
+                            <MenuItem Header="Тестовая команда"  Command="{Binding TestCommand}"/>
                         </Menu>
                     </DockPanel>
                     <DockPanel Grid.Row="1" HorizontalAlignment="Left">
