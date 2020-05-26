@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.PerformanceData;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
-using System.Linq.Expressions;
-using System.Net.Http;
 using FinalBet.Model;
 using FinalBet.Properties;
-using Serilog.Core;
 
 namespace FinalBet.Database
 {
@@ -22,21 +16,32 @@ namespace FinalBet.Database
     {
         public const string RESULTS = "results/";
         public const string NO_TABS_TAG = "NO_TABS";
-        public const char BE_TEAMS_DELIMITER = '-';
         public const char BE_SCORE_DELIMITER = ':';
 
+        /* ОПИСАНИЕ ИЕРАРХИИ ТАБЛИЦ (СМОТРИ ДЛЯ НАГЛЯДНОСТИ Sql.dbml)
+         * 0. dbo.leagues -  страны (континенты и пр.)
+         * 1. dbo.leagueUrls - список Url для всех стран (parentId <== leagues.id)
+         * 2а. dbo.teamNames - имена команд (leagueId <== leagueUrl.id)
+         * 2b. dbo.matches - список матчей (parentId <== leagueUrl.id)
+         * 3a. dbo.results - результаты матчей (parentId <== match.id, resultId <== possibleResult.id)
+         * 3b. dbo.odds - коэффициенты (parentId <== match.id)
+         *
+         * dbo.matchTags - содержит список тэгов, полученных при парсинге матчей (NO_TABS по умолчанию)
+         * dbo.possibleResults - содержит все уникальные результаты матчей
+         * dbo.solveMode - перечисление возможных режимов для CodeSelector
+         * dbo.leagueMarks - перечисление для маркировки leagueUrl (Основной турнир, Кубок и т.д.)
+         * dbo.parsedResults - вспомогательная таблица для парсинга
+         */
+
+        #region 0. dbo.leagues
         //Заполняет таблицу dbo.leagues [название лиги, URL, flagName]
+        //Запускается один раз
         public static void ParseSoccerPage()
         {
-            //getting html from file
-            /*var path = @"D:\soccerTab.html";
-            var doc = new HtmlDocument();
-            doc.Load(path);*/
-
             //getting html from url
             var url = Settings.Default.soccerUrl;
             var doc = new HtmlDocument();
-            
+
             var web = new HtmlWeb();
             try
             {
@@ -47,7 +52,6 @@ namespace FinalBet.Database
                 Log.Error(ex, "ParseSoccerPage can't load html");
             }
 
-            
             //Начинаем парсить
             // В комментариях обозначен тэг, по которому идет разборка html
             //<ul class="list-events list-events--secondary js-divlinks" id="countries-select">
@@ -56,6 +60,7 @@ namespace FinalBet.Database
             //Получаем название страны и ссылку
             //  < a class="list-events__item__title" href="/soccer/africa/">
             var captions = htmlNode.SelectNodes(".//a[contains(@class, 'item__title')]").Select(x => x.InnerText).ToList();
+
             var links = htmlNode.
                 SelectNodes(".//a[contains(@class, 'item__title')]").
                 Select(x => x.GetAttributeValue("href", "default")).
@@ -89,10 +94,63 @@ namespace FinalBet.Database
                 }
                 cntx.SubmitChanges();
             }
-
-
         }
-        
+        #endregion
+
+        #region 1. dbo.leagueUrls
+        //Возвращает список leagueUrl для выбранной страны
+        public static List<leagueUrl> GetLeagueUrls(string html, int countryId)
+        {
+            var result = new List<leagueUrl>();
+            if (string.IsNullOrEmpty(html)) return result;
+
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            //Начинаем парсить
+            // В комментариях обозначен тэг, по которому идет разборка html
+            //< table class="table-main js-tablebanner-t">
+            var htmlNode = doc.DocumentNode.SelectSingleNode("//table[@class='table-main js-tablebanner-t']");
+
+            //Тут просто <tbody>, но нам нужны только те, которые содержат
+            //<th class="h-text-left">
+            var yearNodes = htmlNode.SelectNodes(".//tbody").
+                Where(x => x.Descendants("th").Any()).
+                ToList();
+
+            foreach (var yearNode in yearNodes)
+            {
+                //<th class="h-text-left">2019/2020</th>
+                string year = yearNode.SelectSingleNode(".//th[@class='h-text-left']").InnerText;
+
+                //<a href="https://www.betexplorer.com/soccer/russia/premier-league/">Premier League</a>
+                var names = yearNode.SelectNodes(".//a").Select(x => x.InnerText).ToList();
+                var urls = yearNode.SelectNodes(".//a").
+                    Select(x => x.GetAttributeValue("href", "default")).
+                    Select(x => x.Substring(x.Substring(0, x.Length - 2).LastIndexOf('/') + 1)).
+                    ToList();
+
+                if (!names.Any() || (names.Count != urls.Count))
+                    throw new Exception("GetLeagueUrls: Ошибка парсинга. В выбранном <tbody> нет лиг!");
+
+                for (int i = 0; i < names.Count; i++)
+                {
+                    var toAdd = new leagueUrl()
+                    {
+                        parentId = countryId,
+                        name = names[i],
+                        url = urls[i],
+                        year = year,
+                        mark = ""
+                    };
+                    result.Add(toAdd);
+                }
+            }
+
+            return result;
+        }
+
+        //Получает html для последующего заполнения dbo.leagueUrls
         public static async Task<string> GetLeagueUrlsHtml(league country)
         {
             var doc = new HtmlDocument();
@@ -116,69 +174,19 @@ namespace FinalBet.Database
 
             return hasError ? "" : doc.DocumentNode.InnerHtml;
         }
-        
-        //Возвращает список URL с сезонами для выбранной лиги
-        public static List<leagueUrl> GetLeagueUrls(string html, int countryId)
-        {
-            var result = new List<leagueUrl>();
-            if (String.IsNullOrEmpty(html)) return result;
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-            
-            //Начинаем парсить
-            // В комментариях обозначен тэг, по которому идет разборка html
-            //< table class="table-main js-tablebanner-t">
-            var htmlNode = doc.DocumentNode.SelectSingleNode("//table[@class='table-main js-tablebanner-t']");
-            
-            //Тут просто <tbody>, но нам нужны только те, которые содержат
-            //<th class="h-text-left">
-            var yearNodes = htmlNode.SelectNodes(".//tbody").
-                Where(x=>x.Descendants("th").Any()).
-                ToList();
+        #endregion
 
-            foreach (var yearNode in yearNodes)
-            {
-                //<th class="h-text-left">2019/2020</th>
-                string year = yearNode.SelectSingleNode(".//th[@class='h-text-left']").InnerText;
-
-                //<a href="https://www.betexplorer.com/soccer/russia/premier-league/">Premier League</a>
-                var names = yearNode.SelectNodes(".//a").Select(x=>x.InnerText).ToList();
-                var urls = yearNode.SelectNodes(".//a").
-                    Select(x => x.GetAttributeValue("href", "default")).
-                    Select(x => x.Substring(x.Substring(0, x.Length - 2).LastIndexOf('/') + 1)).
-                    ToList();
-
-                if(!names.Any() || (names.Count != urls.Count))
-                    throw new Exception("GetLeagueUrls: Ошибка парсинга. В выбранном <tbody> нет лиг!");
-
-                for (int i = 0; i < names.Count; i++)
-                {
-                    var toAdd = new leagueUrl()
-                    {
-                        parentId = countryId,
-                        name = names[i],
-                        url = urls[i],
-                        year = year,
-                        mark = ""
-                    };
-                    result.Add(toAdd);
-                }
-            }
-            
-            return result;
-        }
-
-        //Возвращает список матчей для выбранной ссылки
+        #region 2. dbo.matches
+        //Возвращает список BeMatch(вспомогательный класс) для выбранной ссылки
         //В случае, если по указанной ссылке находятся несколько Tab-вкладок
         //Например, Russia-2013, [Main, Regelation],
-        //То будут возвращены все матчи
+        //То будут возвращены все матчи с соответствующими matchTag
         public static async Task<List<BeMatch>> GetMatches(league country, leagueUrl leagueUrl)
         {
             var doc = new HtmlDocument();
 
             //Проверяем, есть ли загруженный html в архиве
-            var zipPath = GetZipPath(country, leagueUrl);  
+            var zipPath = GetZipPath(country, leagueUrl);
 
             var isHtmlExists = File.Exists(zipPath);
             if (isHtmlExists)
@@ -223,7 +231,7 @@ namespace FinalBet.Database
                     Global.Current.Errors++;
                 }
             }
-            
+
             //Проверяем, есть ли несколько вкладок
             //<ul class="list-tabs list-tabs--secondary"....
             var isSingleTab = doc.DocumentNode.SelectSingleNode(".//ul[contains(@class, 'list-tabs--secondary')]") == null;
@@ -231,7 +239,7 @@ namespace FinalBet.Database
             //Если одна вкладка, то возвращаем список матчей из загруженного документа
             if (isSingleTab)
             {
-               return GetMatches(doc, NO_TABS_TAG);
+                return GetMatches(doc, NO_TABS_TAG);
             }
 
             //Иначе получаем список новых ссылок и их названий
@@ -256,19 +264,19 @@ namespace FinalBet.Database
             //Находим главный div  //< div class="h-mb15">
             var mainDiv = doc.DocumentNode.SelectSingleNode(".//div[@class='h-mb15']");
             //Получаем первый ряд
-            var main_li_ids = tabListNode.First().
+            var mainLiIds = tabListNode.First().
                 SelectNodes(".//li[contains(@id, 'sm-a')]").
-                Select(x=>x.GetAttributeValue("id", default(string))).
-                Where(x=>!String.IsNullOrEmpty(x)).
+                Select(x => x.GetAttributeValue("id", default(string))).
+                Where(x => !String.IsNullOrEmpty(x)).
                 ToList();
 
             //<div class="box-overflow">
-            var div_s = mainDiv.SelectNodes(".//div[@class='box-overflow']")
+            var divNodes = mainDiv.SelectNodes(".//div[@class='box-overflow']")
                 .ToList();
 
             // ***********************************************************   ДВА РЯДА ТАБОВ  **************************
             //Это в теории значит, что у нас всего 2 ряда табов, и можно их так херануть
-            if (div_s.Count == (main_li_ids.Count + 1))
+            if (divNodes.Count == (mainLiIds.Count + 1))
             {
                 var itemsCaseTwoTabs = tabListNode.First().SelectNodes(".//li[contains(@id, 'sm-a')]")
                     .Select(
@@ -276,15 +284,15 @@ namespace FinalBet.Database
                             new
                             {
                                 mainTag = x.InnerText.Trim(),
-                                id = x.GetAttributeValue("id", default(string)).Replace("a-","")
+                                id = x.GetAttributeValue("id", default(string)).Replace("a-", "")
                             }).ToList();
 
                 var stageUrlsTwoTabs = new List<StageUrl>();
                 foreach (var item in itemsCaseTwoTabs)
                 {
-                    var div_id_node = mainDiv.SelectSingleNode(".//div[@id='"+item.id+"']");
+                    var divIdNode = mainDiv.SelectSingleNode(".//div[@id='" + item.id + "']");
 
-                    var toAdd = div_id_node.
+                    var toAdd = divIdNode.
                         SelectNodes(".//li[@class='list-tabs__item']")
                         .Select(x => x.SelectSingleNode(".//a")).
                         Select(x => new StageUrl(x, item.mainTag, country, leagueUrl)).ToList();
@@ -308,12 +316,12 @@ namespace FinalBet.Database
             var stageUrlsThreeTabs = new List<StageUrl>();
             foreach (var item in itemsCaseThreeTabs)
             {
-                var div_id_node = mainDiv.SelectSingleNode(".//div[@id='" + item.id + "']");
+                var divIdNode = mainDiv.SelectSingleNode(".//div[@id='" + item.id + "']");
 
                 //Значит тут реально только 2 ряда табов
-                if (div_id_node != null)
+                if (divIdNode != null)
                 {
-                    var toAdd = div_id_node.
+                    var toAdd = divIdNode.
                         SelectNodes(".//li[@class='list-tabs__item']")
                         .Select(x => x.SelectSingleNode(".//a")).
                         Select(x => new StageUrl(x, item.mainTag, country, leagueUrl)).ToList();
@@ -323,10 +331,10 @@ namespace FinalBet.Database
                 else
                 {
                     var shortId = item.id.Substring(0, 4);
-                    var div_lvl2_node = mainDiv.SelectSingleNode(".//div[@id='" + shortId + "']");
-                    if (div_lvl2_node != null)
+                    var divLvl2Node = mainDiv.SelectSingleNode(".//div[@id='" + shortId + "']");
+                    if (divLvl2Node != null)
                     {
-                        var lvl_two_tabs = div_lvl2_node.SelectNodes(".//li[contains(@id, 'sm-a')]")
+                        var lvlTwoTabs = divLvl2Node.SelectNodes(".//li[contains(@id, 'sm-a')]")
                             .Select(
                                 x =>
                                     new
@@ -335,12 +343,12 @@ namespace FinalBet.Database
                                         id = x.GetAttributeValue("id", default(string)).Replace("a-", "")
                                     }).ToList();
 
-                        foreach (var lvlTwoTab in lvl_two_tabs)
+                        foreach (var lvlTwoTab in lvlTwoTabs)
                         {
-                            var div_lvl3_node = mainDiv.SelectSingleNode(".//div[@id='" + lvlTwoTab.id + "']");
-                            if (div_lvl3_node != null)
+                            var divLvl3Node = mainDiv.SelectSingleNode(".//div[@id='" + lvlTwoTab.id + "']");
+                            if (divLvl3Node != null)
                             {
-                                var toAdd = div_lvl3_node.
+                                var toAdd = divLvl3Node.
                                     SelectNodes(".//li[@class='list-tabs__item']")
                                     .Select(x => x.SelectSingleNode(".//a")).
                                     Select(x => new StageUrl(x, item.mainTag + " - " + lvlTwoTab.mainTag, country, leagueUrl)).ToList();
@@ -352,10 +360,9 @@ namespace FinalBet.Database
                 }
             }
             return GetMatchesFromUrlsList(stageUrlsThreeTabs);
-
-            throw new Exception("Impossible!");
         }
 
+        //Разборщик html
         private static List<BeMatch> GetMatchesFromUrlsList(List<StageUrl> urls)
         {
             var result = new List<BeMatch>();
@@ -367,7 +374,7 @@ namespace FinalBet.Database
                 var doc2 = new HtmlDocument();
                 var stageFileName = urls[i].Stage + ".html";
 
-                var isStageHtmlExists = false;
+                bool isStageHtmlExists;
                 using (ZipArchive zip = ZipFile.OpenRead(urls[i].ZipPath))
                 {
                     isStageHtmlExists = zip.Entries.Any(x => x.Name == stageFileName);
@@ -403,13 +410,14 @@ namespace FinalBet.Database
             return result;
         }
 
+        //Разборщик html
         private static List<BeMatch> GetMatches(HtmlDocument doc, string tag)
         {
             var result = new List<BeMatch>();
 
             //< table class="table-main h-mb15
             var tableNode = doc.DocumentNode.SelectSingleNode(".//table[contains(@class, 'table-main h-mb15')]");
-            
+
             //Это вариант при ручнос сохранении:)
             //<tr>
             //  <td class="h-text-left">
@@ -449,7 +457,7 @@ namespace FinalBet.Database
             var trNodes = tableNode.SelectNodes(".//tr").ToList();
             foreach (var tr in trNodes)
             {
-                if(tr.InnerText.Contains("Round")) continue; //<tr><th class="h-text-left" colspan="2">1. Round</th><th class="h-text-center">1</th><th class="h-text-center">X</th><th class="h-text-center">2</th><th>&nbsp;</th></tr>
+                if (tr.InnerText.Contains("Round")) continue; //<tr><th class="h-text-left" colspan="2">1. Round</th><th class="h-text-center">1</th><th class="h-text-center">X</th><th class="h-text-center">2</th><th>&nbsp;</th></tr>
 
                 var names = tr.SelectSingleNode(".//td[@class='h-text-left']");
                 if (names == null)
@@ -464,46 +472,19 @@ namespace FinalBet.Database
                 var finalScore = tr.SelectSingleNode(".//td[@class='h-text-center']").InnerText.Trim();
 
                 //odds не парсим, так как все равно их потом подгружать
-              
+
                 var date = tr.SelectSingleNode(".//td[contains(@class, 'h-text-right')]").InnerText;
-                
+
                 var toAdd = new BeMatch(teams, matchHref, finalScore, date, tag);
                 result.Add(toAdd);
             }
 
             return result;
         }
-        
-        public static void ParseMatchResult(string matchResult, out bool isCorrect, out int scored, out int missed)
-        {
-            isCorrect = false;
-            scored = -1;
-            missed = -1;
+        #endregion
 
-            //Contains any letter == notCorrect
-            bool hasAnyLetter = matchResult.Any(Char.IsLetter);
-            if (hasAnyLetter) return;
-
-            //Parsing
-            var pos = matchResult.IndexOf(BE_SCORE_DELIMITER);
-            if (pos < 0) return;
-
-            var strScore = matchResult.Substring(0, pos).Trim();
-            var strMissed = matchResult.Substring(pos + 1).Trim();
-
-            if (!Int32.TryParse(strScore, out scored)) return;
-            if (!Int32.TryParse(strMissed, out missed)) return;
-
-            isCorrect = true;
-        }
-
-        public static string GetZipPath(league country, leagueUrl leagueUrl)
-        {
-            var zipFileName = country.name + "_urlId__" + leagueUrl.id + ".zip";
-            return Settings.Default.zipFolder + zipFileName;
-        }
-
-        private static async Task<string> GetMatchDetailHtml(match match)
+        #region 3a. dbo.results (First, Second halfs)
+        private static async Task<string> GetHalfResultsHtml(match match)
         {
             var web = new HtmlWeb();
             var url = Settings.Default.beUrl + match.href.Substring(1, match.href.Length - 1);
@@ -519,7 +500,8 @@ namespace FinalBet.Database
                 return string.Empty;
             }
         }
-        private static MatchDetail GetMatchDetails(string html, int matchId)
+
+        private static MatchDetail GetHalfsResults(string html, int matchId)
         {
             #region Html
 
@@ -572,34 +554,36 @@ namespace FinalBet.Database
             return new MatchDetail(scores[0], scores[1], matchId);
         }
 
-        public static async Task<MatchDetail> GetMatchDetais(match match)
+        public static async Task<MatchDetail> GetHalfsResults(match match)
         {
-            var html = await GetMatchDetailHtml(match);
-            return GetMatchDetails(html, match.id);
+            var html = await GetHalfResultsHtml(match);
+            return GetHalfsResults(html, match.id);
+        }
+        #endregion
+
+        #region 3b. dbo.odds
+        public static async Task<List<odd>> GetMatchOdds(match match, BeOddLoadMode loadMode)
+        {
+            var html = await GetOddHtml(match, loadMode);
+            return GetOddsFromHtml(match.id, html, loadMode);
         }
 
-        public static async Task<List<odd>> GetMatchOdds(match match)
+        private static List<odd> GetOddsFromHtml(int parentId, string html, BeOddLoadMode oddParseLoadMode)
         {
-            var result = new List<odd>();
-            var tasks = new List<Task<string>>
-            {
-                GetBeOddHtml(match, BeOddType._1X2),
-                GetBeOddHtml(match, BeOddType.OU),
-                GetBeOddHtml(match, BeOddType.AH),
-                GetBeOddHtml(match, BeOddType.BTS)
-            };
+            if (string.IsNullOrEmpty(html)) return new List<odd>();
 
-            var html = await Task.WhenAll(tasks);
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
 
-            result.AddRange(GetOddsFromHtml(match.id, html[0], BeOddType._1X2));
-            result.AddRange(GetOddsFromHtml(match.id, html[1], BeOddType.OU));
-            result.AddRange(GetOddsFromHtml(match.id, html[2], BeOddType.AH));
-            result.AddRange(GetOddsFromHtml(match.id, html[3], BeOddType.BTS));
+            if (oddParseLoadMode == BeOddLoadMode.OU) return GetTotalOdds(doc, parentId);
+            if (oddParseLoadMode == BeOddLoadMode._1X2) return Get1X2Odds(doc, parentId);
+            if (oddParseLoadMode == BeOddLoadMode.AH) return GetAhOdds(doc, parentId);
+            if (oddParseLoadMode == BeOddLoadMode.BTS) return GetBtsOdds(doc, parentId);
 
-            return result;
+            throw new NotImplementedException("Ty 4o, pes?");
         }
 
-        private static async Task<string> GetBeOddHtml(string href, BeOddType oddType)
+        private static async Task<string> GetOddHtml(string href, BeOddLoadMode oddLoadMode)
         {
             //PowerShell Web Request
             /*Invoke - WebRequest - Uri "https://www.betexplorer.com/match-odds/WEqpywFK/1/ou/" - Headers @{
@@ -621,7 +605,7 @@ namespace FinalBet.Database
             -OutFile D:\out_wr.txt*/
 
             var matchId = href.Split('/').Last(x => !String.IsNullOrEmpty(x));
-            string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddType + "/";
+            string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddLoadMode + "/";
 
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.Accept = "application/json, text/javascript, #1#*; q=0.01";
@@ -632,7 +616,7 @@ namespace FinalBet.Database
             request.Headers.Add("method", "GET");
             request.Headers.Add("authority", "www.betexplorer.com");
             request.Headers.Add("scheme", "https");
-            request.Headers.Add("path", "/match-odds/" + matchId + "/1/" + oddType);
+            request.Headers.Add("path", "/match-odds/" + matchId + "/1/" + oddLoadMode);
             request.Headers.Add("x-requested-with", "XMLHttpRequest");
             request.Headers.Add("sec-fetch-site", "same-origin");
             request.Headers.Add("sec-fetch-mode", "cors");
@@ -657,33 +641,18 @@ namespace FinalBet.Database
 
                 return res;
             }
-            catch (Exception e)
+            catch 
             {
                 return String.Empty;
             }
         }
 
-        private static async Task<string> GetBeOddHtml(match match, BeOddType oddType)
+        private static async Task<string> GetOddHtml(match match, BeOddLoadMode oddLoadMode)
         {
-            return await GetBeOddHtml(match.href, oddType);
+            return await GetOddHtml(match.href, oddLoadMode);
         }
 
-        private static List<odd> GetOddsFromHtml(int parentId, string html, BeOddType oddParseType)
-        {
-            if (string.IsNullOrEmpty(html)) return new List<odd>();
-            
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            if (oddParseType == BeOddType.OU) return GetTotalOddsFromHtml(doc, parentId);
-            if (oddParseType == BeOddType._1X2) return Get1x2OddsFromHtml(doc, parentId);
-            if (oddParseType == BeOddType.AH) return GetAhOddsFromHtml(doc, parentId);
-            if (oddParseType == BeOddType.BTS) return GetBtsOddsFromHtml(doc, parentId);
-
-            throw new NotImplementedException("Ty 4o, pes?");
-        }
-
-        private static List<odd> GetAhOddsFromHtml(HtmlDocument doc, int parentId)
+        private static List<odd> GetAhOdds(HtmlDocument doc, int parentId)
         {
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
@@ -699,7 +668,7 @@ namespace FinalBet.Database
 
                 var fora = foraStrings.First();
 
-                if(!double.TryParse(fora, out var doubleFora)) continue;
+                if (!double.TryParse(fora, out _)) continue;
 
                 //<td class="table-main__detail-odds" data-odd="1.07"></td>
                 var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
@@ -717,7 +686,7 @@ namespace FinalBet.Database
             return result;
         }
 
-        private static List<odd> Get1x2OddsFromHtml(HtmlDocument doc, int parentId)
+        private static List<odd> Get1X2Odds(HtmlDocument doc, int parentId)
         {
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
@@ -742,7 +711,7 @@ namespace FinalBet.Database
             return result;
         }
 
-        private static List<odd> GetTotalOddsFromHtml(HtmlDocument doc, int parentId)
+        private static List<odd> GetTotalOdds(HtmlDocument doc, int parentId)
         {
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
@@ -756,7 +725,7 @@ namespace FinalBet.Database
 
                 if (totalStrings.Any(x => x != totalStrings.First())) continue;
 
-                if(!double.TryParse(totalStrings.First(), out var total)) continue;
+                if (!double.TryParse(totalStrings.First(), out var total)) continue;
 
                 //<td class="table-main__detail-odds" data-odd="1.07"></td>
                 var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
@@ -768,13 +737,13 @@ namespace FinalBet.Database
                 if (oddsStrings.Count != 2) continue;
                 var odds = oddsStrings.Select(double.Parse).ToList();
 
-                result.Add(new odd(){oddType = "Over " + total, parentId = parentId, value = odds[0]});
-                result.Add(new odd() { oddType = "Under " + total, parentId = parentId, value = odds[1]});
+                result.Add(new odd() { oddType = "Over " + total, parentId = parentId, value = odds[0] });
+                result.Add(new odd() { oddType = "Under " + total, parentId = parentId, value = odds[1] });
             }
             return result;
         }
 
-        private static List<odd> GetBtsOddsFromHtml(HtmlDocument doc, int parentId)
+        private static List<odd> GetBtsOdds(HtmlDocument doc, int parentId)
         {
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
@@ -797,7 +766,32 @@ namespace FinalBet.Database
 
             return result;
         }
+        #endregion
         
+        #region Secondary functions
+        public static void ParseMatchResult(string matchResult, out bool isCorrect, out int scored, out int missed)
+        {
+            isCorrect = false;
+            scored = -1;
+            missed = -1;
+
+            //Contains any letter == notCorrect
+            bool hasAnyLetter = matchResult.Any(Char.IsLetter);
+            if (hasAnyLetter) return;
+
+            //Parsing
+            var pos = matchResult.IndexOf(BE_SCORE_DELIMITER);
+            if (pos < 0) return;
+
+            var strScore = matchResult.Substring(0, pos).Trim();
+            var strMissed = matchResult.Substring(pos + 1).Trim();
+
+            if (!Int32.TryParse(strScore, out scored)) return;
+            if (!Int32.TryParse(strMissed, out missed)) return;
+
+            isCorrect = true;
+        }
+
         private static string ReadStreamFromResponse(WebResponse response)
         {
             using (Stream responseStream = response.GetResponseStream())
@@ -806,6 +800,13 @@ namespace FinalBet.Database
                 return sr.ReadToEnd();
             }
         }
+
+        public static string GetZipPath(league country, leagueUrl leagueUrl)
+        {
+            var zipFileName = country.name + "_urlId__" + leagueUrl.id + ".zip";
+            return Settings.Default.zipFolder + zipFileName;
+        }
+        #endregion
     }
 
     public class BeMatch
@@ -844,8 +845,7 @@ namespace FinalBet.Database
             if (string.IsNullOrEmpty(FinalScore)) return false;
 
             if (string.IsNullOrEmpty(Date)) return false;
-            DateTime dt;
-            if (!DateTime.TryParse(Date, out dt)) return false;
+            if (!DateTime.TryParse(Date, out _)) return false;
 
             return true;
         }
@@ -939,7 +939,7 @@ namespace FinalBet.Database
 
             if (HasStage)
             {
-                var stagePos = Href.IndexOf("?stage=") + "?stage=".Length;
+                var stagePos = Href.IndexOf("?stage=", StringComparison.Ordinal) + "?stage=".Length;
                 Stage = Href.Substring(stagePos, Href.Length - stagePos);
             }
 
@@ -947,30 +947,30 @@ namespace FinalBet.Database
         }
     }
 
-    public sealed class BeOddType
+    public sealed class BeOddLoadMode
     {
-        private readonly string name;
+        private readonly string _name;
 
-        public static readonly BeOddType _1X2 = new BeOddType("1x2");
-        public static readonly BeOddType OU = new BeOddType("ou");
-        public static readonly BeOddType AH = new BeOddType("ah");
-        public static readonly BeOddType BTS = new BeOddType("bts");
+        public static readonly BeOddLoadMode _1X2 = new BeOddLoadMode("1x2");
+        public static readonly BeOddLoadMode OU = new BeOddLoadMode("ou");
+        public static readonly BeOddLoadMode AH = new BeOddLoadMode("ah");
+        public static readonly BeOddLoadMode BTS = new BeOddLoadMode("bts");
 
-        private BeOddType(string name)
+        private BeOddLoadMode(string name)
         {
-            this.name = name;
+            _name = name;
         }
 
         public override string ToString()
         {
-            return name;
+            return _name;
         }
 
     }
 
-    public sealed class OddType
+/*    public sealed class OddType
     {
-        private readonly string name;
+        private readonly string _name;
 
         public static readonly OddType _1 = new OddType("1");
         public static readonly OddType X = new OddType("X");
@@ -978,13 +978,13 @@ namespace FinalBet.Database
         
         private OddType(string name)
         {
-            this.name = name;
+            this._name = name;
         }
 
         public override string ToString()
         {
-            return name;
+            return _name;
         }
 
-    }
+    }*/
 }

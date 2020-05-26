@@ -35,6 +35,11 @@ namespace FinalBet
             Global.Current.Infos++;
 
             Connection.Initialize(Settings.Default.soccerConnectionString);
+            if (!Connection.IsSuccessful)
+            {
+                Log.Fatal("Соединение с БД не установлено");
+                Global.Current.Errors++;
+            }
 
             var culture = new CultureInfo("en-Us")
             {

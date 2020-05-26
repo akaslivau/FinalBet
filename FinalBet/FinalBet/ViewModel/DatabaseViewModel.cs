@@ -541,7 +541,7 @@ namespace FinalBet.ViewModel
                 {
                     sWatch.Reset();
                     sWatch.Start();
-                    var tasks = batches[i].Select(x => BetExplorerParser.GetMatchDetais(x)).ToList();
+                    var tasks = batches[i].Select(x => BetExplorerParser.GetHalfsResults(x)).ToList();
                     var matchDetails = await Task.WhenAll(tasks);
 
                     using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -649,10 +649,8 @@ namespace FinalBet.ViewModel
                     sWatch.Reset();
                     sWatch.Start();
 
-                    var matchOdds = await BetExplorerParser.GetMatchOdds(matches[i]);
-
-
-
+                    var matchOdds = await BetExplorerParser.GetMatchOdds(matches[i], BeOddLoadMode.OU);
+                    
                     StatusText = "Number " + i + " from " + cnt + "."
                                  + "Last time: " + elapsed + " s.";
 

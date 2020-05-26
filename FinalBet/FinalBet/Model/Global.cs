@@ -26,6 +26,7 @@ namespace FinalBet.Model
             get
             {
                 if (_leagueMarks != null) return _leagueMarks;
+                if(!Connection.IsSuccessful) return new ObservableCollection<leagueMark>();
 
                 using (var cntx = new SqlDataContext(Connection.ConnectionString))
                 {
@@ -43,6 +44,8 @@ namespace FinalBet.Model
             get
             {
                 if (_possibleModes != null) return _possibleModes;
+                if (!Connection.IsSuccessful) return new ObservableCollection<solveMode>();
+
                 using (var cntx = new SqlDataContext(Connection.ConnectionString))
                 {
                     var table = cntx.GetTable<solveMode>().ToList();

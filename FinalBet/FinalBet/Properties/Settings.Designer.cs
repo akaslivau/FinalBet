@@ -35,17 +35,6 @@ namespace FinalBet.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ANDREW-PC\\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True;" +
-            "MultipleActiveResultSets=True")]
-        public string soccerConnectionString {
-            get {
-                return ((string)(this["soccerConnectionString"]));
-            }
-        }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("D:\\BEHTML\\")]
@@ -103,6 +92,17 @@ namespace FinalBet.Properties {
             }
             set {
                 this["beUrl"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ANDREW-ПК\\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True;" +
+            "MultipleActiveResultSets=True")]
+        public string soccerConnectionString {
+            get {
+                return ((string)(this["soccerConnectionString"]));
             }
         }
     }

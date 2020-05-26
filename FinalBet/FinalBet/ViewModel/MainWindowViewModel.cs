@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using FinalBet.Database;
 using FinalBet.Framework;
 
 namespace FinalBet.ViewModel
@@ -65,6 +66,12 @@ namespace FinalBet.ViewModel
         public MainWindowViewModel()
         {
             base.DisplayName = "...Ту-ду-ду-ду...";
+
+            if (!Connection.IsSuccessful)
+            {
+                base.DisplayName = "ОШИБКА ПОДКЛЮЧЕНИЯ К БАЗЕ ДАННЫХ";
+                return;
+            }
 
             Database = new DatabaseViewModel();
             RedGreenTable = new RedGreenViewModel();
