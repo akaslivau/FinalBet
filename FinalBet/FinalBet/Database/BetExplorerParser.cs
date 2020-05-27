@@ -34,8 +34,10 @@ namespace FinalBet.Database
          */
 
         #region 0. dbo.leagues
-        //Заполняет таблицу dbo.leagues [название лиги, URL, flagName]
-        //Запускается один раз
+
+        /// <summary>
+        /// Заполняет таблицу dbo.leagues [название лиги, URL, flagName]. Однократный запуск
+        /// </summary>
         public static void ParseSoccerPage()
         {
             //getting html from url
@@ -81,6 +83,12 @@ namespace FinalBet.Database
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var leagueTable = cntx.GetTable<league>();
+                if (leagueTable.Any())
+                {
+                    Log.Warning("Таблица dbo.leagues не пустая. Операция преркащена.");
+                    Global.Current.Warnings++;
+                    return;
+                }
 
                 for (int i = 0; i < cnt; i++)
                 {

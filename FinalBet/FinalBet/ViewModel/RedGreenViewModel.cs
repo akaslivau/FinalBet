@@ -18,6 +18,18 @@ namespace FinalBet.ViewModel
     public class RedGreenViewModel:ViewModelBase
     {
         #region Variables
+        private SolveMode _solveMode = new SolveMode();
+        public SolveMode SolveMode
+        {
+            get => _solveMode;
+            set
+            {
+                if (_solveMode == value) return;
+                _solveMode = value;
+                OnPropertyChanged("SolveMode");
+            }
+        }
+
         private int _selectedMatchId = -1;
         public int SelectedMatchId
         {
@@ -58,25 +70,7 @@ namespace FinalBet.ViewModel
                 InitializeTournaments(value);
             }
         }
-
-
-        private bool _showOnlyFavorites;
-        public bool ShowOnlyFavorites
-        {
-            get => _showOnlyFavorites;
-            set
-            {
-                if (_showOnlyFavorites == value) return;
-                _showOnlyFavorites = value;
-                OnPropertyChanged("ShowOnlyFavorites");
-
-                Settings.Default.onlyFavorites = value;
-                Settings.Default.Save();
-
-                InitializeLeagues(value);
-            }
-        }
-
+        
         private ObservableCollection<string> _tournaments;
         public ObservableCollection<string> Tournaments
         {
@@ -153,8 +147,7 @@ namespace FinalBet.ViewModel
                 OnPropertyChanged("SelectedSubSeason");
             }
         }
-
-
+        
         private bool _onlyMainSeason;
         public bool OnlyMainSeason
         {
@@ -166,7 +159,6 @@ namespace FinalBet.ViewModel
                 OnPropertyChanged("OnlyMainSeason");
             }
         }
-
         #endregion
 
         #region Methods
@@ -277,6 +269,7 @@ namespace FinalBet.ViewModel
 
         #endregion
 
+        #region Commands
         public ICommand DrawCommand { get; private set; }
         public ICommand TestCommand { get; private set; }
 
@@ -292,14 +285,14 @@ namespace FinalBet.ViewModel
                     .Where(x => x.parentId == parentId && x.tagId == SelectedSubSeason.id).ToList();
             }
 
-            if(!matchList.Any()) return;
+            if (!matchList.Any()) return;
 
             var teamNames = Soccer.GetTeamNames(
                 (matchList.Select(x => x.homeTeamId).
                 Union(matchList.Select(x => x.guestTeamId))).Distinct());
-            
 
-            var canvas = (DrawingCanvas) prm;
+
+            var canvas = (DrawingCanvas)prm;
             canvas.Clear();
             var shift = 4;
             int i = 0;
@@ -317,7 +310,7 @@ namespace FinalBet.ViewModel
                 foreach (var teamName in teamNames)
                 {
                     var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).
-                        OrderBy(x=>x.date).ToList();
+                        OrderBy(x => x.date).ToList();
 
                     var rGmatches = new List<RGmatch>();
                     foreach (var match in line)
@@ -340,7 +333,7 @@ namespace FinalBet.ViewModel
                     }
 
                     var outputs = rGmatches.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();
-                    
+
                     //Отрисовка
                     var teamVisual = new VisualWithTag();
                     canvas.DrawTeamCell(teamVisual,
@@ -357,13 +350,13 @@ namespace FinalBet.ViewModel
                         canvas.Width = cWidth;
                     }
                     canvas.Height = teamNames.Count * (canvas.CellSize + shift) + shift;
-                   
+
                     for (int j = 0; j < line.Count; j++)
                     {
-                       var txt = MatchSolver.OutputStrings[outputs[j]];
-                       var brush = MatchSolver.OutputBrushes[outputs[j]];
-                       var cellVisual = new VisualWithTag();
-                       cellVisual.Tag = line[j].id;
+                        var txt = MatchSolver.OutputStrings[outputs[j]];
+                        var brush = MatchSolver.OutputBrushes[outputs[j]];
+                        var cellVisual = new VisualWithTag();
+                        cellVisual.Tag = line[j].id;
 
                         canvas.DrawCellSquare(
                             cellVisual,
@@ -377,18 +370,11 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private SolveMode _solveMode = new SolveMode();
-        public SolveMode SolveMode
+        private void Test(object obj)
         {
-            get => _solveMode;
-            set
-            {
-                if (_solveMode == value) return;
-                _solveMode = value;
-                OnPropertyChanged("SolveMode");
-            }
-        }
 
+        }
+        #endregion
 
         public RedGreenViewModel()
         {
@@ -398,17 +384,12 @@ namespace FinalBet.ViewModel
             Tournaments = new ObservableCollection<string>();
             SubSeasons = new ObservableCollection<matchTag>();
 
-            _showOnlyFavorites = Settings.Default.onlyFavorites;
-
-            InitializeLeagues(_showOnlyFavorites);
+            InitializeLeagues(true);
 
             DrawCommand = new RelayCommand(Draw, a => SelectedSubSeason != null);
             TestCommand = new RelayCommand(Test);
         }
 
-        private void Test(object obj)
-        {
-            
-        }
+
     }
 }

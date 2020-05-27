@@ -10,8 +10,9 @@ namespace FinalBet.ViewModel
     public class MainWindowViewModel:ViewModelBase
     {
         #region Variables
-        public DatabaseViewModel Database { get; set; }
-        public RedGreenViewModel RedGreenTable { get; set; }
+        public DatabaseViewModel Database { get; private set; }
+        public RedGreenViewModel RedGreenTable { get; private set; }
+        public TestDataViewModel TestDataViewModel { get; private set; }
         #endregion
 
         #region Commands
@@ -39,30 +40,14 @@ namespace FinalBet.ViewModel
 
         #endregion
 
-        public string TestString
-        {
-            get => Properties.Settings.Default.soccerUrl;
-            set
-            {
-                if (Properties.Settings.Default.soccerUrl == value) return;
-                Properties.Settings.Default.soccerUrl = value;
-                Properties.Settings.Default.Save();
-                OnPropertyChanged("TestString");
-            }
-        }
 
         public ICommand TestCommand { get; private set; }
-
         
-
-
         public void Test(object a)
         {
 
         }
-
-
-
+        
         public MainWindowViewModel()
         {
             base.DisplayName = "...Ту-ду-ду-ду...";
@@ -75,6 +60,7 @@ namespace FinalBet.ViewModel
 
             Database = new DatabaseViewModel();
             RedGreenTable = new RedGreenViewModel();
+            TestDataViewModel = new TestDataViewModel();
 
             //Commands
             OpenLogCommand = new RelayCommand(OpenLog);

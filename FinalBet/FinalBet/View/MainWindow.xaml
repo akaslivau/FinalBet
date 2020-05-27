@@ -20,6 +20,9 @@
         <Style TargetType="{x:Type TextBlock}">
             <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
         </Style>
+        <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+        </Style>
         <Style TargetType="{x:Type TextBox}">
             <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
         </Style>
@@ -398,14 +401,6 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <ToggleButton Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
-                                              HorizontalAlignment="Right"
-                                              IsChecked="{Binding ShowOnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                              Margin="{StaticResource ControlMargin}"
-                                              Style="{DynamicResource MahApps.Metro.Styles.MetroCircleToggleButtonStyle}"
-                                              Template="{DynamicResource StarToggleButton}"
-                                />
-
                                 <ComboBox Grid.Row="0" Grid.Column="1"
                                           Width="200" Height="25"
                                           Margin="{StaticResource ControlMargin}"
@@ -493,6 +488,44 @@
                         </viewModel:DrawingCanvas>
                     </ScrollViewer>
 
+                </Grid>
+            </TabItem>
+            <TabItem Header="{Binding DisplayName}"
+                     DataContext="{Binding TestDataViewModel}"
+            >
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <ComboBox Width="200" Height="25"
+                                      Margin="{StaticResource ControlMargin}"
+                                      ItemsSource="{Binding Leagues}"
+                                      SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      DisplayMemberPath="name"
+                            />
+                        </StackPanel>
+                    <DockPanel Grid.Row="1">
+                        <Menu>
+                            <MenuItem Header="Тестировать" Command="{Binding DoTestCommand}"/>
+                            <MenuItem Header="Тестировать все" Command="{Binding TestAllCommand}"/>
+                        </Menu>
+                    </DockPanel>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="5*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Text ="{Binding Path=Output}"
+                        />
+                    </Grid>
                 </Grid>
             </TabItem>
         </TabControl>
