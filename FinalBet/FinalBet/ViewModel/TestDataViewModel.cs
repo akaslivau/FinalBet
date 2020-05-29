@@ -56,6 +56,7 @@ namespace FinalBet.ViewModel
         #region Commands
         public ICommand DoTestCommand { get; private set; }
         public IAsyncCommand TestAllCommand { get; private set; }
+        public ICommand TestThreeCommand { get; private set; }
 
 
 
@@ -100,26 +101,68 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private void TestThree(object obj)
+        {
+            Output = "Результаты выполнения теста №3 для [" + SelectedLeague.name.ToUpper() + "]\r\n";
+
+            var test3 = Test3(SelectedLeague, out var output);
+
+            if (test3)
+            {
+                Output += "\n" + "Успешно";
+                return;
+            }
+
+            Output += "\n" + "Обнаружены следующие ошибки\n\n";
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var urlTable = cntx.GetTable<leagueUrl>();
+                var ids = output.Select(x => x.Key).ToList();
+                var items = urlTable.Where(x => ids.Contains(x.id)).
+                    Select(x => new
+                    {
+                        Id = x.id.ToString(),
+                        Name = x.name,
+                        Year = x.year,
+                        Output = output[x.id]
+                    }).
+                    Select(x=>string.Join("\t\t", new string[]{x.Id, x.Name, x.Year, x.Output})).
+                    ToList();
+
+                Output += string.Join("\n", items);
+            }
+        }
+
         private static bool Test1(league league)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var leagueId= cntx.GetTable<league>().Single(x => x.id == league.id).id;
-                var leagueUrlIds = cntx.GetTable<leagueUrl>().
-                    Where(x => x.parentId == leagueId).
-                    Select(x => x.id)
-                    .ToList();
+                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id);
 
                 var matchTable = cntx.GetTable<match>();
                 var resultTable = cntx.GetTable<result>();
 
-                var results = from result in resultTable
-                              where (from match in matchTable
-                                     where leagueUrlIds.Contains(match.parentId)
-                                     select match.id).Contains(result.parentId)
-                              select result;
+                var query1 = (from result in resultTable
+                    where result.matchPeriod == 1
+                    from url in urlTable
+                    where (from match in matchTable
+                        where match.parentId == url.id
+                        select match.id).Contains(result.parentId)
+                    group result by url.id
+                    into g
+                    select g.Count()).ToList();
 
-                return results.Count(x => x.matchPeriod == 1) == results.Count(x => x.matchPeriod == 2);
+                var query2 = (from result in resultTable
+                    where result.matchPeriod == 2
+                    from url in urlTable
+                    where (from match in matchTable
+                        where match.parentId == url.id
+                        select match.id).Contains(result.parentId)
+                    group result by url.id
+                    into g
+                    select g.Count()).ToList();
+
+                return (query1.Zip(query2, (a, b) => a == b)).All(x => x);
             }
         }
 
@@ -127,9 +170,8 @@ namespace FinalBet.ViewModel
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var leagueId = cntx.GetTable<league>().Single(x => x.id == league.id).id;
                 var leagueUrlIds = cntx.GetTable<leagueUrl>().
-                    Where(x => x.parentId == leagueId).
+                    Where(x => x.parentId == league.id).
                     Select(x => x.id)
                     .ToList();
 
@@ -154,9 +196,55 @@ namespace FinalBet.ViewModel
                     orderby result.id
                     select result.resultId).ToList();
 
-                return firstHalfRes.Zip(secondHalfRes, (a, b) => possibleResults[a] && possibleResults[b])
+                return firstHalfRes.Zip(secondHalfRes, 
+                        (a, b) => possibleResults[a] && possibleResults[b])
                     .All(x => x);
             }
+        }
+
+        private static bool Test3(league league, out Dictionary<int,string> output)
+        {
+            var res = true;
+            output = new Dictionary<int, string>();
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var resultTable = cntx.GetTable<result>();
+                var matchTable = cntx.GetTable<match>();
+                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id);
+
+                var list = (from result in resultTable
+                    from url in urlTable
+                    where (from match in matchTable
+                        where match.parentId == url.id
+                        select match.id).Contains(result.parentId)
+                    let test = url
+                    group result by url.id
+                    into g
+                    select new {UrlId = g.Key, Results = g.ToList()}).ToList();
+
+                var possibleResult = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
+                foreach (var item in list)
+                {
+                    var fullTimeCount = item.Results.Where(x => x.matchPeriod == 0).
+                        Count(x=>possibleResult[x.resultId]);
+                    var firstHalfCount = item.Results.Count(x => x.matchPeriod == 1);
+                    var secondHalfCount = item.Results.Count(x => x.matchPeriod == 2);
+                    if (firstHalfCount >0 && 
+                        secondHalfCount > 0 &&
+                        (fullTimeCount > firstHalfCount || fullTimeCount > secondHalfCount)
+                        )
+                    {
+                        res = false;
+                        output.Add(item.UrlId, "Total: " + fullTimeCount 
+                                                         + "\t\tFirst: " + firstHalfCount
+                                                         + "\t\tSecond: " + secondHalfCount
+                                                         );
+                    }
+                }
+            }
+
+            return res;
         }
 
         private List<bool> GetTestResults(league league)
@@ -164,7 +252,8 @@ namespace FinalBet.ViewModel
             return new List<bool>
             {
                 Test1(league),
-                Test2(league)
+                Test2(league),
+                Test3(league, out _)
             };
         }
         #endregion
@@ -186,6 +275,7 @@ namespace FinalBet.ViewModel
 
             DoTestCommand = new RelayCommand(DoTest, a => SelectedLeague != null);
             TestAllCommand = new AsyncCommand(TestAll);
+            TestThreeCommand = new RelayCommand(TestThree, a => SelectedLeague != null);
         }
     }
 }

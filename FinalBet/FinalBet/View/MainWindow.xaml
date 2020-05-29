@@ -509,21 +509,17 @@
                         </StackPanel>
                     <DockPanel Grid.Row="1">
                         <Menu>
-                            <MenuItem Header="Тестировать" Command="{Binding DoTestCommand}"/>
-                            <MenuItem Header="Тестировать все" Command="{Binding TestAllCommand}"/>
+                            <MenuItem Header="Тестировать лигу" Command="{Binding DoTestCommand}"/>
+                            <MenuItem Header="Тестировать все лиги" Command="{Binding TestAllCommand}"/>
+                            <MenuItem Header="Тест №3" Command="{Binding TestThreeCommand}"/>
                         </Menu>
                     </DockPanel>
                     <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="5*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="8*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0"
-                                 IsReadOnly="True"
+                        <TextBox IsReadOnly="True"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
                                  Text ="{Binding Path=Output}"
+                                 HorizontalContentAlignment="Left"
                         />
                     </Grid>
                 </Grid>
