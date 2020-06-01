@@ -454,7 +454,7 @@
                             <MenuItem Header="Рисовать" Command="{Binding DrawCommand}"
                                       CommandParameter="{Binding ElementName=RedGreenCanvas}"
                                       />
-                            <MenuItem Header="Загрузить детали" Command="{Binding TestCommand}"
+                            <MenuItem Header="Тестовая команда" Command="{Binding TestCommand}"
                                       />
                         </Menu>
                     </DockPanel>
@@ -506,7 +506,21 @@
                                       SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       DisplayMemberPath="name"
                             />
-                        </StackPanel>
+                            <ComboBox  Width="200" Height="25"
+                                       Margin="{StaticResource ControlMargin}"
+                                       ItemsSource="{Binding Tournaments}"
+                                       SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            />
+                            <TextBlock Text="Год отсечки результатов:"
+                                       Style="{StaticResource Textblock.H3}"
+                                       VerticalAlignment="Center"
+                                       />
+                            <Controls:NumericUpDown Margin="{StaticResource ControlMargin}"
+                                                    Minimum="-1"
+                                                    Width="125"
+                                                    Value="{Binding Path=ResultBorderYear, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    />
+                    </StackPanel>
                     <DockPanel Grid.Row="1">
                         <Menu>
                             <MenuItem Header="Тестировать лигу" Command="{Binding DoTestCommand}"/>

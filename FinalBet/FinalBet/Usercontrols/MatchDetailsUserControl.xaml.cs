@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using FinalBet.Database;
+using FinalBet.Framework;
 
 namespace FinalBet.Usercontrols
 {
@@ -39,18 +41,29 @@ namespace FinalBet.Usercontrols
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var table = cntx.GetTable<match>();
-                var sngl = table.Single(x => x.id == control.MatchId);
+                var match = table.Single(x => x.id == control.MatchId);
 
-                var url = cntx.GetTable<leagueUrl>().Single(x => x.id == sngl.parentId);
-                var resInfo = cntx.GetTable<result>().Where(x => x.id == sngl.id).ToList();
+                var resInfo = cntx.GetTable<result>().Where(x => x.parentId == match.id).ToList();
 
-                control.HomeTeam = cntx.GetTable<teamName>().Single(x => x.id == sngl.homeTeamId).name;
-                control.GuestTeam = cntx.GetTable<teamName>().Single(x => x.id == sngl.guestTeamId).name;
+                control.HomeTeam = cntx.GetTable<teamName>().Single(x => x.id == match.homeTeamId).name;
+                control.GuestTeam = cntx.GetTable<teamName>().Single(x => x.id == match.guestTeamId).name;
 
                 var mResult = cntx.GetTable<possibleResult>().Single(x => x.id == resInfo.Single(a=>a.matchPeriod==0).resultId);
                 control.MatchResult = mResult.scored + " : " + mResult.missed;
 
-                control.MatchDate = sngl.date.ToString("dd-MM-yyyy");
+                if (resInfo.Count(x => x.matchPeriod > 0) != 2)
+                {
+                    control.HalfResults = "no half data";
+                }
+                else
+                {
+                    var r1 = cntx.GetTable<possibleResult>().Single(x => x.id == resInfo.Single(a => a.matchPeriod == 1).resultId);
+                    var r2 = cntx.GetTable<possibleResult>().Single(x => x.id == resInfo.Single(a => a.matchPeriod == 2).resultId);
+                    control.HalfResults = "(" + r1.scored + " : " + r1.missed + "; " + r2.scored + " : " + r2.missed + ")";
+                }
+               
+                control.MatchDate = match.date.ToString("dd-MM-yyyy");
+                control.Uri = match.href;
             }
         }
 
@@ -111,6 +124,10 @@ namespace FinalBet.Usercontrols
             }
         }
 
+        private string _halfResults = "";
+        public string HalfResults { get { return _halfResults;} set{ _halfResults = value; OnPropertyChanged("HalfResults");}}
+
+
         private string _matchDate;
         public string MatchDate
         {
@@ -122,11 +139,25 @@ namespace FinalBet.Usercontrols
                 OnPropertyChanged("MatchDate");
             }
         }
+
+        private string _uri = "";
+        public string Uri { get { return _uri;} set{ _uri = value; OnPropertyChanged("Uri");}}
+
+        public ICommand OpenUrlCommand { get; set; }
+
+        private void OpenUrl(object obj)
+        {
+            Uri baseUri = new Uri(Properties.Settings.Default.beUrl);
+            Uri myUri = new Uri(baseUri, Uri);
+
+            Process.Start(new ProcessStartInfo((myUri).AbsoluteUri));
+        }
         #endregion
 
 
         public MatchDetailsUserControl()
         {
+            OpenUrlCommand = new RelayCommand(OpenUrl);
             InitializeComponent();
         }
 

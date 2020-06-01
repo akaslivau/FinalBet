@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:FinalBet.Usercontrols"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              mc:Ignorable="d" 
              Name="_this"
              >
@@ -12,10 +13,11 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="10*"/>
-            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="7*"/>
             <ColumnDefinition Width="10*"/>
         </Grid.ColumnDefinitions>
         <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
@@ -30,13 +32,26 @@
         <TextBlock Grid.Row="1" Grid.Column="1" 
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   Style="{StaticResource Textblock.H3}" 
-                   Text="{Binding ElementName=_this, Path=MatchResult}"/>
+                   Style="{StaticResource Textblock.H3}">
+            <Hyperlink>
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="Click">
+                        <i:InvokeCommandAction Command="{Binding ElementName=_this, Path=OpenUrlCommand}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <Run Text="{Binding ElementName=_this, Path=MatchResult}"/>
+            </Hyperlink>
+            </TextBlock>
         <TextBlock Grid.Row="1" Grid.Column="2" 
                    HorizontalAlignment="Left"
                    VerticalAlignment="Center"
                    Style="{StaticResource Textblock.H3}" 
                    Text="{Binding ElementName=_this, Path=GuestTeam}"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" 
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Style="{StaticResource Textblock.H5}" 
+                   Text="{Binding ElementName=_this, Path=HalfResults}"/>
         </Grid>
     </GroupBox>
 </UserControl>

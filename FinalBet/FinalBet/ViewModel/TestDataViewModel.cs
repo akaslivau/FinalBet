@@ -19,7 +19,7 @@ namespace FinalBet.ViewModel
         /*  СПИСОК ТЕСТОВ
          * 1. Количество результатов для matchPeriod = 1 AND matchPeriod = 2 должно быть одинаковым
          * 2. [Сомнительно] Все results для matchPeriod = 1,2 должны быть isCorrect
-         * 3. 
+         * 3. Число КОРРЕКТНЫХ результатов с matchPeriod == 0 должно быть равно числу результатов c matchPeriod = 1,2
         */
 
 
@@ -48,9 +48,103 @@ namespace FinalBet.ViewModel
                 if (_selectedLeague == value) return;
                 _selectedLeague = value;
                 OnPropertyChanged("SelectedLeague");
+                InitializeTournaments(value);
             }
         }
-        
+
+        private void InitializeTournaments(league league)
+        {
+            Tournaments.Clear();
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<leagueUrl>().
+                    Where(x => x.parentId == league.id).
+                    Select(x => x.mark).
+                    Where(x => x.Length > 0).
+                    Distinct().
+                    ToList();
+
+                foreach (var item in table)
+                {
+                    Tournaments.Add(item);
+                }
+
+                if (Tournaments.Any()) SelectedTournament = Tournaments.First();
+            }
+        }
+
+        private ObservableCollection<string> _tournaments = new ObservableCollection<string>();
+        public ObservableCollection<string> Tournaments
+        {
+            get => _tournaments;
+            set
+            {
+                if (_tournaments == value) return;
+                _tournaments = value;
+                OnPropertyChanged("Tournaments");
+            }
+        }
+
+        private string _selectedTournament;
+        public string SelectedTournament
+        {
+            get => _selectedTournament;
+            set
+            {
+                if (_selectedTournament == value) return;
+                _selectedTournament = value;
+                OnPropertyChanged("SelectedTournament");
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var resultBorder = cntx.GetTable<border>().SingleOrDefault(x =>
+                        x.leagueId == SelectedLeague.id && x.mark == SelectedTournament);
+
+                    _resultBorderYear = resultBorder?.resultBorderYear ?? -1;
+                    OnPropertyChanged("ResultBorderYear");
+                }
+            }
+        }
+
+        private int _resultBorderYear = -1;
+
+        public int ResultBorderYear
+        {
+            get => _resultBorderYear;
+            set
+            {
+                _resultBorderYear = value;
+                OnPropertyChanged("ResultBorderYear");
+                UpdateResultBorderYear(SelectedLeague, SelectedTournament, value);
+            }
+        }
+
+        private static void UpdateResultBorderYear(league league, string mark, int newValue)
+        {
+            if(league.id <=0 || string.IsNullOrEmpty(mark)) return;
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<border>();
+                if (!table.Any(x => x.leagueId == league.id && x.mark == mark))
+                {
+                    var toAdd = new border
+                    {
+                        leagueId = league.id,
+                        mark = mark,
+                        resultBorderYear =  -1,
+                        oddBorderYear = -1
+                    };
+                    table.InsertOnSubmit(toAdd);
+                    cntx.SubmitChanges();
+                }
+
+                var sngl = table.Single(x => x.leagueId == league.id && x.mark == mark);
+                sngl.resultBorderYear = newValue;
+                cntx.SubmitChanges();
+            }
+        }
+
+
         #endregion
 
         #region Commands
@@ -68,7 +162,7 @@ namespace FinalBet.ViewModel
         {
             Output = "Результаты выполнения тестов для [" + SelectedLeague.name.ToUpper() + "]\r\n";
 
-            var testResults = GetTestResults(SelectedLeague);
+            var testResults = GetTestResults(SelectedLeague, SelectedTournament);
 
             Output += "\n" + (testResults.All(x => x) ? "Все тесты пройдены успешно" : "Обнаружены ошибки") + "\n";
 
@@ -85,7 +179,7 @@ namespace FinalBet.ViewModel
 
                 foreach (var league in leagues)
                 {
-                    await Task.Run(() =>
+/*                    await Task.Run(() =>
                         {
                             var testResults = GetTestResults(league);
                             var isOk = testResults.All(x => x);
@@ -94,7 +188,7 @@ namespace FinalBet.ViewModel
                                 Output += league.name + ": " + (isOk ? "OK" : "ERROR!!!") + "\r\n";
                             });
                         }
-                    );
+                    );*/
                     await Task.Delay(50);
                 }
                 Dispatcher.CurrentDispatcher.Invoke(() => { Output += "FINISHED"; });
@@ -103,9 +197,11 @@ namespace FinalBet.ViewModel
 
         private void TestThree(object obj)
         {
-            Output = "Результаты выполнения теста №3 для [" + SelectedLeague.name.ToUpper() + "]\r\n";
+            Output = "Результаты выполнения теста №3 для [" 
+                     + SelectedLeague.name.ToUpper() + "]." 
+                     + "["+SelectedTournament+"]\r\n";
 
-            var test3 = Test3(SelectedLeague, out var output);
+            var test3 = Test3(SelectedLeague, SelectedTournament, out var output);
 
             if (test3)
             {
@@ -133,11 +229,11 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private static bool Test1(league league)
+        private static bool Test1(league league, string mark)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id);
+                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id && x.mark == mark);
 
                 var matchTable = cntx.GetTable<match>();
                 var resultTable = cntx.GetTable<result>();
@@ -166,12 +262,12 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private static bool Test2(league league)
+        private static bool Test2(league league, string mark)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var leagueUrlIds = cntx.GetTable<leagueUrl>().
-                    Where(x => x.parentId == league.id).
+                    Where(x => x.parentId == league.id && x.mark == mark).
                     Select(x => x.id)
                     .ToList();
 
@@ -202,7 +298,7 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private static bool Test3(league league, out Dictionary<int,string> output)
+        private static bool Test3(league league, string mark, out Dictionary<int,string> output)
         {
             var res = true;
             output = new Dictionary<int, string>();
@@ -211,7 +307,7 @@ namespace FinalBet.ViewModel
             {
                 var resultTable = cntx.GetTable<result>();
                 var matchTable = cntx.GetTable<match>();
-                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id);
+                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id && x.mark == mark);
 
                 var list = (from result in resultTable
                     from url in urlTable
@@ -228,32 +324,35 @@ namespace FinalBet.ViewModel
                 {
                     var fullTimeCount = item.Results.Where(x => x.matchPeriod == 0).
                         Count(x=>possibleResult[x.resultId]);
-                    var firstHalfCount = item.Results.Count(x => x.matchPeriod == 1);
-                    var secondHalfCount = item.Results.Count(x => x.matchPeriod == 2);
-                    if (firstHalfCount >0 && 
-                        secondHalfCount > 0 &&
-                        (fullTimeCount > firstHalfCount || fullTimeCount > secondHalfCount)
-                        )
+                    var firstHalfCount = item.Results.Where(x => x.matchPeriod == 1).Count(x => possibleResult[x.resultId]);
+                    var secondHalfCount = item.Results.Where(x => x.matchPeriod == 2).Count(x => possibleResult[x.resultId]);
+
+                    var notOk = fullTimeCount != firstHalfCount || fullTimeCount != secondHalfCount;
+                    if (notOk)
                     {
                         res = false;
-                        output.Add(item.UrlId, "Total: " + fullTimeCount 
+                    }
+
+                    output.Add(item.UrlId, "Total: " + fullTimeCount 
                                                          + "\t\tFirst: " + firstHalfCount
                                                          + "\t\tSecond: " + secondHalfCount
+                                                         + "\t\tDifference: " + (fullTimeCount-secondHalfCount)
+                                                         + "\t\t"+(notOk ? "WARNING" : "OK... ")
                                                          );
-                    }
+                    
                 }
             }
 
             return res;
         }
 
-        private List<bool> GetTestResults(league league)
+        private List<bool> GetTestResults(league league, string mark)
         {
             return new List<bool>
             {
-                Test1(league),
-                Test2(league),
-                Test3(league, out _)
+                Test1(league, mark),
+                Test2(league, mark),
+                Test3(league, mark, out _)
             };
         }
         #endregion

@@ -96,4 +96,13 @@
       <Column Name="btsLoaded" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
     </Type>
   </Table>
+  <Table Name="dbo.borders" Member="borders">
+    <Type Name="border">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="leagueId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="mark" Type="System.String" DbType="NVarChar(255) NOT NULL" CanBeNull="false" />
+      <Column Name="resultBorderYear" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="oddBorderYear" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
 </Database>

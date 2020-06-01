@@ -63,6 +63,9 @@ namespace FinalBet
     partial void InsertparsedResult(parsedResult instance);
     partial void UpdateparsedResult(parsedResult instance);
     partial void DeleteparsedResult(parsedResult instance);
+    partial void Insertborder(border instance);
+    partial void Updateborder(border instance);
+    partial void Deleteborder(border instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -180,6 +183,14 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<parsedResult>();
+			}
+		}
+		
+		public System.Data.Linq.Table<border> borders
+		{
+			get
+			{
+				return this.GetTable<border>();
 			}
 		}
 	}
@@ -1825,6 +1836,164 @@ namespace FinalBet
 					this._btsLoaded = value;
 					this.SendPropertyChanged("btsLoaded");
 					this.OnbtsLoadedChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.borders")]
+	public partial class border : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private int _leagueId;
+		
+		private string _mark;
+		
+		private int _resultBorderYear;
+		
+		private int _oddBorderYear;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnleagueIdChanging(int value);
+    partial void OnleagueIdChanged();
+    partial void OnmarkChanging(string value);
+    partial void OnmarkChanged();
+    partial void OnresultBorderYearChanging(int value);
+    partial void OnresultBorderYearChanged();
+    partial void OnoddBorderYearChanging(int value);
+    partial void OnoddBorderYearChanged();
+    #endregion
+		
+		public border()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_leagueId", DbType="Int NOT NULL")]
+		public int leagueId
+		{
+			get
+			{
+				return this._leagueId;
+			}
+			set
+			{
+				if ((this._leagueId != value))
+				{
+					this.OnleagueIdChanging(value);
+					this.SendPropertyChanging();
+					this._leagueId = value;
+					this.SendPropertyChanged("leagueId");
+					this.OnleagueIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_mark", DbType="NVarChar(255) NOT NULL", CanBeNull=false)]
+		public string mark
+		{
+			get
+			{
+				return this._mark;
+			}
+			set
+			{
+				if ((this._mark != value))
+				{
+					this.OnmarkChanging(value);
+					this.SendPropertyChanging();
+					this._mark = value;
+					this.SendPropertyChanged("mark");
+					this.OnmarkChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_resultBorderYear", DbType="Int NOT NULL")]
+		public int resultBorderYear
+		{
+			get
+			{
+				return this._resultBorderYear;
+			}
+			set
+			{
+				if ((this._resultBorderYear != value))
+				{
+					this.OnresultBorderYearChanging(value);
+					this.SendPropertyChanging();
+					this._resultBorderYear = value;
+					this.SendPropertyChanged("resultBorderYear");
+					this.OnresultBorderYearChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_oddBorderYear", DbType="Int NOT NULL")]
+		public int oddBorderYear
+		{
+			get
+			{
+				return this._oddBorderYear;
+			}
+			set
+			{
+				if ((this._oddBorderYear != value))
+				{
+					this.OnoddBorderYearChanging(value);
+					this.SendPropertyChanging();
+					this._oddBorderYear = value;
+					this.SendPropertyChanged("oddBorderYear");
+					this.OnoddBorderYearChanged();
 				}
 			}
 		}
