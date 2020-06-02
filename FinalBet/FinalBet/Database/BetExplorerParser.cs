@@ -22,9 +22,8 @@ namespace FinalBet.Database
          * 0. dbo.leagues -  страны (континенты и пр.)
          * 1. dbo.leagueUrls - список Url для всех стран (parentId <== leagues.id)
          * 2а. dbo.teamNames - имена команд (leagueId <== leagueUrl.id)
-         * 2b. dbo.matches - список матчей (parentId <== leagueUrl.id)
-         * 3a. dbo.results - результаты матчей (parentId <== match.id, resultId <== possibleResult.id)
-         * 3b. dbo.odds - коэффициенты (parentId <== match.id)
+         * 2b. dbo.matches - список матчей (leagueUrlId <== leagueUrl.id, leagueId <== leagues.Id)
+         * 3 dbo.odds - коэффициенты (parentId <== match.id)
          *
          * dbo.matchTags - содержит список тэгов, полученных при парсинге матчей (NO_TABS по умолчанию)
          * dbo.possibleResults - содержит все уникальные результаты матчей
@@ -491,7 +490,7 @@ namespace FinalBet.Database
         }
         #endregion
 
-        #region 3a. dbo.results (First, Second halfs)
+        #region 2a. dbo.matches Updating (First, Second halfs)
         private static async Task<string> GetHalfResultsHtml(match match)
         {
             var web = new HtmlWeb();
@@ -569,7 +568,7 @@ namespace FinalBet.Database
         }
         #endregion
 
-        #region 3b. dbo.odds
+        #region 3 dbo.odds
         public static async Task<List<odd>> GetMatchOdds(match match, BeOddLoadMode loadMode)
         {
             var html = await GetOddHtml(match, loadMode);
@@ -862,12 +861,12 @@ namespace FinalBet.Database
     public class MatchDetail
     {
         public bool AreResultsCorrect { get; set; }
-        public int MatchId { get; private set; }
+        public int MatchId { get; }
 
         public possibleResult FirstTimePossibleResult { get; set; }
         public possibleResult SecondTimePossibleResult { get; set; }
 
-        public MatchDetail(string fTimeResult, string sTimeResult,int matchId)
+        public MatchDetail(string fTimeResult, string sTimeResult, int matchId)
         {
             MatchId = matchId;
             FirstTimePossibleResult = null;

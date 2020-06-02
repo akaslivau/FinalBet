@@ -10,10 +10,7 @@ namespace FinalBet.ViewModel
         private leagueUrl _source;
         public leagueUrl Source
         {
-            get
-            {
-                return _source;
-            }
+            get => _source;
             set
             {
                 if (_source == value) return;
@@ -25,10 +22,7 @@ namespace FinalBet.ViewModel
         private string _file = "-";
         public string File
         {
-            get
-            {
-                return _file;
-            }
+            get => _file;
             set
             {
                 if (_file == value) return;
@@ -37,13 +31,10 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private int _matchesCount=0;
+        private int _matchesCount;
         public int MatchesCount
         {
-            get
-            {
-                return _matchesCount;
-            }
+            get => _matchesCount;
             set
             {
                 if (_matchesCount == value) return;
@@ -55,10 +46,7 @@ namespace FinalBet.ViewModel
         private int _possibleYear = -1;
         public int PossibleYear
         {
-            get
-            {
-                return _possibleYear;
-            }
+            get => _possibleYear;
             set
             {
                 if (_possibleYear == value) return;
@@ -68,13 +56,10 @@ namespace FinalBet.ViewModel
         }
 
         //Это переменная нужна, чтобы загружать матчи для завершенного сезона
-        private bool _isCurrent = false;
+        private bool _isCurrent;
         public bool IsCurrent
         {
-            get
-            {
-                return _isCurrent;
-            }
+            get => _isCurrent;
             set
             {
                 if (_isCurrent == value) return;
@@ -83,6 +68,10 @@ namespace FinalBet.ViewModel
             }
         }
 
+
+        #endregion
+
+        #region Static
         public static bool GetIsCurrent(string url)
         {
             //axaxaxaxaxa
@@ -99,37 +88,36 @@ namespace FinalBet.ViewModel
             }
             return true;
         }
+
+        public static int GetPossibleYear(string strYear)
+        {
+            if (!string.IsNullOrEmpty(strYear))
+            {
+                if (int.TryParse(strYear, out int attempt1))
+                {
+                    return attempt1;
+                }
+
+                var split = strYear.Substring(0, strYear.IndexOf('/'));
+                if (!string.IsNullOrEmpty(split))
+                {
+                    if (int.TryParse(split, out int attempt2))
+                    {
+                        return attempt2;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
         #endregion
-
-
 
         public LeagueUrlViewModel(leagueUrl item)
         {
             Source = item;
 
-            //kekeke
-            var strYear = item.year;
-            if (!string.IsNullOrEmpty(strYear))
-            {
-                int attempt1;
-                if (int.TryParse(strYear, out attempt1))
-                {
-                    PossibleYear = attempt1;
-                }
-                else
-                {
-                    var split = strYear.Substring(0, strYear.IndexOf('/'));
-                    if (!string.IsNullOrEmpty(split))
-                    {
-                        int attempt2;
-                        if (int.TryParse(split, out attempt2))
-                        {
-                            PossibleYear = attempt2;
-                        }
-                    }
-                }
-            }
-
+            PossibleYear = GetPossibleYear(item.year);
             IsCurrent = GetIsCurrent(item.url);
         }
     }

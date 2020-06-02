@@ -43,22 +43,20 @@ namespace FinalBet.Usercontrols
                 var table = cntx.GetTable<match>();
                 var match = table.Single(x => x.id == control.MatchId);
 
-                var resInfo = cntx.GetTable<result>().Where(x => x.parentId == match.id).ToList();
-
                 control.HomeTeam = cntx.GetTable<teamName>().Single(x => x.id == match.homeTeamId).name;
                 control.GuestTeam = cntx.GetTable<teamName>().Single(x => x.id == match.guestTeamId).name;
 
-                var mResult = cntx.GetTable<possibleResult>().Single(x => x.id == resInfo.Single(a=>a.matchPeriod==0).resultId);
+                var mResult = cntx.GetTable<possibleResult>().Single(x => x.id == match.matchResultId);
                 control.MatchResult = mResult.scored + " : " + mResult.missed;
 
-                if (resInfo.Count(x => x.matchPeriod > 0) != 2)
+                if (match.firstHalfResId==null || match.secondHalfResId == null)
                 {
                     control.HalfResults = "no half data";
                 }
                 else
                 {
-                    var r1 = cntx.GetTable<possibleResult>().Single(x => x.id == resInfo.Single(a => a.matchPeriod == 1).resultId);
-                    var r2 = cntx.GetTable<possibleResult>().Single(x => x.id == resInfo.Single(a => a.matchPeriod == 2).resultId);
+                    var r1 = cntx.GetTable<possibleResult>().Single(x => x.id == match.firstHalfResId);
+                    var r2 = cntx.GetTable<possibleResult>().Single(x => x.id == match.secondHalfResId);
                     control.HalfResults = "(" + r1.scored + " : " + r1.missed + "; " + r2.scored + " : " + r2.missed + ")";
                 }
                

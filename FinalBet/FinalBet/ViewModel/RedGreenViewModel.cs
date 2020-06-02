@@ -240,7 +240,7 @@ namespace FinalBet.ViewModel
                 var tags = cntx.GetTable<matchTag>().ToList();
 
                 var items = cntx.GetTable<match>().
-                    Where(x => x.parentId == parentId).
+                    Where(x => x.leagueUrlId == parentId).
                     Select(x => x.tagId).Distinct()
                     .ToList();
                     
@@ -282,7 +282,7 @@ namespace FinalBet.ViewModel
                     .Single(x => x.parentId == SelectedLeague.id && x.year == SelectedYear && x.mark == SelectedTournament).id;
 
                 matchList = cntx.GetTable<match>()
-                    .Where(x => x.parentId == parentId && x.tagId == SelectedSubSeason.id).ToList();
+                    .Where(x => x.leagueUrlId == parentId && x.tagId == SelectedSubSeason.id).ToList();
             }
 
             if (!matchList.Any()) return;
@@ -303,9 +303,6 @@ namespace FinalBet.ViewModel
             {
                 var possibleResults = cntx.GetTable<possibleResult>();
 
-                var matchesId = matchList.Select(x => x.id).ToList();
-                var results = cntx.GetTable<result>().Where(x => matchesId.Contains(x.parentId)).ToList();
-
                 canvas.Width = 1;
                 foreach (var teamName in teamNames)
                 {
@@ -315,14 +312,17 @@ namespace FinalBet.ViewModel
                     var rGmatches = new List<RGmatch>();
                     foreach (var match in line)
                     {
-                        var resId = results.SingleOrDefault(x => x.parentId == match.id && x.matchPeriod == SolveMode.MatchPeriod);
+                        var resId = SolveMode.MatchPeriod == 0 ? match.matchResultId :
+                            SolveMode.MatchPeriod == 1 ? match.firstHalfResId : 
+                            match.secondHalfResId;
+
                         if (resId == null)
                         {
                             rGmatches.Add(RGmatch.GetEmpty());
                             continue;
                         }
 
-                        var res = possibleResults.Single(x => x.id == resId.resultId);
+                        var res = possibleResults.Single(x => x.id == resId);
                         if (!res.isCorrect)
                         {
                             rGmatches.Add(RGmatch.GetNanMatch());

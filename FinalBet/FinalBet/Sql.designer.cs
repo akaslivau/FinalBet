@@ -42,9 +42,6 @@ namespace FinalBet
     partial void InsertleagueUrl(leagueUrl instance);
     partial void UpdateleagueUrl(leagueUrl instance);
     partial void DeleteleagueUrl(leagueUrl instance);
-    partial void Insertmatch(match instance);
-    partial void Updatematch(match instance);
-    partial void Deletematch(match instance);
     partial void InsertmatchTag(matchTag instance);
     partial void UpdatematchTag(matchTag instance);
     partial void DeletematchTag(matchTag instance);
@@ -54,9 +51,6 @@ namespace FinalBet
     partial void InsertpossibleResult(possibleResult instance);
     partial void UpdatepossibleResult(possibleResult instance);
     partial void DeletepossibleResult(possibleResult instance);
-    partial void Insertresult(result instance);
-    partial void Updateresult(result instance);
-    partial void Deleteresult(result instance);
     partial void InsertteamName(teamName instance);
     partial void UpdateteamName(teamName instance);
     partial void DeleteteamName(teamName instance);
@@ -66,6 +60,9 @@ namespace FinalBet
     partial void Insertborder(border instance);
     partial void Updateborder(border instance);
     partial void Deleteborder(border instance);
+    partial void Insertmatch(match instance);
+    partial void Updatematch(match instance);
+    partial void Deletematch(match instance);
     #endregion
 		
 		public SqlDataContext() : 
@@ -130,14 +127,6 @@ namespace FinalBet
 			}
 		}
 		
-		public System.Data.Linq.Table<match> matches
-		{
-			get
-			{
-				return this.GetTable<match>();
-			}
-		}
-		
 		public System.Data.Linq.Table<matchTag> matchTags
 		{
 			get
@@ -162,14 +151,6 @@ namespace FinalBet
 			}
 		}
 		
-		public System.Data.Linq.Table<result> results
-		{
-			get
-			{
-				return this.GetTable<result>();
-			}
-		}
-		
 		public System.Data.Linq.Table<teamName> teamNames
 		{
 			get
@@ -191,6 +172,14 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<border>();
+			}
+		}
+		
+		public System.Data.Linq.Table<match> matches
+		{
+			get
+			{
+				return this.GetTable<match>();
 			}
 		}
 	}
@@ -755,212 +744,6 @@ namespace FinalBet
 		}
 	}
 	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.matches")]
-	public partial class match : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private int _parentId;
-		
-		private int _homeTeamId;
-		
-		private int _guestTeamId;
-		
-		private int _tagId;
-		
-		private string _href;
-		
-		private System.DateTime _date;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnparentIdChanging(int value);
-    partial void OnparentIdChanged();
-    partial void OnhomeTeamIdChanging(int value);
-    partial void OnhomeTeamIdChanged();
-    partial void OnguestTeamIdChanging(int value);
-    partial void OnguestTeamIdChanged();
-    partial void OntagIdChanging(int value);
-    partial void OntagIdChanged();
-    partial void OnhrefChanging(string value);
-    partial void OnhrefChanged();
-    partial void OndateChanging(System.DateTime value);
-    partial void OndateChanged();
-    #endregion
-		
-		public match()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
-		{
-			get
-			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
-		public int parentId
-		{
-			get
-			{
-				return this._parentId;
-			}
-			set
-			{
-				if ((this._parentId != value))
-				{
-					this.OnparentIdChanging(value);
-					this.SendPropertyChanging();
-					this._parentId = value;
-					this.SendPropertyChanged("parentId");
-					this.OnparentIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_homeTeamId", DbType="Int NOT NULL")]
-		public int homeTeamId
-		{
-			get
-			{
-				return this._homeTeamId;
-			}
-			set
-			{
-				if ((this._homeTeamId != value))
-				{
-					this.OnhomeTeamIdChanging(value);
-					this.SendPropertyChanging();
-					this._homeTeamId = value;
-					this.SendPropertyChanged("homeTeamId");
-					this.OnhomeTeamIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_guestTeamId", DbType="Int NOT NULL")]
-		public int guestTeamId
-		{
-			get
-			{
-				return this._guestTeamId;
-			}
-			set
-			{
-				if ((this._guestTeamId != value))
-				{
-					this.OnguestTeamIdChanging(value);
-					this.SendPropertyChanging();
-					this._guestTeamId = value;
-					this.SendPropertyChanged("guestTeamId");
-					this.OnguestTeamIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_tagId", DbType="Int NOT NULL")]
-		public int tagId
-		{
-			get
-			{
-				return this._tagId;
-			}
-			set
-			{
-				if ((this._tagId != value))
-				{
-					this.OntagIdChanging(value);
-					this.SendPropertyChanging();
-					this._tagId = value;
-					this.SendPropertyChanged("tagId");
-					this.OntagIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_href", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
-		public string href
-		{
-			get
-			{
-				return this._href;
-			}
-			set
-			{
-				if ((this._href != value))
-				{
-					this.OnhrefChanging(value);
-					this.SendPropertyChanging();
-					this._href = value;
-					this.SendPropertyChanged("href");
-					this.OnhrefChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_date", DbType="DateTime NOT NULL")]
-		public System.DateTime date
-		{
-			get
-			{
-				return this._date;
-			}
-			set
-			{
-				if ((this._date != value))
-				{
-					this.OndateChanging(value);
-					this.SendPropertyChanging();
-					this._date = value;
-					this.SendPropertyChanged("date");
-					this.OndateChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.matchTags")]
 	public partial class matchTag : INotifyPropertyChanging, INotifyPropertyChanged
 	{
@@ -1386,140 +1169,6 @@ namespace FinalBet
 					this._diff = value;
 					this.SendPropertyChanged("diff");
 					this.OndiffChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.results")]
-	public partial class result : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private int _parentId;
-		
-		private int _matchPeriod;
-		
-		private int _resultId;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnparentIdChanging(int value);
-    partial void OnparentIdChanged();
-    partial void OnmatchPeriodChanging(int value);
-    partial void OnmatchPeriodChanged();
-    partial void OnresultIdChanging(int value);
-    partial void OnresultIdChanged();
-    #endregion
-		
-		public result()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
-		{
-			get
-			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_parentId", DbType="Int NOT NULL")]
-		public int parentId
-		{
-			get
-			{
-				return this._parentId;
-			}
-			set
-			{
-				if ((this._parentId != value))
-				{
-					this.OnparentIdChanging(value);
-					this.SendPropertyChanging();
-					this._parentId = value;
-					this.SendPropertyChanged("parentId");
-					this.OnparentIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_matchPeriod", DbType="Int NOT NULL")]
-		public int matchPeriod
-		{
-			get
-			{
-				return this._matchPeriod;
-			}
-			set
-			{
-				if ((this._matchPeriod != value))
-				{
-					this.OnmatchPeriodChanging(value);
-					this.SendPropertyChanging();
-					this._matchPeriod = value;
-					this.SendPropertyChanged("matchPeriod");
-					this.OnmatchPeriodChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_resultId", DbType="Int NOT NULL")]
-		public int resultId
-		{
-			get
-			{
-				return this._resultId;
-			}
-			set
-			{
-				if ((this._resultId != value))
-				{
-					this.OnresultIdChanging(value);
-					this.SendPropertyChanging();
-					this._resultId = value;
-					this.SendPropertyChanged("resultId");
-					this.OnresultIdChanged();
 				}
 			}
 		}
@@ -1994,6 +1643,308 @@ namespace FinalBet
 					this._oddBorderYear = value;
 					this.SendPropertyChanged("oddBorderYear");
 					this.OnoddBorderYearChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.matches")]
+	public partial class match : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private int _id;
+		
+		private System.Nullable<int> _leagueId;
+		
+		private int _leagueUrlId;
+		
+		private int _homeTeamId;
+		
+		private int _guestTeamId;
+		
+		private int _tagId;
+		
+		private string _href;
+		
+		private System.DateTime _date;
+		
+		private System.Nullable<int> _matchResultId;
+		
+		private System.Nullable<int> _firstHalfResId;
+		
+		private System.Nullable<int> _secondHalfResId;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnidChanging(int value);
+    partial void OnidChanged();
+    partial void OnleagueIdChanging(System.Nullable<int> value);
+    partial void OnleagueIdChanged();
+    partial void OnleagueUrlIdChanging(int value);
+    partial void OnleagueUrlIdChanged();
+    partial void OnhomeTeamIdChanging(int value);
+    partial void OnhomeTeamIdChanged();
+    partial void OnguestTeamIdChanging(int value);
+    partial void OnguestTeamIdChanged();
+    partial void OntagIdChanging(int value);
+    partial void OntagIdChanged();
+    partial void OnhrefChanging(string value);
+    partial void OnhrefChanged();
+    partial void OndateChanging(System.DateTime value);
+    partial void OndateChanged();
+    partial void OnmatchResultIdChanging(System.Nullable<int> value);
+    partial void OnmatchResultIdChanged();
+    partial void OnfirstHalfResIdChanging(System.Nullable<int> value);
+    partial void OnfirstHalfResIdChanged();
+    partial void OnsecondHalfResIdChanging(System.Nullable<int> value);
+    partial void OnsecondHalfResIdChanged();
+    #endregion
+		
+		public match()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		public int id
+		{
+			get
+			{
+				return this._id;
+			}
+			set
+			{
+				if ((this._id != value))
+				{
+					this.OnidChanging(value);
+					this.SendPropertyChanging();
+					this._id = value;
+					this.SendPropertyChanged("id");
+					this.OnidChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_leagueId", DbType="Int")]
+		public System.Nullable<int> leagueId
+		{
+			get
+			{
+				return this._leagueId;
+			}
+			set
+			{
+				if ((this._leagueId != value))
+				{
+					this.OnleagueIdChanging(value);
+					this.SendPropertyChanging();
+					this._leagueId = value;
+					this.SendPropertyChanged("leagueId");
+					this.OnleagueIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_leagueUrlId", DbType="Int NOT NULL")]
+		public int leagueUrlId
+		{
+			get
+			{
+				return this._leagueUrlId;
+			}
+			set
+			{
+				if ((this._leagueUrlId != value))
+				{
+					this.OnleagueUrlIdChanging(value);
+					this.SendPropertyChanging();
+					this._leagueUrlId = value;
+					this.SendPropertyChanged("leagueUrlId");
+					this.OnleagueUrlIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_homeTeamId", DbType="Int NOT NULL")]
+		public int homeTeamId
+		{
+			get
+			{
+				return this._homeTeamId;
+			}
+			set
+			{
+				if ((this._homeTeamId != value))
+				{
+					this.OnhomeTeamIdChanging(value);
+					this.SendPropertyChanging();
+					this._homeTeamId = value;
+					this.SendPropertyChanged("homeTeamId");
+					this.OnhomeTeamIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_guestTeamId", DbType="Int NOT NULL")]
+		public int guestTeamId
+		{
+			get
+			{
+				return this._guestTeamId;
+			}
+			set
+			{
+				if ((this._guestTeamId != value))
+				{
+					this.OnguestTeamIdChanging(value);
+					this.SendPropertyChanging();
+					this._guestTeamId = value;
+					this.SendPropertyChanged("guestTeamId");
+					this.OnguestTeamIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_tagId", DbType="Int NOT NULL")]
+		public int tagId
+		{
+			get
+			{
+				return this._tagId;
+			}
+			set
+			{
+				if ((this._tagId != value))
+				{
+					this.OntagIdChanging(value);
+					this.SendPropertyChanging();
+					this._tagId = value;
+					this.SendPropertyChanged("tagId");
+					this.OntagIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_href", DbType="NVarChar(MAX) NOT NULL", CanBeNull=false)]
+		public string href
+		{
+			get
+			{
+				return this._href;
+			}
+			set
+			{
+				if ((this._href != value))
+				{
+					this.OnhrefChanging(value);
+					this.SendPropertyChanging();
+					this._href = value;
+					this.SendPropertyChanged("href");
+					this.OnhrefChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_date", DbType="DateTime NOT NULL")]
+		public System.DateTime date
+		{
+			get
+			{
+				return this._date;
+			}
+			set
+			{
+				if ((this._date != value))
+				{
+					this.OndateChanging(value);
+					this.SendPropertyChanging();
+					this._date = value;
+					this.SendPropertyChanged("date");
+					this.OndateChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_matchResultId", DbType="Int")]
+		public System.Nullable<int> matchResultId
+		{
+			get
+			{
+				return this._matchResultId;
+			}
+			set
+			{
+				if ((this._matchResultId != value))
+				{
+					this.OnmatchResultIdChanging(value);
+					this.SendPropertyChanging();
+					this._matchResultId = value;
+					this.SendPropertyChanged("matchResultId");
+					this.OnmatchResultIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_firstHalfResId", DbType="Int")]
+		public System.Nullable<int> firstHalfResId
+		{
+			get
+			{
+				return this._firstHalfResId;
+			}
+			set
+			{
+				if ((this._firstHalfResId != value))
+				{
+					this.OnfirstHalfResIdChanging(value);
+					this.SendPropertyChanging();
+					this._firstHalfResId = value;
+					this.SendPropertyChanged("firstHalfResId");
+					this.OnfirstHalfResIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_secondHalfResId", DbType="Int")]
+		public System.Nullable<int> secondHalfResId
+		{
+			get
+			{
+				return this._secondHalfResId;
+			}
+			set
+			{
+				if ((this._secondHalfResId != value))
+				{
+					this.OnsecondHalfResIdChanging(value);
+					this.SendPropertyChanging();
+					this._secondHalfResId = value;
+					this.SendPropertyChanged("secondHalfResId");
+					this.OnsecondHalfResIdChanged();
 				}
 			}
 		}

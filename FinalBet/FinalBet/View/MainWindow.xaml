@@ -139,9 +139,15 @@
                                 <MenuItem Header="Загрузить все отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Детали матчей">
-                                <MenuItem Header="Загрузить счета таймов"
-                                          Command="{Binding LoadMatchDetailsCommand}"
-                                />
+                                <MenuItem Header="Счета таймов">
+                                    <MenuItem Header="Первичная загрузка"
+                                              Command="{Binding LoadMatchDetailsCommand}"
+                                    />
+                                    <MenuItem Header="Дозагрузка"
+                                              Command="{Binding ReLoadMatchDetailsCommand}"
+                                    />
+                                </MenuItem>
+
                                 <MenuItem Header="Загрузить кэфы"
                                           Command="{Binding LoadMatchOddsCommand}"
                                 />
@@ -525,7 +531,7 @@
                         <Menu>
                             <MenuItem Header="Тестировать лигу" Command="{Binding DoTestCommand}"/>
                             <MenuItem Header="Тестировать все лиги" Command="{Binding TestAllCommand}"/>
-                            <MenuItem Header="Тест №3" Command="{Binding TestThreeCommand}"/>
+                            <MenuItem Header="Тест №2" Command="{Binding TestTwoCommand}"/>
                         </Menu>
                     </DockPanel>
                     <Grid Grid.Row="2">
