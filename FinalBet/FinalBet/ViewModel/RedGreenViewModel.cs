@@ -372,7 +372,11 @@ namespace FinalBet.ViewModel
 
         private void Test(object obj)
         {
-
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var op = cntx.GetTable<match>().Single(x => x.id == 2958);
+                var ap = BetExplorerParser.GetHalfsResults(op);
+            }
         }
         #endregion
 

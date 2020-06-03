@@ -605,7 +605,7 @@ namespace FinalBet.ViewModel
         private async Task ReloadMatchDetails()
         {
             var batches = new List<List<match>>();
-            int batchSize = 5;
+            int batchSize = 1;
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -631,7 +631,10 @@ namespace FinalBet.ViewModel
                     where urlsIds.Contains(match.leagueUrlId)
                     where match.firstHalfResId == null || match.secondHalfResId == null
                     select match).ToList();
-                
+
+                var possibleResDict = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
+                query = query.Where(x => possibleResDict[x.matchResultId.Value]).ToList();
+
                 batches = query.Split(batchSize).ToList();
             }
 
@@ -648,6 +651,20 @@ namespace FinalBet.ViewModel
                 {
                     sWatch.Reset();
                     sWatch.Start();
+                    //888888888888 DELETE
+/*                    var m = batches[i][0];
+                    string finalRes;
+                    using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                    {
+                        finalRes = cntx.GetTable<possibleResult>().Single(x => x.id == m.matchResultId).value;
+                    }
+
+                    Uri baseUri = new Uri(Properties.Settings.Default.beUrl);
+                    Uri myUri = new Uri(baseUri, batches[i][0].href);
+                    Process.Start(new ProcessStartInfo((myUri).AbsoluteUri));
+                    int z = 3;*/
+                    //DELETE
+
                     var tasks = batches[i].Select(x => BetExplorerParser.GetHalfsResults(x)).ToList();
                     var matchDetails = await Task.WhenAll(tasks);
 
@@ -674,8 +691,8 @@ namespace FinalBet.ViewModel
                             if (!matchDetails[k].AreResultsCorrect) continue;
 
                             var match = matchesTable.Single(x => x.id == matchDetails[k].MatchId);
-                            var firstHalfResultId = possibleResultDict[matchDetails[k].FirstTimePossibleResult.value];
-                            var secondHalfResultId = possibleResultDict[matchDetails[k].SecondTimePossibleResult.value];
+                            match.firstHalfResId = possibleResultDict[matchDetails[k].FirstTimePossibleResult.value];
+                            match.secondHalfResId = possibleResultDict[matchDetails[k].SecondTimePossibleResult.value];
                         }
                         cntx.SubmitChanges();
                     }
@@ -760,8 +777,7 @@ namespace FinalBet.ViewModel
         private void TestAsyncTask()
         {
             //TODO: coerce result if need (ET, PEN)
-            //TODO: fill Sql Tables parsedResults
-            //TODO: check and coerce dbo.Results ==> ET, PEN, simple check F+S=FinalScore
+            //TODO: check and coerce dbo.matches ==> ET, PEN, simple check F+S=FinalScore
         }
 
         //Вспомогательные методы, используемые при Task LoadMatches

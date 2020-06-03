@@ -498,7 +498,14 @@ namespace FinalBet.Database
             try
             {
                 var doc = await web.LoadFromWebAsync(url);
-                return doc.DocumentNode.InnerHtml;
+                if (doc == null) return string.Empty;
+                if (string.IsNullOrEmpty(doc.DocumentNode.InnerHtml)) return string.Empty;
+
+                var res = doc.DocumentNode.InnerHtml;
+                res = res.Replace(new string(new[] { '\\', '"' }), new string(new[] { '"' }));
+                res = res.Replace(new string(new[] { '<', '\\', '/' }), new string(new[] { '<', '/' }));
+
+                return res;
             }
             catch (Exception e)
             {
@@ -550,15 +557,52 @@ namespace FinalBet.Database
             //< h2 class="list-details__item__partial" id="js-partial">(1:1, 0:0, 1:1, 3:4)</h2></li>
             var scoresString = node.SelectSingleNode(".//h2[@class='list-details__item__partial']").InnerText;
             bool hasScores = scoresString.Any(x => x == ':');
-            if (!hasScores) return null;
+            if (hasScores)
+            {
+                var scores = scoresString.Split(',', '(', ')').
+                    Where(x => !String.IsNullOrEmpty(x)).
+                    Select(x => x.Trim()).ToList();
+                if (scores.Count < 2) return null;
 
+                return new MatchDetail(scores[0], scores[1], matchId);
+            }
 
-            var scores = scoresString.Split(',', '(', ')').
-                Where(x => !String.IsNullOrEmpty(x)).
-                Select(x => x.Trim()).ToList();
-            if (scores.Count < 2) return null;
+            //<ul class=\"list-details list-details--shooters\">\n
+            var goalsNode = doc.DocumentNode.SelectSingleNode(".//ul[@class='list-details list-details--shooters']");
+            //<table class=\"table-main\">
+            var tableNodes = goalsNode?.SelectNodes(".//table[@class='table-main']");
+            if (tableNodes == null) return null;
+            if (tableNodes.Count != 2) return null;
 
-            return new MatchDetail(scores[0], scores[1], matchId);
+            //Парсим таблицу 1
+            //<td style=\"width: 4ex\">24.</td>
+            var homeGoalsMinutes = tableNodes[0].SelectNodes(".//td[contains(@style,'width:')]")
+                .Select(x => x.InnerText).
+                Select(x => x.Substring(0, x.IndexOf('.'))).
+                Select(x=>int.TryParse(x, out var g)? g: -1).
+                ToList();
+
+            var guestGoalsMinutes = tableNodes[1].SelectNodes(".//td[contains(@style,'width:')]")
+                .Select(x => x.InnerText).
+                Select(x => x.Substring(0, x.IndexOf('.'))).
+                Select(x => int.TryParse(x, out var g) ? g : -1).
+                ToList();
+
+            if (homeGoalsMinutes.Any(x => x < 0) || guestGoalsMinutes.Any(x => x < 0))
+            {
+                int z = 3;
+                return null;
+            }
+
+            var fTimeScore = homeGoalsMinutes.Count(x => x <= 45).ToString() + 
+                             BE_SCORE_DELIMITER +
+                             guestGoalsMinutes.Count(x => x <= 45);
+
+            var sTimeScore = homeGoalsMinutes.Count(x => x > 45).ToString() +
+                             BE_SCORE_DELIMITER +
+                             guestGoalsMinutes.Count(x => x > 45);
+
+            return new MatchDetail(fTimeScore, sTimeScore, matchId);
         }
 
         public static async Task<MatchDetail> GetHalfsResults(match match)
