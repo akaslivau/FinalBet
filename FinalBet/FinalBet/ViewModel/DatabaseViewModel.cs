@@ -605,7 +605,7 @@ namespace FinalBet.ViewModel
         private async Task ReloadMatchDetails()
         {
             var batches = new List<List<match>>();
-            int batchSize = 1;
+            int batchSize = 10;
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -652,7 +652,7 @@ namespace FinalBet.ViewModel
                     sWatch.Reset();
                     sWatch.Start();
                     //888888888888 DELETE
-/*                    var m = batches[i][0];
+                    /*var m = batches[i][0];
                     string finalRes;
                     using (var cntx = new SqlDataContext(Connection.ConnectionString))
                     {

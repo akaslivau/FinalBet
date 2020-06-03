@@ -569,24 +569,40 @@ namespace FinalBet.Database
 
             //<ul class=\"list-details list-details--shooters\">\n
             var goalsNode = doc.DocumentNode.SelectSingleNode(".//ul[@class='list-details list-details--shooters']");
+            //<li class=\"list-details__item\">
+            var liNodes = goalsNode?.SelectNodes(".//li[@class='list-details__item']");
+            if (liNodes == null) return null;
+            if (liNodes.Count != 2) return null;
+
             //<table class=\"table-main\">
-            var tableNodes = goalsNode?.SelectNodes(".//table[@class='table-main']");
-            if (tableNodes == null) return null;
-            if (tableNodes.Count != 2) return null;
+
+            //var tableNodes = goalsNode?.SelectNodes(".//table[@class='table-main']");
+
 
             //Парсим таблицу 1
             //<td style=\"width: 4ex\">24.</td>
-            var homeGoalsMinutes = tableNodes[0].SelectNodes(".//td[contains(@style,'width:')]")
-                .Select(x => x.InnerText).
-                Select(x => x.Substring(0, x.IndexOf('.'))).
-                Select(x=>int.TryParse(x, out var g)? g: -1).
-                ToList();
+            var homeGoalsMinutes = new List<int>();
+            var guestGoalsMinutes = new List<int>();
 
-            var guestGoalsMinutes = tableNodes[1].SelectNodes(".//td[contains(@style,'width:')]")
-                .Select(x => x.InnerText).
-                Select(x => x.Substring(0, x.IndexOf('.'))).
-                Select(x => int.TryParse(x, out var g) ? g : -1).
-                ToList();
+
+            var tableNode = liNodes[0].SelectSingleNode(".//table[@class='table-main']");
+            if (tableNode != null)
+            {
+                homeGoalsMinutes = tableNode.SelectNodes(".//td[contains(@style,'width:')]")
+                    .Select(x => x.InnerText).
+                    Select(x => x.Substring(0, x.IndexOf('.'))).
+                    Select(x => int.TryParse(x, out var g) ? g : -1).
+                    ToList();
+            }
+
+            tableNode = liNodes[1].SelectSingleNode(".//table[@class='table-main']");
+
+            if (tableNode != null)
+            {
+                guestGoalsMinutes = tableNode.SelectNodes(".//td[contains(@style,'width:')]")
+                    .Select(x => x.InnerText).Select(x => x.Substring(0, x.IndexOf('.')))
+                    .Select(x => int.TryParse(x, out var g) ? g : -1).ToList();
+            }
 
             if (homeGoalsMinutes.Any(x => x < 0) || guestGoalsMinutes.Any(x => x < 0))
             {
