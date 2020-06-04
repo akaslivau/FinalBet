@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using Serilog;
 
 namespace FinalBet.Database
@@ -39,6 +40,11 @@ namespace FinalBet.Database
             finally
             {
                 Con.Close();
+            }
+
+            if (IsSuccessful && !File.Exists("connection"))
+            {
+                File.WriteAllText("connection", conString);
             }
         }
 

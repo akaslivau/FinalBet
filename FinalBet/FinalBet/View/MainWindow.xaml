@@ -151,6 +151,9 @@
                                 <MenuItem Header="Загрузить кэфы"
                                           Command="{Binding LoadMatchOddsCommand}"
                                 />
+                                <MenuItem Header="Коррекция"
+                                          Command="{Binding CoerceResultsCommand}"
+                                />
                             </MenuItem>
                             <MenuItem Header="Отметки">
                                 <MenuItem Header="Отметить"
@@ -531,7 +534,10 @@
                         <Menu>
                             <MenuItem Header="Тестировать лигу" Command="{Binding DoTestCommand}"/>
                             <MenuItem Header="Тестировать все лиги" Command="{Binding TestAllCommand}"/>
+                            <MenuItem Header="Прервать" Command="{Binding BreakCommand}"/>
                             <MenuItem Header="Тест №2" Command="{Binding TestTwoCommand}"/>
+                            <MenuItem Header="Очистить результаты таймов" Command="{Binding ClearHalfResultsCommand}"/>
+                            
                         </Menu>
                     </DockPanel>
                     <Grid Grid.Row="2">

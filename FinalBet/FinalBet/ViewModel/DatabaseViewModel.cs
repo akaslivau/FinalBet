@@ -633,7 +633,7 @@ namespace FinalBet.ViewModel
                     select match).ToList();
 
                 var possibleResDict = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
-                query = query.Where(x => possibleResDict[x.matchResultId.Value]).ToList();
+                query = query.Where(x => possibleResDict[x.matchResultId]).ToList();
 
                 batches = query.Split(batchSize).ToList();
             }
@@ -936,6 +936,7 @@ namespace FinalBet.ViewModel
         public ICommand UnmarkSelectedUrlsCommand { get; private set; }
         public ICommand MarkAutoCommand { get; private set; }
         public ICommand CheckMarksCommand { get; private set; }
+        public ICommand CoerceResultsCommand { get; private set; }
         
         private void MarkSelectedUrls(object a, string mark)
         {
@@ -1007,6 +1008,89 @@ namespace FinalBet.ViewModel
             }
 
             StatusText = Selected.name + (hasErrors ?  ": Были обнаружены ошибки, смотри лог" : ": Ошибок нет");
+        }
+
+        private void CoerceResults(object obj)
+        {
+            //Correct ET + PEN
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var possibleResults = cntx.GetTable<possibleResult>();
+                var notCorrectIds = possibleResults.Where(x => x.value.Contains("PEN") || x.value.Contains("ET")).
+                    Select(x => x.id).ToList();
+
+                var matches = (from match in cntx.GetTable<match>()
+                    where match.firstHalfResId != null && match.secondHalfResId != null
+                    where notCorrectIds.Contains(match.matchResultId)
+                    select new
+                    {
+                        MatchId = match.id,
+                        FullTimeRes = match.matchResultId,
+                        FirstHalfRes = match.firstHalfResId.Value,
+                        SecondHalfRes = match.secondHalfResId.Value
+                    }).ToList();
+
+                foreach (var match in matches)
+                {
+                    var res = possibleResults.Single(x => x.id == match.FullTimeRes);
+
+                    var psbl1 = possibleResults.Single(x => x.id == match.FirstHalfRes);
+                    var psbl2 = possibleResults.Single(x => x.id == match.SecondHalfRes);
+
+                    var psbl = possibleResults.Where(x=>x.scored == (psbl1.scored + psbl2.scored) &&
+                                                        x.missed == (psbl1.missed + psbl2.missed)
+                                                        );
+                    if(psbl.Count()>1) throw new Exception();
+                    if (psbl.Count() == 0)
+                    {
+                        var scored = psbl1.scored + psbl2.scored;
+                        var missed = psbl1.missed + psbl2.missed;
+                        var toAdd = new possibleResult()
+                        {
+                            scored = scored,
+                            missed = missed,
+                            isCorrect = true,
+                            value = scored + BetExplorerParser.BE_SCORE_DELIMITER + missed.ToString(),
+                            total = scored + missed,
+                            diff = scored - missed
+                        };
+                        possibleResults.InsertOnSubmit(toAdd);
+                        cntx.SubmitChanges();
+                    }
+
+                    var newPsbl = possibleResults.Single(x => x.scored == (psbl1.scored + psbl2.scored) &&
+                                                          x.missed == (psbl1.missed + psbl2.missed));
+
+                    var toUpdate = cntx.GetTable<match>().Single(x => x.id == match.MatchId);
+                    toUpdate.beforeCoercedId = toUpdate.matchResultId;
+                    cntx.SubmitChanges();
+                    toUpdate.matchResultId = newPsbl.id;
+                    cntx.SubmitChanges();
+                }
+            }
+
+            //CORRECT AWA (Когда счета таймов есть, а итоговый счет AWA)
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var possibleResults = cntx.GetTable<possibleResult>();
+                var awaIds = possibleResults.Where(x => x.value.Contains("AWA")).
+                    Select(x => x.id).ToList();
+
+                var matches = (from match in cntx.GetTable<match>()
+                    where match.firstHalfResId != null && match.secondHalfResId != null
+                    where awaIds.Contains(match.matchResultId)
+                    select match).ToList();
+
+                int i = 0;
+                matches.ForEach(x =>
+                {
+                    x.firstHalfResId = null;
+                    x.secondHalfResId = null;
+                    i++;
+                });
+                cntx.SubmitChanges();
+                MessageBox.Show("AWA.:: " + i.ToString());
+            }
         }
         #endregion
 
@@ -1139,6 +1223,8 @@ namespace FinalBet.ViewModel
             UnmarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, ""), a=>LeagueUrls.Selected != null);
             MarkAutoCommand = new RelayCommand(MarkAuto, a=> LeagueUrls.Items.Any() && SelectedLeagueMark != null);
             CheckMarksCommand = new RelayCommand(CheckMarks);
+
+            CoerceResultsCommand = new RelayCommand(CoerceResults);
 
             TestCommand = new RelayCommand(Test);
         }

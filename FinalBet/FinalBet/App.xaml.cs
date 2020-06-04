@@ -4,8 +4,10 @@ using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -34,7 +36,11 @@ namespace FinalBet
             Log.Information("Application started");
             Global.Current.Infos++;
 
-            Connection.Initialize(Settings.Default.soccerConnectionString);
+            var conString = File.Exists("connection")
+                ? File.ReadAllText("connection", Encoding.GetEncoding("windows-1251"))
+                : Settings.Default.soccerConnectionString;
+
+            Connection.Initialize(conString);
             if (!Connection.IsSuccessful)
             {
                 Log.Fatal("Соединение с БД не установлено");

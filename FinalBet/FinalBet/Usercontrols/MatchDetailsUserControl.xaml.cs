@@ -47,7 +47,7 @@ namespace FinalBet.Usercontrols
                 control.GuestTeam = cntx.GetTable<teamName>().Single(x => x.id == match.guestTeamId).name;
 
                 var mResult = cntx.GetTable<possibleResult>().Single(x => x.id == match.matchResultId);
-                control.MatchResult = mResult.scored + " : " + mResult.missed;
+                control.MatchResult = mResult.value;
 
                 if (match.firstHalfResId==null || match.secondHalfResId == null)
                 {

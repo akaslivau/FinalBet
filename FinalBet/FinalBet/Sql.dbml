@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?><Database Name="soccer" Class="SqlDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
-  <Connection Mode="AppSettings" ConnectionString="Data Source=ANDREW-ПК\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True;MultipleActiveResultSets=True" SettingsObjectName="FinalBet.Properties.Settings" SettingsPropertyName="soccerConnectionString" Provider="System.Data.SqlClient" />
+  <Connection Mode="AppSettings" ConnectionString="Data Source=ANDREW-ПК\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True" SettingsObjectName="FinalBet.Properties.Settings" SettingsPropertyName="soccerConnectionString" Provider="System.Data.SqlClient" />
   <Table Name="dbo.leagueMarks" Member="leagueMarks">
     <Type Name="leagueMark">
       <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
@@ -96,7 +96,8 @@
       <Column Name="tagId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
       <Column Name="href" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
       <Column Name="date" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
-      <Column Name="matchResultId" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="matchResultId" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="beforeCoercedId" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="firstHalfResId" Type="System.Int32" DbType="Int" CanBeNull="true" />
       <Column Name="secondHalfResId" Type="System.Int32" DbType="Int" CanBeNull="true" />
     </Type>

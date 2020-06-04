@@ -606,7 +606,6 @@ namespace FinalBet.Database
 
             if (homeGoalsMinutes.Any(x => x < 0) || guestGoalsMinutes.Any(x => x < 0))
             {
-                int z = 3;
                 return null;
             }
 

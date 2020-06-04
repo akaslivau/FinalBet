@@ -15,7 +15,85 @@ namespace FinalBet.ViewModel
          * 1. Нет нулевых результатов в match.matchResultId + неНУЛЛевые match.FirstHalfResId.COUNT = match.SecondHalfResId.COUNT
          * 2. Число КОРРЕКТНЫХ результатов с matchPeriod == 0 должно быть равно числу результатов c matchPeriod = 1,2
         */
+        #region Async
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                if (_isBusy == value) return;
+                _isBusy = value;
+                OnPropertyChanged("IsBusy");
+            }
+        }
 
+        private bool _cancelAsync;
+        public bool CancelAsync
+        {
+            get => _cancelAsync;
+            set
+            {
+                if (_cancelAsync == value) return;
+                _cancelAsync = value;
+                OnPropertyChanged("CancelAsync");
+            }
+        }
+        public IAsyncCommand TestAllCommand { get; private set; }
+        public ICommand BreakCommand
+        {
+            get
+            {
+                return new RelayCommand(x =>
+                    {
+                        CancelAsync = true;
+                        IsBusy = false;
+                    },
+                    a => IsBusy);
+            }
+        }
+
+        private async Task TestAll()
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var leagues = cntx.GetTable<league>().Where(x => x.isFavorite);
+                Dispatcher.CurrentDispatcher.Invoke(() => { Output = "Тестирую все страны" + "\r\n"; });
+                IsBusy = true;
+
+                foreach (var league in leagues)
+                {
+                    await Task.Run(() =>
+                        {
+                            var marks = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id)
+                                .Where(x => x.mark.Length > 0)
+                                .Select(x => x.mark).
+                                Distinct().ToList();
+
+                            foreach (var mark in marks)
+                            {
+                                var testResults = GetTestResults(league, mark);
+                                var isOk = testResults.All(x => x);
+                                Dispatcher.CurrentDispatcher.Invoke(() =>
+                                {
+                                    Output += league.name + ".[" + mark + "]: " + (isOk ? "OK" : "ERROR!!!") +
+                                              "\r\n";
+                                });
+                            }
+                        }
+                    );
+                    await Task.Delay(50);
+                    if (CancelAsync)
+                    {
+                        break;
+                    }
+                }
+                IsBusy = false;
+                CancelAsync = false;
+                Dispatcher.CurrentDispatcher.Invoke(() => { Output += "FINISHED"; });
+            }
+        }
+        #endregion
 
         #region Fields
         private string _output = "";
@@ -143,8 +221,9 @@ namespace FinalBet.ViewModel
 
         #region Commands
         public ICommand DoTestCommand { get; private set; }
-        public IAsyncCommand TestAllCommand { get; private set; }
+
         public ICommand TestTwoCommand { get; private set; }
+        public ICommand ClearHalfResultsCommand { get; private set; }
         
         /// <summary>
         /// Запуск тестов целостности базы данных для выбранной страны
@@ -162,30 +241,7 @@ namespace FinalBet.ViewModel
             Output += string.Join("\n", lines);
         }
 
-        private async Task TestAll()
-        {
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var leagues = cntx.GetTable<league>().Where(x => x.isFavorite);
-                Dispatcher.CurrentDispatcher.Invoke(() => { Output = "Тестирую все страны" + "\r\n"; });
 
-                foreach (var league in leagues)
-                {
-/*                    await Task.Run(() =>
-                        {
-                            var testResults = GetTestResults(league);
-                            var isOk = testResults.All(x => x);
-                            Dispatcher.CurrentDispatcher.Invoke(() =>
-                            {
-                                Output += league.name + ": " + (isOk ? "OK" : "ERROR!!!") + "\r\n";
-                            });
-                        }
-                    );*/
-                    await Task.Delay(50);
-                }
-                Dispatcher.CurrentDispatcher.Invoke(() => { Output += "FINISHED"; });
-            }
-        }
 
         private void TestTwo(object obj)
         {
@@ -193,9 +249,9 @@ namespace FinalBet.ViewModel
                      + SelectedLeague.name.ToUpper() + "]." 
                      + "["+SelectedTournament+"]\r\n";
 
-            var test3 = Test2(SelectedLeague, SelectedTournament, out var output);
+            var test2 = Test2(SelectedLeague, SelectedTournament, out var output);
 
-            if (test3)
+            if (test2)
             {
                 Output += "\n" + "Успешно";
                 return;
@@ -221,12 +277,32 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private void ClearHalfResultUnderBorder(object obj)
+        {
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var urls = cntx.GetTable<leagueUrl>().Where(x => x.parentId == SelectedLeague.id)
+                    .Where(x => x.mark == SelectedTournament).ToList();
+
+                var urlIds = urls.Where(x=>LeagueUrlViewModel.GetPossibleYear(x.year)<ResultBorderYear).
+                    Select(x => x.id).ToList();
+
+                var matches = cntx.GetTable<match>().Where(x => x.leagueId == SelectedLeague.id)
+                    .Where(x => urlIds.Contains(x.leagueUrlId)).ToList();
+
+                matches.ForEach(x =>
+                {
+                    x.firstHalfResId = null;
+                    x.secondHalfResId = null;
+                });
+                cntx.SubmitChanges();
+            }
+        }
+
         private static bool Test1(league league)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                if (cntx.GetTable<match>().Any(x => x.matchResultId == null)) return false;
-
                 var query = from match in cntx.GetTable<match>()
                     where match.leagueId == league.id
                     group match by match.leagueUrlId
@@ -262,11 +338,12 @@ namespace FinalBet.ViewModel
                 var possibleResult = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
                 foreach (var item in query)
                 {
-                    var fullTimeCount = item.FullTime.Count(x=>possibleResult[x.Value]);
+                    var fullTimeCount = item.FullTime.Count(x=>possibleResult[x]);
                     var firstHalfCount = item.FirstHalf.Where(x=>x.HasValue).Count(x => possibleResult[x.Value]);
                     var secondHalfCount = item.SecondHalf.Where(x => x.HasValue).Count(x => possibleResult[x.Value]);
 
-                    var notOk = fullTimeCount != firstHalfCount || fullTimeCount != secondHalfCount;
+                    var notOk = (fullTimeCount != firstHalfCount && firstHalfCount!=0) || 
+                                (fullTimeCount != secondHalfCount && secondHalfCount!=0);
                     if (notOk)
                     {
                         res = false;
@@ -313,6 +390,7 @@ namespace FinalBet.ViewModel
             DoTestCommand = new RelayCommand(DoTest, a => SelectedLeague != null);
             TestAllCommand = new AsyncCommand(TestAll);
             TestTwoCommand = new RelayCommand(TestTwo, a => SelectedLeague != null);
+            ClearHalfResultsCommand = new RelayCommand(ClearHalfResultUnderBorder, a=> SelectedLeague!=null);
         }
     }
 }

@@ -1690,7 +1690,9 @@ namespace FinalBet
 		
 		private System.DateTime _date;
 		
-		private System.Nullable<int> _matchResultId;
+		private int _matchResultId;
+		
+		private System.Nullable<int> _beforeCoercedId;
 		
 		private System.Nullable<int> _firstHalfResId;
 		
@@ -1716,8 +1718,10 @@ namespace FinalBet
     partial void OnhrefChanged();
     partial void OndateChanging(System.DateTime value);
     partial void OndateChanged();
-    partial void OnmatchResultIdChanging(System.Nullable<int> value);
+    partial void OnmatchResultIdChanging(int value);
     partial void OnmatchResultIdChanged();
+    partial void OnbeforeCoercedIdChanging(System.Nullable<int> value);
+    partial void OnbeforeCoercedIdChanged();
     partial void OnfirstHalfResIdChanging(System.Nullable<int> value);
     partial void OnfirstHalfResIdChanged();
     partial void OnsecondHalfResIdChanging(System.Nullable<int> value);
@@ -1889,8 +1893,8 @@ namespace FinalBet
 			}
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_matchResultId", DbType="Int")]
-		public System.Nullable<int> matchResultId
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_matchResultId", DbType="Int NOT NULL")]
+		public int matchResultId
 		{
 			get
 			{
@@ -1905,6 +1909,26 @@ namespace FinalBet
 					this._matchResultId = value;
 					this.SendPropertyChanged("matchResultId");
 					this.OnmatchResultIdChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_beforeCoercedId", DbType="Int")]
+		public System.Nullable<int> beforeCoercedId
+		{
+			get
+			{
+				return this._beforeCoercedId;
+			}
+			set
+			{
+				if ((this._beforeCoercedId != value))
+				{
+					this.OnbeforeCoercedIdChanging(value);
+					this.SendPropertyChanging();
+					this._beforeCoercedId = value;
+					this.SendPropertyChanged("beforeCoercedId");
+					this.OnbeforeCoercedIdChanged();
 				}
 			}
 		}
