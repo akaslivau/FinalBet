@@ -1069,11 +1069,12 @@ namespace FinalBet.ViewModel
                 }
             }
 
-            //CORRECT AWA (Когда счета таймов есть, а итоговый счет AWA)
+            //CORRECT AWA, CAN.
+            //(Когда счета таймов есть, а итоговый счет тю-тю)
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var possibleResults = cntx.GetTable<possibleResult>();
-                var awaIds = possibleResults.Where(x => x.value.Contains("AWA")).
+                var awaIds = possibleResults.Where(x => x.value.Contains("AWA") || x.value.Contains("CAN")).
                     Select(x => x.id).ToList();
 
                 var matches = (from match in cntx.GetTable<match>()
@@ -1089,7 +1090,7 @@ namespace FinalBet.ViewModel
                     i++;
                 });
                 cntx.SubmitChanges();
-                MessageBox.Show("AWA.:: " + i.ToString());
+                MessageBox.Show("Исправлено штук, " + i.ToString());
             }
         }
         #endregion

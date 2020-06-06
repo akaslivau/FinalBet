@@ -506,6 +506,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
@@ -535,12 +536,20 @@
                             <MenuItem Header="Тестировать лигу" Command="{Binding DoTestCommand}"/>
                             <MenuItem Header="Тестировать все лиги" Command="{Binding TestAllCommand}"/>
                             <MenuItem Header="Прервать" Command="{Binding BreakCommand}"/>
-                            <MenuItem Header="Тест №2" Command="{Binding TestTwoCommand}"/>
                             <MenuItem Header="Очистить результаты таймов" Command="{Binding ClearHalfResultsCommand}"/>
-                            
                         </Menu>
                     </DockPanel>
-                    <Grid Grid.Row="2">
+                    <DockPanel Grid.Row="2">
+                        <Menu>
+                            <MenuItem Header="Тест №1" Command="{Binding TestOneCommand}"/>
+                            <MenuItem Header="Тест №2" Command="{Binding TestTwoCommand}"/>
+                            <MenuItem Header="Тест №3" Command="{Binding TestThreeCommand}"/>
+                            <MenuItem Header="Тест №4" Command="{Binding TestFourCommand}"/>
+                            <MenuItem Header="Тест №5" Command="{Binding TestFiveCommand}"/>
+                            <CheckBox Content="Автокоррекция тест №4" IsChecked="{Binding Coerce4}"/>
+                        </Menu>
+                    </DockPanel>
+                    <Grid Grid.Row="3">
                         <TextBox IsReadOnly="True"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"

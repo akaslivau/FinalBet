@@ -98,7 +98,7 @@ namespace FinalBet.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ANDREW-ПК\\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ANDREW-PC\\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True")]
         public string soccerConnectionString {
             get {
                 return ((string)(this["soccerConnectionString"]));
