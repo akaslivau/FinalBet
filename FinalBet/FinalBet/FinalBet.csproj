@@ -130,6 +130,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Usercontrols\AutoTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Usercontrols\CodeSelector.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -164,6 +168,9 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Sql.dbml</DependentUpon>
+    </Compile>
+    <Compile Include="Usercontrols\AutoTextBox.xaml.cs">
+      <DependentUpon>AutoTextBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Usercontrols\CodeSelector.xaml.cs">
       <DependentUpon>CodeSelector.xaml</DependentUpon>

@@ -200,6 +200,11 @@
                                       SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             />
                         </Controls:Badged>
+                        <usercontrols:AutoTextBox 
+                            VerticalAlignment="Center"
+                            FilterSource="{Binding Path=Items}"
+                            SelectedCommand="{Binding ShitCommand}"
+                            />
                     </DockPanel>
 
 
@@ -542,7 +547,10 @@
                     <DockPanel Grid.Row="2">
                         <Menu>
                             <MenuItem Header="Тест №1" Command="{Binding TestOneCommand}"/>
-                            <MenuItem Header="Тест №2" Command="{Binding TestTwoCommand}"/>
+                            <MenuItem Header="Тест №2" >
+                                <MenuItem Header="Запуск" Command="{Binding TestTwoCommand}"/>
+                                <MenuItem Header="Коррекция из файла" Command="{Binding CorrectTestTwoCommand}"/>
+                            </MenuItem>
                             <MenuItem Header="Тест №3" Command="{Binding TestThreeCommand}"/>
                             <MenuItem Header="Тест №4" Command="{Binding TestFourCommand}"/>
                             <MenuItem Header="Тест №5" Command="{Binding TestFiveCommand}"/>

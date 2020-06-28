@@ -908,6 +908,15 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region Commands
+
+        public ICommand ShitCommand
+        {
+            get
+            {
+                return new RelayCommand((o => MessageBox.Show("!!!!!")));
+            }
+        }
+
         public ICommand OpenArchiveFolderCommand
         {
             get

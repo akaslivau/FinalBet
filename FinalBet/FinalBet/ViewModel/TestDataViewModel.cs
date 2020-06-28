@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -255,6 +257,7 @@ namespace FinalBet.ViewModel
         #region Commands
         public ICommand DoTestCommand { get; private set; }
         public ICommand ClearHalfResultsCommand { get; private set; }
+        public ICommand CorrectTestTwoCommand { get; }
 
 
         public ICommand TestOneCommand { get; private set; }
@@ -344,6 +347,43 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private void CorrectTestTwo(object obj)
+        {
+            if (File.Exists("correct2.txt"))
+            {
+                var lines = File.ReadAllLines("correct2.txt");
+                var items = (from line in lines
+                    let ar = line.Split('\t')
+                    select new
+                    {
+                        Id = int.Parse(ar[0]),
+                        Match = ar[4],
+                        Ftime = ar[5],
+                        Stime = ar[6]
+                    }).ToList();
+
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var results = cntx.GetTable<possibleResult>();
+                    var matches = cntx.GetTable<match>();
+
+                    foreach (var item in items)
+                    {
+                        var m = matches.Single(x => x.id == item.Id);
+                        if(m.firstHalfResId!=null || m.secondHalfResId!=null) continue;
+
+                        var ftimeId = results.Single(x => x.value == item.Ftime).id;
+                        var stimeId = results.Single(x => x.value == item.Stime).id;
+
+                        m.firstHalfResId = ftimeId;
+                        m.secondHalfResId = stimeId;
+                    }
+                    cntx.SubmitChanges();
+                }
+            }
+        }
+
+
         private void TestThree(object obj)
         {
             Output = (Test3(SelectedLeague, SelectedTournament, out var errors) ? "OK" : "Error") + "\t\tТест №3" + "\t\t" + TestDescriptions[2];
@@ -407,6 +447,11 @@ namespace FinalBet.ViewModel
                     }).ToList();
 
                 var possibleResult = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
+                var matchScores = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.value);
+                var teamNames = cntx.GetTable<teamName>().
+                    Where(x => x.leagueId == league.id)
+                    .ToDictionary(x => x.id, x => x.name);
+
                 foreach (var item in query)
                 {
                     var fullTimeCount = item.FullTime.Count(x=>possibleResult[x]);
@@ -415,18 +460,48 @@ namespace FinalBet.ViewModel
 
                     var notOk = (fullTimeCount != firstHalfCount && firstHalfCount!=0) || 
                                 (fullTimeCount != secondHalfCount && secondHalfCount!=0);
+
+                    var underOutput = new List<string>();
                     if (notOk)
                     {
                         res = false;
+                        //Отбираем некорректные id
+                        var matchesList = (from match in cntx.GetTable<match>()
+                            where match.leagueUrlId == item.UrlId
+                            select match).ToList().Where(x =>
+                            !x.firstHalfResId.HasValue && !x.secondHalfResId.HasValue &&
+                            possibleResult[x.matchResultId]).ToList();
+
+                       
+                        foreach (var match in matchesList)
+                        {
+                            var notCrctInfo = new List<string>
+                            {
+                                match.id.ToString(),
+                                match.date.ToShortDateString(),
+                                teamNames[match.homeTeamId],
+                                teamNames[match.guestTeamId],
+                                matchScores[match.matchResultId],
+                            };
+                            underOutput.Add(string.Join("\t", notCrctInfo));
+                        }
+                        
+                        
+
+
+
                     }
+
+
 
                     output.Add(item.UrlId, "Total: " + fullTimeCount 
                                                          + "\t\tFirst: " + firstHalfCount
                                                          + "\t\tSecond: " + secondHalfCount
                                                          + "\t\tDifference: " + (fullTimeCount-secondHalfCount)
                                                          + "\t\t"+(notOk ? "WARNING" : "OK... ")
+                                                         + (notOk? ("\n" +  string.Join("\n", underOutput)): "")
                                                          );
-                    
+
                 }
             }
 
@@ -580,7 +655,7 @@ namespace FinalBet.ViewModel
                 Test1(league),
                 Test2(league, mark, out _),
                 Test3(league, mark, out _),
-                Test4(league, mark, out _)
+                Test4(league, mark, out _),
             };
         }
         #endregion
@@ -603,6 +678,8 @@ namespace FinalBet.ViewModel
             DoTestCommand = new RelayCommand(DoTest, a => SelectedLeague != null);
             TestAllCommand = new AsyncCommand(TestAll);
             ClearHalfResultsCommand = new RelayCommand(ClearHalfResultUnderBorder, a=> SelectedLeague!=null);
+
+            CorrectTestTwoCommand = new RelayCommand(CorrectTestTwo);
 
             TestOneCommand = new RelayCommand(TestOne, a => SelectedLeague != null);
             TestTwoCommand = new RelayCommand(TestTwo, a => SelectedLeague != null);
