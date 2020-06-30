@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
+using System.Windows.Input;
 using FinalBet.Model;
 using FinalBet.Properties;
 
@@ -425,7 +426,7 @@ namespace FinalBet.Database
             //< table class="table-main h-mb15
             var tableNode = doc.DocumentNode.SelectSingleNode(".//table[contains(@class, 'table-main h-mb15')]");
 
-            //Это вариант при ручнос сохранении:)
+            //Это вариант при ручном сохранении:)
             //<tr>
             //  <td class="h-text-left">
             //      <a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/amkar-krasnodar/xpAWzhYl/" class="in-match">
@@ -478,11 +479,40 @@ namespace FinalBet.Database
 
                 var finalScore = tr.SelectSingleNode(".//td[@class='h-text-center']").InnerText.Trim();
 
-                //odds не парсим, так как все равно их потом подгружать
+                //odds...
+                var doubleOdds = new List<double>();
+                var odds = tr.Descendants().Where(x => x.Name == "td")
+                    .Where(x => x.GetAttributeValue("class", "").Contains("table-main__odds")).ToList();
+                if (odds.Count == 3)
+                {
+                    var stringOdds = new List<string>();
+                    foreach (var node in odds)
+                    {
+                        if (!string.IsNullOrEmpty(node.GetAttributeValue("data-odd", "")))
+                        {
+                            stringOdds.Add(node.GetAttributeValue("data-odd", ""));
+                            continue;
+                        }
+
+                        var spanNodes = node.Descendants().Where(x => !string.IsNullOrEmpty(x.GetAttributeValue("data-odd", "")))
+                            .ToList();
+                        if (spanNodes.Count == 1)
+                        {
+                            stringOdds.Add(spanNodes[0].GetAttributeValue("data-odd", ""));
+                        }
+                    }
+
+                    if (stringOdds.Count == 3 && 
+                        stringOdds.All(x=>double.TryParse(x, out _))
+                        )
+                    {
+                        stringOdds.ForEach(x=>doubleOdds.Add(double.Parse(x)));
+                    }
+                }
 
                 var date = tr.SelectSingleNode(".//td[contains(@class, 'h-text-right')]").InnerText;
 
-                var toAdd = new BeMatch(teams, matchHref, finalScore, date, tag);
+                var toAdd = new BeMatch(teams, matchHref, finalScore, date, tag, doubleOdds);
                 result.Add(toAdd);
             }
 
@@ -874,183 +904,4 @@ namespace FinalBet.Database
         }
         #endregion
     }
-
-    public class BeMatch
-    {
-        public List<string> Names { get; }
-        public string Href { get; }
-        public string FinalScore { get; }
-        public string Date { get; }
-        public string Tag { get; }
-
-        public bool IsCorrect { get; }
-
-        public BeMatch(List<string> names, string href, string finalScore, string date, string tag)
-        {
-            Names = new List<string>();
-
-            Href = href;
-            FinalScore = finalScore;
-            Date = date;
-            Tag = tag;
-            
-            foreach (var name in names)
-            {
-                Names.Add(name);
-            }
-
-            IsCorrect = GetIsCorrect();
-        }
-
-        private bool GetIsCorrect()
-        {
-            if (Names.Count != 2) return false;
-            if (Names.Any(x => x.Length < 1)) return false;
-
-            if (string.IsNullOrEmpty(Href)) return false;
-            if (string.IsNullOrEmpty(FinalScore)) return false;
-
-            if (string.IsNullOrEmpty(Date)) return false;
-            if (!DateTime.TryParse(Date, out _)) return false;
-
-            return true;
-        }
-    }
-
-    public class MatchDetail
-    {
-        public bool AreResultsCorrect { get; set; }
-        public int MatchId { get; }
-
-        public possibleResult FirstTimePossibleResult { get; set; }
-        public possibleResult SecondTimePossibleResult { get; set; }
-
-        public MatchDetail(string fTimeResult, string sTimeResult, int matchId)
-        {
-            MatchId = matchId;
-            FirstTimePossibleResult = null;
-            SecondTimePossibleResult = null;
-
-            BetExplorerParser.ParseMatchResult(fTimeResult, out var isCorrect1, out var scored1, out var missed1);
-            BetExplorerParser.ParseMatchResult(sTimeResult, out var isCorrect2, out var scored2, out var missed2);
-
-            AreResultsCorrect = isCorrect1 && isCorrect2;
-
-            if (AreResultsCorrect)
-            {
-                FirstTimePossibleResult = new possibleResult()
-                {
-                    isCorrect = isCorrect1,
-                    value = fTimeResult,
-                    scored = scored1,
-                    missed = missed1,
-                    total = scored1 + missed1,
-                    diff = scored1 - missed1
-                };
-
-               SecondTimePossibleResult = new possibleResult()
-                {
-                    isCorrect = isCorrect2,
-                    value = sTimeResult,
-                    scored = scored2,
-                    missed = missed2,
-                    total = scored2 + missed2,
-                    diff = scored2 - missed2
-                };
-            }
-        }
-
-        public override string ToString()
-        {
-            var list = new List<string>
-            {
-                AreResultsCorrect.ToString(),
-                FirstTimePossibleResult.value,
-                SecondTimePossibleResult.value
-            };
-            return string.Join("\n", list);
-        }
-    }
-
-    public class StageUrl
-    {
-        //<a href="https://www.betexplorer.com/soccer/russia/premier-league-2013-2014/results/?stage=baGxDORM"
-        #region Variables
-        public string Href { get; }
-        public string SelfTag { get; }
-        public bool HasStage { get; }
-        public string Stage { get; }
-        public HtmlNode Node { get; }
-        public string WebUrl { get; }
-        public string ZipPath { get; }
-        #endregion
-
-        public string OuterTag { get; }
-
-        public string GetFinalTag()
-        {
-            return string.IsNullOrEmpty(OuterTag) ? SelfTag : OuterTag + "-" + SelfTag;
-        }
-        
-        public StageUrl(HtmlNode node, string outerTag, league country, leagueUrl leagueUrl)
-        {
-            ZipPath = BetExplorerParser.GetZipPath(country, leagueUrl);
-            
-            Node = node;
-            OuterTag = outerTag;
-
-            SelfTag = node.InnerText;
-            Href = node.GetAttributeValue("href", "");
-            HasStage = !string.IsNullOrEmpty(Href) && Href.Contains("?stage=");
-
-            if (HasStage)
-            {
-                var stagePos = Href.IndexOf("?stage=", StringComparison.Ordinal) + "?stage=".Length;
-                Stage = Href.Substring(stagePos, Href.Length - stagePos);
-            }
-
-            WebUrl = Settings.Default.soccerUrl + country.url + leagueUrl.url + BetExplorerParser.RESULTS + Href;
-        }
-    }
-
-    public sealed class BeOddLoadMode
-    {
-        private readonly string _name;
-
-        public static readonly BeOddLoadMode _1X2 = new BeOddLoadMode("1x2");
-        public static readonly BeOddLoadMode OU = new BeOddLoadMode("ou");
-        public static readonly BeOddLoadMode AH = new BeOddLoadMode("ah");
-        public static readonly BeOddLoadMode BTS = new BeOddLoadMode("bts");
-
-        private BeOddLoadMode(string name)
-        {
-            _name = name;
-        }
-
-        public override string ToString()
-        {
-            return _name;
-        }
-
-    }
-
-/*    public sealed class OddType
-    {
-        private readonly string _name;
-
-        public static readonly OddType _1 = new OddType("1");
-        public static readonly OddType X = new OddType("X");
-        public static readonly OddType _2 = new OddType("2");
-        
-        private OddType(string name)
-        {
-            this._name = name;
-        }
-
-        public override string ToString()
-        {
-            return _name;
-        }
-
-    }*/
 }

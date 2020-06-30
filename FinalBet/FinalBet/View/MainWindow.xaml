@@ -148,12 +148,12 @@
                                     />
                                 </MenuItem>
 
-                                <MenuItem Header="Загрузить кэфы"
-                                          Command="{Binding LoadMatchOddsCommand}"
-                                />
                                 <MenuItem Header="Коррекция"
                                           Command="{Binding CoerceResultsCommand}"
                                 />
+                            </MenuItem>
+                            <MenuItem Header="Кэфы">
+                                    <MenuItem Header="1x2 из файлов" Command="{Binding Load1x2CoefsCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Отметки">
                                 <MenuItem Header="Отметить"

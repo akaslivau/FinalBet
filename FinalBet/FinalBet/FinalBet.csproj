@@ -150,9 +150,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Database\BeMatch.cs" />
+    <Compile Include="Database\BeOddLoadMode.cs" />
     <Compile Include="Database\BetExplorerParser.cs" />
     <Compile Include="Database\Connection.cs" />
+    <Compile Include="Database\MatchDetail.cs" />
+    <Compile Include="Database\OddType.cs" />
     <Compile Include="Database\Soccer.cs" />
+    <Compile Include="Database\StageUrl.cs" />
     <Compile Include="Extensions\LinqExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\SvgViewboxAttachedProperties.cs" />
