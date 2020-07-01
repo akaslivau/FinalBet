@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -657,7 +658,7 @@ namespace FinalBet.ViewModel
 
         private static bool Test1X2(league league, string mark, out string output, out List<int> wrongMatchIds)
         {
-            output = "OK.";
+            output = league.name + " OK.";
             var res = true;
             wrongMatchIds = new List<int>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -714,13 +715,61 @@ namespace FinalBet.ViewModel
                 foreach (var match in matches)
                 {
                     var odds = await BetExplorerParser.GetMatchOdds(match, BeOddLoadMode._1X2);
+                    var isOk = false;
                     if (odds.Count == 3)
                     {
                         oddTable.InsertAllOnSubmit(odds);
                         cntx.SubmitChanges();
+                        isOk = true;
+                    }
+                    else
+                    {
+                        var nearestMatchesIds = cntx.GetTable<match>()
+                            .Where(x => x.homeTeamId == match.homeTeamId && x.guestTeamId == match.guestTeamId)
+                            .Where(x => Math.Abs((x.date - match.date).Days) < 10000).Select(x => x.id).ToList();
+
+                        if (nearestMatchesIds.Any())
+                        {
+                            var nearestOdds = cntx.GetTable<odd>().
+                                Where(x => nearestMatchesIds.Contains(x.parentId))
+                                .ToList();
+
+                            if (nearestOdds.Any())
+                            {
+                                var odd1 = new odd()
+                                {
+                                    parentId = match.id,
+                                    oddType = OddType._1,
+                                    value = nearestOdds.Where(x => x.oddType == OddType._1).Select(x => x.value)
+                                        .Average()
+                                };
+
+                                var oddX = new odd()
+                                {
+                                    parentId = match.id,
+                                    oddType = OddType.X,
+                                    value = nearestOdds.Where(x => x.oddType == OddType.X).Select(x => x.value)
+                                        .Average()
+                                };
+
+                                var odd2 = new odd()
+                                {
+                                    parentId = match.id,
+                                    oddType = OddType._2,
+                                    value = nearestOdds.Where(x => x.oddType == OddType._2).Select(x => x.value)
+                                        .Average()
+                                };
+
+                                oddTable.InsertOnSubmit(odd1);
+                                oddTable.InsertOnSubmit(oddX);
+                                oddTable.InsertOnSubmit(odd2);
+                                cntx.SubmitChanges();
+                                isOk = true;
+                            }
+                        }
                     }
 
-                    Dispatcher.CurrentDispatcher.Invoke(() => { Output += "Матч ID № " + match.id + (odds.Count == 3? " ОК": " не был исправлен") + "\r\n"; });
+                    Dispatcher.CurrentDispatcher.Invoke(() => { Output += "Матч ID № " + match.id + (isOk? " ОК": " не был исправлен") + "\r\n"; });
                     await Task.Delay(50);
 
                     if (CancelAsync)
