@@ -28,5 +28,8 @@
 &lt;/SerializableConnectionString&gt;</DesignTimeValue>
       <Value Profile="(Default)">Data Source=ANDREW-PC\SQLEXPRESS;Initial Catalog=soccer;Integrated Security=True</Value>
     </Setting>
+    <Setting Name="oddLoadYear" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2012</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

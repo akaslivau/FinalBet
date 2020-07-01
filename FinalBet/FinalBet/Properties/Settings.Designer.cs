@@ -104,5 +104,17 @@ namespace FinalBet.Properties {
                 return ((string)(this["soccerConnectionString"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2012")]
+        public int oddLoadYear {
+            get {
+                return ((int)(this["oddLoadYear"]));
+            }
+            set {
+                this["oddLoadYear"] = value;
+            }
+        }
     }
 }

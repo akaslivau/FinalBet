@@ -552,9 +552,16 @@
                                 <MenuItem Header="Коррекция из файла" Command="{Binding CorrectTestTwoCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Тест №3" Command="{Binding TestThreeCommand}"/>
-                            <MenuItem Header="Тест №4" Command="{Binding TestFourCommand}"/>
+                            <MenuItem Header="Тест №4" Command="{Binding TestFourCommand}">
+                                <MenuItem Header="Запуск" Command="{Binding TestFourCommand}"/>
+                                <MenuItem Header="Автокоррекция" IsCheckable="True" IsChecked="{Binding Coerce4}"/>
+                            </MenuItem>
                             <MenuItem Header="Тест №5" Command="{Binding TestFiveCommand}"/>
-                            <CheckBox Content="Автокоррекция тест №4" IsChecked="{Binding Coerce4}"/>
+                            <MenuItem Header="Тест 1X2" >
+                                <MenuItem Header="Запуск" Command="{Binding Test1X2Command}"/>
+                                <MenuItem Header="Корректировка" Command="{Binding Coerce1X2Command}"/>
+                            </MenuItem>
+                            
                         </Menu>
                     </DockPanel>
                     <Grid Grid.Row="3">

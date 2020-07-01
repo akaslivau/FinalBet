@@ -5,12 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:FinalBet.Usercontrols"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
              mc:Ignorable="d" 
              Name="_this"
              >
     <GroupBox Header="{Binding ElementName=_this, Path=Header}" Margin="{StaticResource ControlMargin}">
     <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -52,6 +54,22 @@
                    VerticalAlignment="Center"
                    Style="{StaticResource Textblock.H5}" 
                    Text="{Binding ElementName=_this, Path=HalfResults}"/>
+        <TabControl Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                    TabStripPlacement="Left"
+                    >
+                <TabItem Header="1X2" mah:ControlsHelper.HeaderFontSize="10">
+                    <StackPanel Orientation="Vertical">
+                    <TextBlock FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" Text="{Binding ElementName=_this, Path=Odds1x2}"/>
+                        <TextBlock FontSize="10" HorizontalAlignment="Center" xml:space="preserve"> 1&#x09;X&#x09;2</TextBlock>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Total" mah:ControlsHelper.HeaderFontSize="10">
+                </TabItem>
+                <TabItem Header="Fora" mah:ControlsHelper.HeaderFontSize="10">
+                </TabItem>
+                <TabItem Header="BTS" mah:ControlsHelper.HeaderFontSize="10">
+                </TabItem>
+            </TabControl>
         </Grid>
     </GroupBox>
 </UserControl>

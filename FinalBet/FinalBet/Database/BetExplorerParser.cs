@@ -784,6 +784,14 @@ namespace FinalBet.Database
 
         private static List<odd> Get1X2Odds(HtmlDocument doc, int parentId)
         {
+            var html = doc.DocumentNode.InnerHtml;
+
+            if (doc.DocumentNode.InnerHtml.Contains(
+                "Unfortunately there wasn't any bookmaker offering odds for this match"))
+            {
+                return new List<odd>();
+            }
+
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
             var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
@@ -792,19 +800,44 @@ namespace FinalBet.Database
             //<td class="table-main__detail-odds" data-odd="3.35"></td>
 
             var oddsStrings = node.SelectNodes(".//td[@class='table-main__detail-odds']")
-                .Select(x => x.GetAttributeValue("data-odd", "")).
-                Where(x => !string.IsNullOrEmpty(x)).
-                ToList();
+                .Select(x => x.GetAttributeValue("data-odd", "")).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
             oddsStrings = oddsStrings.Skip(oddsStrings.Count - 3).ToList();
 
-            if (oddsStrings.Count != 3) return new List<odd>();
+            if (oddsStrings.Count == 3)
+            {
+                result.Add(new odd() {oddType = "1", parentId = parentId, value = double.Parse(oddsStrings[0])});
+                result.Add(new odd() {oddType = "X ", parentId = parentId, value = double.Parse(oddsStrings[1])});
+                result.Add(new odd() {oddType = "2 ", parentId = parentId, value = double.Parse(oddsStrings[2])});
+                return result;
+            }
 
-            result.Add(new odd() { oddType = "1", parentId = parentId, value = double.Parse(oddsStrings[0]) });
-            result.Add(new odd() { oddType = "X ", parentId = parentId, value = double.Parse(oddsStrings[1]) });
-            result.Add(new odd() { oddType = "2 ", parentId = parentId, value = double.Parse(oddsStrings[2]) });
+            //Иначе надо парсить неактивные ставки, если они есть
+            //<tr data-bid=\"417\" data-originid=\"1\">
+            var trNodes = node.Descendants().Where(x => x.Name == "tr")
+                .Where(x => !string.IsNullOrEmpty(x.GetAttributeValue("data-bid", ""))).ToList();
 
-            return result;
+            if (!trNodes.Any()) return new List<odd>();
+
+            //<td class=\"table-main__detail-odds table-main__detail-odds--first inactive\" data-odd=\"2.65\" data-created=\"30,08,2015,20,48\" data-opening-odd=\"2.85\" data-opening-date=\"26,08,2015,12,42\"><span></span></td>
+            //<td class=\"table-main__detail-odds inactive\" data-odd=\"3.10\" data-created=\"30,08,2015,16,04\" data-opening-odd=\"3.20\" data-opening-date=\"26,08,2015,12,42\"><span></span></td>
+            //<td class=\"table-main__detail-odds inactive\" data-odd=\"2.60\" data-created=\"30,08,2015,20,48\" data-opening-odd=\"2.30\" data-opening-date=\"26,08,2015,12,42\"><span></span></td>
+
+            var trNode = trNodes.First();
+            var strOdds = trNode.Descendants().Where(x => x.Name == "td")
+                .Where(x => x.GetAttributeValue("class", "").Contains("table-main__detail-odds"))
+                .Select(x => x.GetAttributeValue("data-odd", "")).Where(x => !string.IsNullOrEmpty(x)).ToList();
+
+            if (strOdds.Count != 3) return new List<odd>();
+            if (strOdds.All(x => double.TryParse(x, out _)))
+            {
+                result.Add(new odd() {oddType = "1", parentId = parentId, value = double.Parse(strOdds[0])});
+                result.Add(new odd() {oddType = "X ", parentId = parentId, value = double.Parse(strOdds[1])});
+                result.Add(new odd() {oddType = "2 ", parentId = parentId, value = double.Parse(strOdds[2])});
+                return result;
+            }
+
+            return new List<odd>();
         }
 
         private static List<odd> GetTotalOdds(HtmlDocument doc, int parentId)

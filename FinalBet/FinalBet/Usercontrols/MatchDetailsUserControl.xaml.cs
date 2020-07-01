@@ -62,6 +62,16 @@ namespace FinalBet.Usercontrols
                
                 control.MatchDate = match.date.ToString("dd-MM-yyyy");
                 control.Uri = match.href;
+                
+                //Odds
+                control.Odds1x2 = "---------";
+                var oddsTable = cntx.GetTable<odd>();
+                var odds = oddsTable.Where(x => x.parentId == control.MatchId).ToList();
+                if (odds.Any())
+                {
+                    var dict = odds.ToDictionary(x => x.oddType, x => x.value);
+                    control.Odds1x2 = dict[OddType._1] + "\t" + dict[OddType.X] + "\t" + dict[OddType._2];
+                }
             }
         }
 
@@ -74,6 +84,21 @@ namespace FinalBet.Usercontrols
         #endregion
 
         #region Variables
+        private string _odds1x2;
+        public string Odds1x2
+        {
+            get
+            {
+                return _odds1x2;
+            }
+            set
+            {
+                if (_odds1x2 == value) return;
+                _odds1x2 = value;
+                OnPropertyChanged("Odds1x2");
+            }
+        }
+
         private string _header = "Выберите матч";
         public string Header
         {

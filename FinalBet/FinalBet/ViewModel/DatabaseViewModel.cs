@@ -1121,7 +1121,7 @@ namespace FinalBet.ViewModel
                             select new Tuple<league, leagueUrl, bool>(league, leagueUrl, isCur)).ToList();
 
                     tpl = tpl.Where(x => !x.Item3).ToList();
-                    tpl = tpl.Where(x => LeagueUrlViewModel.GetPossibleYear(x.Item2.year) > 2011).ToList();
+                    tpl = tpl.Where(x => LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
                 }
 
                 var total = tpl.Count;
@@ -1140,6 +1140,7 @@ namespace FinalBet.ViewModel
                     {
                         var dif = matches.Count - hrefs.Count;
                         Log.Information(item.Item1.name + "\t" + item.Item2.name + "\t" + dif.ToString());
+                        Global.Current.Infos++;
                     }
                     
                     using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -1154,7 +1155,7 @@ namespace FinalBet.ViewModel
 
                         var oddTypeList = new List<string>() {OddType._1, OddType.X, OddType._2};
 
-                        for (int j = 0; j < 2; j++)
+                        for (int j = 0; j < oddTypeList.Count; j++)
                         {
                             var toAddOdds = (from m in matchesToAddOdds
                                 let ma = matches.Single(x => x.Href == m.href)
