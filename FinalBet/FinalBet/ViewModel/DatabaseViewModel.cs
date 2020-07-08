@@ -1184,32 +1184,144 @@ namespace FinalBet.ViewModel
                 CancelAsync = false;
             }
         }
-
-        private async Task LoadLeague1x2Coefs()
-        {
-
-        }
-
+        
         private async Task LoadCoefs(BeOddLoadMode mode)
         {
+            try
+            {
+                IsBusy = true;
+                string oddTypeKeyword = OddType.GetOddTypeKeyword(mode);
 
+                List<Tuple<league, leagueUrl, bool>> tpl;
+
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var countries = cntx.GetTable<league>();
+                    var urlTable = cntx.GetTable<leagueUrl>();
+
+                    tpl =
+                        (from league in countries
+                            join leagueUrl in urlTable on league.id equals leagueUrl.parentId
+                            where league.isFavorite && leagueUrl.mark.Length > 1
+                            let isCur = LeagueUrlViewModel.GetIsCurrent(leagueUrl.url)
+                            select new Tuple<league, leagueUrl, bool>(league, leagueUrl, isCur)).ToList();
+
+                    tpl = tpl.Where(x => !x.Item3).ToList();
+                    tpl = tpl.Where(x =>
+                        LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
+                }
+
+                foreach (var item in tpl)
+                {
+                    if (CancelAsync) break;
+
+                    var batches = new List<List<match>>();
+                    int batchSize = 20;
+
+                    using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                    {
+                        var matches = cntx.GetTable<match>()
+                            .Where(x => x.leagueId == item.Item1.id && x.leagueUrlId == item.Item2.id);
+
+                        var matchesToParse =
+                            (from match in matches
+                                where !cntx.GetTable<odd>().Where(x => x.oddType.Contains(oddTypeKeyword))
+                                    .Select(x => x.parentId).Distinct().Contains(match.id)
+                                select match).ToList();
+
+                        if (!matchesToParse.Any()) continue;
+
+                        batches = matchesToParse.Split(batchSize).ToList();
+                    }
+
+                    string elapsed = "";
+                    var cnt = batches.Count;
+                    var totalTime = 0D;
+                    var sWatch = new Stopwatch();
+
+                    for (int j = 0; j < cnt; j++)
+                    {
+                        sWatch.Reset();
+                        sWatch.Start();
+                        
+                        var tasks = batches[j].Select(x => BetExplorerParser.GetMatchOdds(x, mode)).ToList();
+                        var oddsToAdd = await Task.WhenAll(tasks);
+                        
+                        using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                        {
+                            var oddsTable = cntx.GetTable<odd>();
+                            for (int k = 0; k < oddsToAdd.Length; k++)
+                            {
+                                var toDelete = oddsToAdd[k];
+                                if (oddsToAdd[k].Any() && oddsToAdd[k].All(z => z != null))
+                                {
+                                    oddsTable.InsertAllOnSubmit(oddsToAdd[k]);
+                                }
+                            }
+
+                            cntx.SubmitChanges();
+                        }
+
+                        sWatch.Stop();
+
+
+                        StatusText = "Mode: " + mode.ToString() + "\r\n" +
+                                     "League info: " + String.Join("\t",
+                                         new string[] {item.Item1.name, item.Item2.url, item.Item2.year}) + "\r\n" +
+                                     "Chunk size: " + batchSize +
+                                     ". Number " + j + " from " + cnt + "."
+                                     + "Last time: " + elapsed + " s."
+                                     + " Finished in: " +
+                                     (((double) totalTime * ((double) (cnt - j)) / j / 3600D)).ToString("F2") + " h.";
+
+                        ProgressBarValue = 100 * ((double) j / (double) cnt);
+
+                        sWatch.Stop();
+                        elapsed = sWatch.Elapsed.Seconds.ToString();
+                        totalTime += sWatch.Elapsed.Seconds;
+                    }
+                }
+
+                await Task.Delay(100);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            finally
+            {
+                IsBusy = false;
+                CancelAsync = false;
+            }
         }
 
         #endregion
 
         #region ToDelete
-        public ICommand TestAsyncCommand { get; private set; }
+        public IAsyncCommand TestAsyncCommand { get; private set; }
 
 
-        private void TestAsyncTask()
+        private async Task TestAsyncTask()
         {
+            var ids = File.ReadAllLines("input.txt").Select(x => int.Parse(x)).ToList();
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var matches = cntx.GetTable<match>().Where(x => ids.Contains(x.id)).ToList();
 
+                foreach (var match in matches)
+                {
+                    int z = 3;
+                    var odds = await BetExplorerParser.GetMatchOdds(match, BeOddLoadMode.OU);
+                }
+            }
         }
 
         public ICommand TestCommand { get; set; }
 
         private void Test(object a)
         {
+
+            
 
             /*var country = Selected;
             var url = LeagueUrls.Selected;
@@ -1313,7 +1425,7 @@ namespace FinalBet.ViewModel
                 Selected = (league)Table.GetItemAt(0);
             }
 
-            TestAsyncCommand = new RelayCommand(a => TestAsyncTask());
+            TestAsyncCommand = new AsyncCommand(TestAsyncTask);
             TestCommand = new RelayCommand(Test);
 
             SetUrlsRepoCommand = new AsyncCommand(SetUrlsRepo);
@@ -1333,7 +1445,11 @@ namespace FinalBet.ViewModel
             CoerceResultsCommand = new RelayCommand(CoerceResults);
 
             Load1x2CoefsCommand = new AsyncCommand(Load1x2Coefs);
-            
+            LoadOuCoefsCommand = new AsyncCommand(()=>LoadCoefs(BeOddLoadMode.OU));
+            LoadForaCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.AH));
+            LoadBtsCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.BTS));
+
+
 
             ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a => LeagueUrls.Items.Any());
 

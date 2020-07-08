@@ -750,9 +750,16 @@ namespace FinalBet.Database
 
         private static List<odd> GetAhOdds(HtmlDocument doc, int parentId)
         {
+            if (doc.DocumentNode.InnerHtml.Contains(
+                "Unfortunately there wasn't any bookmaker offering odds for this match"))
+            {
+                return new List<odd>();
+            }
+
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
             var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+            if (tableNodes == null) return result;
 
             foreach (var tableNode in tableNodes)
             {
@@ -776,16 +783,14 @@ namespace FinalBet.Database
                 if (oddsStrings.Count != 2) continue;
                 var odds = oddsStrings.Select(double.Parse).ToList();
 
-                result.Add(new odd() { oddType = "1(" + fora + ")", parentId = parentId, value = odds[0] });
-                result.Add(new odd() { oddType = "2(" + fora + ")", parentId = parentId, value = odds[1] });
+                result.Add(new odd() { oddType = "Home(" + fora + ")", parentId = parentId, value = odds[0] });
+                result.Add(new odd() { oddType = "Guest(" + fora + ")", parentId = parentId, value = odds[1] });
             }
             return result;
         }
 
         private static List<odd> Get1X2Odds(HtmlDocument doc, int parentId)
         {
-            var html = doc.DocumentNode.InnerHtml;
-
             if (doc.DocumentNode.InnerHtml.Contains(
                 "Unfortunately there wasn't any bookmaker offering odds for this match"))
             {
@@ -842,9 +847,16 @@ namespace FinalBet.Database
 
         private static List<odd> GetTotalOdds(HtmlDocument doc, int parentId)
         {
+            if (doc.DocumentNode.InnerHtml.Contains(
+                "Unfortunately there wasn't any bookmaker offering odds for this match"))
+            {
+                return new List<odd>();
+            }
+
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
             var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+            if (tableNodes == null) return result;
 
             foreach (var tableNode in tableNodes)
             {
@@ -874,9 +886,17 @@ namespace FinalBet.Database
 
         private static List<odd> GetBtsOdds(HtmlDocument doc, int parentId)
         {
+            if (doc.DocumentNode.InnerHtml.Contains(
+                "Unfortunately there wasn't any bookmaker offering odds for this match"))
+            {
+                return new List<odd>();
+            }
+
             var result = new List<odd>();
             //<table class="table-main h-mb15 sortable" id="sortable-1">
             var tableNodes = doc.DocumentNode.SelectNodes(".//table[contains(@class, 'table-main h-mb15')]");
+            if (tableNodes == null) return result;
+
             var node = tableNodes.Last(); //А по сути, он там один, но похеру уж
 
             //<td class="table-main__detail-odds" data-odd="3.35"></td>

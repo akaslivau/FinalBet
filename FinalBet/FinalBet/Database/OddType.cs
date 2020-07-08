@@ -1,4 +1,6 @@
-﻿namespace FinalBet.Database
+﻿using System;
+
+namespace FinalBet.Database
 {
     public sealed class OddType
     {
@@ -7,6 +9,14 @@
         public static readonly OddType _1 = new OddType("1");
         public static readonly OddType X = new OddType("X");
         public static readonly OddType _2 = new OddType("2");
+
+        public static string GetOddTypeKeyword(BeOddLoadMode mode)
+        {
+            if (mode == BeOddLoadMode.OU) return "Over";
+            if (mode == BeOddLoadMode.AH) return "Home";
+            if (mode == BeOddLoadMode.BTS) return "BTS";
+            throw new ArgumentException("Ty pes!");
+        }
         
         private OddType(string name)
         {

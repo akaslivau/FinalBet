@@ -153,7 +153,10 @@
                                 />
                             </MenuItem>
                             <MenuItem Header="Кэфы">
-                                    <MenuItem Header="1x2 из файлов" Command="{Binding Load1x2CoefsCommand}"/>
+                                <MenuItem Header="1x2 из файлов" Command="{Binding Load1x2CoefsCommand}"/>
+                                <MenuItem Header="Over-under" Command="{Binding LoadOuCoefsCommand}"/>
+                                <MenuItem Header="Fora" Command="{Binding LoadForaCoefsCommand}"/>
+                                <MenuItem Header="BTS" Command="{Binding LoadBtsCoefsCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Отметки">
                                 <MenuItem Header="Отметить"
@@ -179,6 +182,7 @@
                             </MenuItem>
                             <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
                             <MenuItem Header="Тестовая команда"  Command="{Binding TestCommand}"/>
+                            <MenuItem Header="Async Тестовая команда"  Command="{Binding TestAsyncCommand}"/>
                         </Menu>
                     </DockPanel>
                     <DockPanel Grid.Row="1" HorizontalAlignment="Left">
