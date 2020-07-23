@@ -1230,6 +1230,7 @@ namespace FinalBet.ViewModel
                                 select match).ToList();
 
                         if (!matchesToParse.Any()) continue;
+                        if(matchesToParse.Count<50) continue;
 
                         batches = matchesToParse.Split(batchSize).ToList();
                     }
