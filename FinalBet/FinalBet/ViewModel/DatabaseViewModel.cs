@@ -1209,6 +1209,9 @@ namespace FinalBet.ViewModel
                     tpl = tpl.Where(x => !x.Item3).ToList();
                     tpl = tpl.Where(x =>
                         LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
+                    //Naxer belarus
+                    var index = tpl.FindLastIndex(x => x.Item1.name == "Egypt");
+                    tpl = tpl.Skip(index).ToList();
                 }
 
                 foreach (var item in tpl)
@@ -1229,8 +1232,13 @@ namespace FinalBet.ViewModel
                                     .Select(x => x.parentId).Distinct().Contains(match.id)
                                 select match).ToList();
 
-                        if (!matchesToParse.Any()) continue;
-                        if(matchesToParse.Count<50) continue;
+                        if (!matchesToParse.Any() || matchesToParse.Count < 50)
+                        {
+                            await Task.Delay(30);
+                            StatusText = "Skipping..." + item.Item1.name;
+                            continue;
+                        }
+
 
                         batches = matchesToParse.Split(batchSize).ToList();
                     }
