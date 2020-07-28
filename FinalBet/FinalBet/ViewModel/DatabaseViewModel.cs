@@ -25,6 +25,88 @@ namespace FinalBet.ViewModel
 {
     public class DatabaseViewModel: ViewModelBase
     {
+        /// <summary>
+        /// Общая логика работы данного раздела.
+        /// 1. Список всех стран загружается вручную единожды BetExplorerParser.ParseSoccerPage()
+        /// 2. Затем загружаются ссылки для каждой страны. Либо отдельно, либо массово для всех.
+        /// 3. Для того, чтобы загрузить матчи для ссылки ее необходимо пометить - основной турнир, кубок и т.д.
+        /// Загрузка матчей возможна только для завершенного турнира
+        /// Можно загрузить матчи для
+        /// - выбранной ссылки
+        /// - все отмеченные ссылки для выбранной страны
+        /// - вообще все отмеченные ссылки
+        /// HTML для загруженных ссылок попадает в архив
+        /// 4. Для матчей загружаются счета таймов.
+        /// При этом желательно выставить отсечку по годам для турнира, так как ниже 2010 года счетов таймов почти нет
+        /// 5. Загружаются коэффициенты
+        /// 
+        /// </summary>
+
+        public DatabaseViewModel()
+        {
+            //TODO: Солвер для режима угадывания буком
+            //TODO: Тесты для кэфов
+            //TODO: удалить лигу
+            //TODO: оперативное добавление лиги
+            //TODO: загрузка счетов таймов для выбранной ссылки-лиги-турнира в лиге
+            //TODO: список методов-свойств
+            //TODO: параллельные запросы а-ля хабр или где это ты читал
+            //TODO: фильтр по методам-свойствам
+
+            base.DisplayName = "База данных";
+
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var table = cntx.GetTable<league>().ToList();
+                foreach (var league in table)
+                {
+                    Items.Add(league);
+                }
+            }
+            Table = new ListCollectionView(Items);
+            if (Items.Any()) Selected = Items[0];
+
+            ShowOnlyFavorites = Settings.Default.onlyFavorites;
+            if (ShowOnlyFavorites)
+            {
+                Table.Filter = FilterLeagues;
+                Table.Refresh();
+                Selected = (league)Table.GetItemAt(0);
+            }
+
+            TestAsyncCommand = new AsyncCommand(TestAsyncTask);
+            TestCommand = new RelayCommand(Test);
+
+            SetUrlsRepoCommand = new AsyncCommand(SetUrlsRepo);
+            //
+            LoadCountryUrlsCommand = new AsyncCommand(() => LoadCountryUrls(Selected), () => Selected != null);
+            LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any());
+            //
+            LoadUrlMatchesCommand = new AsyncCommand(() => LoadUrlMatches(Selected, LeagueUrls.Selected.Source),
+                () => Selected != null && 
+                                LeagueUrls.Selected != null
+                                );
+            LoadAllMatchesCommand = new AsyncCommand(LoadAllMatches);
+            LoadLeagueMatchesCommand = new AsyncCommand(LoadLeagueMatches, () => Selected != null);
+            //
+            LoadMatchDetailsCommand = new AsyncCommand(LoadMatchDetails);
+            CoerceResultsCommand = new RelayCommand(CoerceResults);
+            //
+            Load1x2CoefsCommand = new AsyncCommand(Load1x2Coefs);
+            LoadOuCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.OU));
+            LoadForaCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.AH));
+            LoadBtsCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.BTS));
+            //
+            ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a => LeagueUrls.Items.Any());
+            //
+            MarkSelectedUrlsCommand = new RelayCommand(x => MarkSelectedUrls(x, SelectedLeagueMark.name),
+                a => LeagueUrls.Selected != null && SelectedLeagueMark != null);
+            UnmarkSelectedUrlsCommand = new RelayCommand(x => MarkSelectedUrls(x, ""), a => LeagueUrls.Selected != null);
+            MarkAutoCommand = new RelayCommand(MarkAuto, a => LeagueUrls.Items.Any() && SelectedLeagueMark != null);
+            CheckMarksCommand = new RelayCommand(CheckMarks);
+
+        }
+
         #region CommonVariables
         private bool _isBusy;
         public bool IsBusy //Выполняется ли асинхронная задача
@@ -93,7 +175,7 @@ namespace FinalBet.ViewModel
             }
         }
 
-        //Список стран
+        //Список стран [CollectionView]
         private ListCollectionView _table;
         public ListCollectionView Table
         {
@@ -230,12 +312,12 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region Ссылки
-        public IAsyncCommand LoadUrlsCommand { get; private set; }
+        public IAsyncCommand LoadCountryUrlsCommand { get; private set; }
         public IAsyncCommand LoadAllUrlsCommand { get; private set; }
         public ICommand ShowFileDetailsCommand { get; private set; }
 
         //Для выбранной страны. Загружает ссылки с сайта и добавляет их в БД, если она пуста
-        private async Task LoadUrls(league ctr)
+        private async Task LoadCountryUrls(league ctr)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
@@ -243,39 +325,38 @@ namespace FinalBet.ViewModel
                 bool anyItemExists = table.Any(x => x.parentId == ctr.id);
 
                 var country = ctr.name;
+                //TODO: Нужно как-то определять действительно новые URL и добавлять их
                 if (anyItemExists)
                 {
                     Log.Warning("LoadUrls, table not empty! {@country}", country);
                     Global.Current.Warnings++;
+                    return;
                 }
-                else
+
+                try
                 {
-                    try
-                    {
-                        IsBusy = true;
-                        StatusText = "Начинаю загрузку ссылок для " + ctr.name;
+                    IsBusy = true;
+                    StatusText = "Начинаю загрузку ссылок для " + ctr.name;
 
-                        var htmlToParse = await BetExplorerParser.GetLeagueUrlsHtml(ctr);
-                        var parsedUrls = BetExplorerParser.GetLeagueUrls(htmlToParse, ctr.id);
-                        //TODO: Нужно как-то определять действительно новые URL и добавлять их
+                    var htmlToParse = await BetExplorerParser.GetLeagueUrlsHtml(ctr);
+                    var parsedUrls = BetExplorerParser.GetLeagueUrls(htmlToParse, ctr.id);
+                    
+                    table.InsertAllOnSubmit(parsedUrls);
+                    cntx.SubmitChanges();
 
-                        table.InsertAllOnSubmit(parsedUrls);
-                        cntx.SubmitChanges();
-
-                        StatusText = "Успешно!";
-                        Log.Information("LeagueUrls загружены для страны {@country}", country);
-                        Global.Current.Infos++;
-                    }
-                    catch (Exception ex)
-                    {
-                        StatusText = "Возникло исключение, смотри логи!";
-                        Log.Warning(ex, "Task LoadUrls()");
-                        Global.Current.Warnings++;
-                    }
-                    finally
-                    {
-                        IsBusy = false;
-                    }
+                    StatusText = "Успешно!";
+                    Log.Information("LeagueUrls загружены для страны {@country}", country);
+                    Global.Current.Infos++;
+                }
+                catch (Exception ex)
+                {
+                    StatusText = "Возникло исключение, смотри логи!";
+                    Log.Warning(ex, "Task LoadUrls()");
+                    Global.Current.Warnings++;
+                }
+                finally
+                {
+                    IsBusy = false;
                 }
             }
         }
@@ -291,7 +372,7 @@ namespace FinalBet.ViewModel
                 foreach (var country in Items)
                 {
                     if (CancelAsync) break;
-                    await LoadUrls(country);
+                    await LoadCountryUrls(country);
 
                     i++;
                     ProgressBarValue = 100 * ((double)i / (double)total);
@@ -321,10 +402,10 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region Матчи
-        public IAsyncCommand LoadMatchesCommand { get; private set; }
+        public IAsyncCommand LoadUrlMatchesCommand { get; private set; }
         public IAsyncCommand LoadLeagueMatchesCommand { get; private set; }
-        public IAsyncCommand LoadMarkedMatchesCommand { get; private set; }
-        public ICommand CoerceResultsCommand { get; private set; }
+        public IAsyncCommand LoadAllMatchesCommand { get; private set; }
+
         public ICommand OpenArchiveFolderCommand
         {
             get
@@ -332,114 +413,38 @@ namespace FinalBet.ViewModel
                 return new RelayCommand((o => Process.Start(Settings.Default.zipFolder)), x => Directory.Exists(Settings.Default.zipFolder));
             }
         }
-
-        /// <summary>
-        /// Корректирует счета таймов (см. описание внутри)
-        /// </summary>
-        /// <param name="obj"></param>
-        private void CoerceResults(object obj)
-        {
-            //Correct ET + PEN
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var possibleResults = cntx.GetTable<possibleResult>();
-                var penOrEtIds = possibleResults.Where(x => x.value.Contains("PEN") || x.value.Contains("ET")).
-                    Select(x => x.id).ToList();
-
-                //НеNULLевые счета таймов, но при этом notCorrect итоговый счет
-                var listToCoerce = (from match in cntx.GetTable<match>()
-                               where match.firstHalfResId != null && match.secondHalfResId != null
-                               where penOrEtIds.Contains(match.matchResultId)
-                               select new
-                               {
-                                   MatchId = match.id,
-                                   FullTimeRes = match.matchResultId,
-                                   FirstHalfRes = match.firstHalfResId.Value,
-                                   SecondHalfRes = match.secondHalfResId.Value
-                               }).ToList();
-
-                foreach (var match in listToCoerce)
-                {
-                    var res = possibleResults.Single(x => x.id == match.FullTimeRes);
-
-                    var psbl1 = possibleResults.Single(x => x.id == match.FirstHalfRes);
-                    var psbl2 = possibleResults.Single(x => x.id == match.SecondHalfRes);
-
-                    var psbl = possibleResults.Where(x => x.scored == (psbl1.scored + psbl2.scored) &&
-                                                        x.missed == (psbl1.missed + psbl2.missed)
-                                                        );
-                    if (psbl.Count() > 1) throw new Exception();
-                    if (psbl.Count() == 0)
-                    {
-                        var scored = psbl1.scored + psbl2.scored;
-                        var missed = psbl1.missed + psbl2.missed;
-                        var toAdd = new possibleResult()
-                        {
-                            scored = scored,
-                            missed = missed,
-                            isCorrect = true,
-                            value = scored + BetExplorerParser.BE_SCORE_DELIMITER + missed.ToString(),
-                            total = scored + missed,
-                            diff = scored - missed
-                        };
-                        possibleResults.InsertOnSubmit(toAdd);
-                        cntx.SubmitChanges();
-                    }
-
-                    var newPsbl = possibleResults.Single(x => x.scored == (psbl1.scored + psbl2.scored) &&
-                                                          x.missed == (psbl1.missed + psbl2.missed));
-
-                    var toUpdate = cntx.GetTable<match>().Single(x => x.id == match.MatchId);
-                    toUpdate.beforeCoercedId = toUpdate.matchResultId;
-                    cntx.SubmitChanges();
-                    toUpdate.matchResultId = newPsbl.id;
-                    cntx.SubmitChanges();
-                }
-            }
-
-            //CORRECT AWA, CAN.
-            //(Когда счета таймов есть, а итоговый счет тю-тю) Нужно обнулить счета таймов
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var possibleResults = cntx.GetTable<possibleResult>();
-                var awaIds = possibleResults.Where(x => x.value.Contains("AWA") || x.value.Contains("CAN")).
-                    Select(x => x.id).ToList();
-
-                var matches = (from match in cntx.GetTable<match>()
-                               where match.firstHalfResId != null && match.secondHalfResId != null
-                               where awaIds.Contains(match.matchResultId)
-                               select match).ToList();
-
-                int i = 0;
-                matches.ForEach(x =>
-                {
-                    x.firstHalfResId = null;
-                    x.secondHalfResId = null;
-                    i++;
-                });
-                cntx.SubmitChanges();
-                MessageBox.Show("Исправлено штук, " + i.ToString());
-            }
-        }
+        
         
 
         //Загружает матчи (.../results) для выбранной ссылки
         //+ добавление в БД
-        //+ сохранение в .zip файл
-        private async Task LoadMatches(league country, leagueUrl url)
+        //+ автосохранение html в .zip файл
+        private async Task LoadUrlMatches(league country, leagueUrl url)
         {
+            if (string.IsNullOrEmpty(url.mark))
+            {
+                MessageBox.Show("Нельзя загружать неотмеченную ссылку");
+                return;
+            }
+
+            if (LeagueUrlViewModel.GetIsCurrent(url.url))
+            {
+                MessageBox.Show("Загрузка матчей для текущей лиги реализована в другом месте!");
+                return;
+            }
+
             //Проверка на наличие матчей
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var table = cntx.GetTable<match>();
                 if (table.Count(x => x.leagueUrlId == url.id) > 0)
                 {
+                    MessageBox.Show("Прервано, смотри лог");
                     Log.Information("Матчи для выбранной ссылки уже существуют {@url}", url);
                     Global.Current.Infos++;
                     return;
                 }
             }
-
             var matches = await BetExplorerParser.GetMatches(country, url);
 
             //Базовая информативная проверка на некорректные записи, чисто для лога
@@ -465,7 +470,6 @@ namespace FinalBet.ViewModel
                 var tagsDict = cntx.GetTable<matchTag>()
                     .ToDictionary(matchTag => matchTag.name, matchTag => matchTag.id);
 
-
                 var matchesTable = cntx.GetTable<match>();
                 var possibleResultsDict = cntx.GetTable<possibleResult>().ToDictionary(possibleResult => possibleResult.value,
                     possibleResult => possibleResult.id);
@@ -484,56 +488,6 @@ namespace FinalBet.ViewModel
 
                 matchesTable.InsertAllOnSubmit(toAddMatches);
                 cntx.SubmitChanges();
-            }
-        }
-
-        //Загружает матчи (/results) для всех leagueUrl, которые
-        // A - принадлежат #isFavorite# стране
-        // Б - имеют непустую отметку #mark#
-        //+ добавление в БД
-        //+ сохранение в .zip файл
-        private async Task LoadMarkedMatches()
-        {
-            //Загружаем только те URL, Для которых mark != ""
-            try
-            {
-                IsBusy = true;
-
-                List<Tuple<league, leagueUrl, bool>> tpl;
-
-                using (var cntx = new SqlDataContext(Connection.ConnectionString))
-                {
-                    var countries = cntx.GetTable<league>();
-                    var urlTable = cntx.GetTable<leagueUrl>();
-
-                    tpl =
-                        (from league in countries
-                         join leagueUrl in urlTable on league.id equals leagueUrl.parentId
-                         where league.isFavorite && leagueUrl.mark.Length > 1
-                         let isCur = LeagueUrlViewModel.GetIsCurrent(leagueUrl.url)
-                         select new Tuple<league, leagueUrl, bool>(league, leagueUrl, isCur)).ToList();
-
-                    tpl = tpl.Where(x => !x.Item3).ToList();
-                }
-
-                var total = tpl.Count;
-                int i = 0;
-                foreach (var item in tpl)
-                {
-                    if (CancelAsync) break;
-
-                    StatusText = "Парсим..." + String.Join("\t",
-                        new string[] { item.Item1.name, item.Item2.url, item.Item2.year });
-                    await LoadMatches(item.Item1, item.Item2);
-
-                    i++;
-                    ProgressBarValue = 100 * ((double)i / (double)total);
-                }
-            }
-            finally
-            {
-                IsBusy = false;
-                CancelAsync = false;
             }
         }
 
@@ -575,7 +529,7 @@ namespace FinalBet.ViewModel
 
                     StatusText = "Парсим..." + String.Join("\t",
                         new string[] { item.Item1.name, item.Item2.url, item.Item2.year });
-                    await LoadMatches(item.Item1, item.Item2);
+                    await LoadUrlMatches(item.Item1, item.Item2);
 
                     i++;
                     ProgressBarValue = 100 * ((double)i / (double)total);
@@ -588,6 +542,56 @@ namespace FinalBet.ViewModel
                 CancelAsync = false;
             }
         }
+
+        //Загружает матчи (/results) для всех leagueUrl, которые
+        // A - принадлежат #isFavorite# стране
+        // Б - имеют непустую отметку #mark#
+        //+ добавление в БД
+        //+ сохранение в .zip файл
+        private async Task LoadAllMatches()
+        {
+            //Загружаем только те URL, Для которых mark != ""
+            try
+            {
+                IsBusy = true;
+
+                List<Tuple<league, leagueUrl, bool>> tpl;
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var countries = cntx.GetTable<league>();
+                    var urlTable = cntx.GetTable<leagueUrl>();
+
+                    tpl =
+                        (from league in countries
+                         join leagueUrl in urlTable on league.id equals leagueUrl.parentId
+                         where league.isFavorite && leagueUrl.mark.Length > 1
+                         let isCur = LeagueUrlViewModel.GetIsCurrent(leagueUrl.url)
+                         select new Tuple<league, leagueUrl, bool>(league, leagueUrl, isCur)).ToList();
+
+                    tpl = tpl.Where(x => !x.Item3).ToList();
+                }
+
+                var total = tpl.Count;
+                int i = 0;
+                foreach (var item in tpl)
+                {
+                    if (CancelAsync) break;
+
+                    StatusText = "Парсим..." + String.Join("\t",
+                        new string[] { item.Item1.name, item.Item2.url, item.Item2.year });
+                    await LoadUrlMatches(item.Item1, item.Item2);
+
+                    i++;
+                    ProgressBarValue = 100 * ((double)i / (double)total);
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+                CancelAsync = false;
+            }
+        }
+        
 
         //Вспомогательные методы, используемые при Task LoadMatches
         private void AddNewMatchTagsToDb(List<BeMatch> matches)
@@ -716,129 +720,22 @@ namespace FinalBet.ViewModel
         }
         #endregion
 
-        #region Детали матчей
+        #region Счета таймов
         public IAsyncCommand LoadMatchDetailsCommand { get; private set; }
-        public IAsyncCommand ReLoadMatchDetailsCommand { get; private set; }
-
-        private async Task LoadMatchDetails()
-        {
-            //Установи batchSize
-            //Помни про take(N)
-            var batches = new List<List<match>>();
-
-            int batchSize = 5;
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var lastParsedId = cntx.GetTable<parsedResult>().Any() ?
-                    cntx.GetTable<parsedResult>().Max(x => x.matchId) :
-                    0; //Таблица содержит id матчей, для которых уже были попытки сделать парсинг
-
-                var matches = cntx.GetTable<match>().
-                    Where(x => x.id > lastParsedId).
-                    Take(20000).
-                    ToList();
-
-                batches = matches.Split(batchSize).ToList();
-            }
-
-            try
-            {
-                IsBusy = true;
-
-                string elapsed = "";
-                var cnt = batches.Count;
-                var totalTime = 0D;
-                var sWatch = new Stopwatch();
-
-                for (int i = 0; i < cnt; i++)
-                {
-                    sWatch.Reset();
-                    sWatch.Start();
-                    var tasks = batches[i].Select(x => BetExplorerParser.GetHalfsResults(x)).ToList();
-                    var matchDetails = await Task.WhenAll(tasks);
-
-                    using (var cntx = new SqlDataContext(Connection.ConnectionString))
-                    {
-                        //parsed results
-                        var parsedResults = cntx.GetTable<parsedResult>();
-                        var toAddParsed = batches[i].Select((x, j) =>
-                            new parsedResult()
-                            {
-                                matchId = batches[i][j].id,
-                                resultsLoaded = matchDetails[j] == null ? false : matchDetails[j].AreResultsCorrect
-                            });
-
-                        parsedResults.InsertAllOnSubmit(toAddParsed);
-                        cntx.SubmitChanges();
-
-                        //possibleResults
-                        AddNewPossibleResultsToDb(matchDetails.ToList());
-
-                        //Updating results
-
-                        var possibleResultDict = cntx.GetTable<possibleResult>().ToDictionary(possibleResult => possibleResult.value,
-                            possibleResult => possibleResult.id);
-
-                        var matchesTable = cntx.GetTable<match>();
-
-                        for (int k = 0; k < matchDetails.Length; k++)
-                        {
-                            if (matchDetails[k] == null)
-                            {
-                                Log.Warning(batches[i][k].id + " was not parsed");
-                                Global.Current.Warnings++;
-                                continue;
-                            }
-
-                            if (!matchDetails[k].AreResultsCorrect) continue;
-
-                            var match = matchesTable.Single(x => x.id == matchDetails[k].MatchId);
-                            var firstHalfResultId = possibleResultDict[matchDetails[k].FirstTimePossibleResult.value];
-                            var secondHalfResultId = possibleResultDict[matchDetails[k].SecondTimePossibleResult.value];
-
-
-                        }
-                        cntx.SubmitChanges();
-                    }
-
-                    StatusText = "Chunk size: " + batchSize +
-                                 ". Number " + i + " from " + cnt + "."
-                                 + "Last time: " + elapsed + " s."
-                                 + " Finished in: " + (((double)totalTime * ((double)(cnt - i)) / i / 3600D)).ToString("F2") + " h.";
-
-                    ProgressBarValue = 100 * ((double)i / (double)cnt);
-
-                    sWatch.Stop();
-                    elapsed = sWatch.Elapsed.Seconds.ToString();
-                    totalTime += sWatch.Elapsed.Seconds;
-
-                    if (CancelAsync) break;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Fatal(e, "LoadMatchDetails");
-                Global.Current.Errors++;
-            }
-            finally
-            {
-                IsBusy = false;
-                CancelAsync = false;
-            }
-        }
+        public ICommand CoerceResultsCommand { get; private set; }
 
         /// <summary>
-        /// Дозагружает счета таймов с учетом годовой отсечки (border)
+        /// Загружает счета таймов с учетом годовой отсечки (border)
         /// </summary>
         /// <returns></returns>
-        private async Task ReloadMatchDetails()
+        private async Task LoadMatchDetails()
         {
             var batches = new List<List<match>>();
             int batchSize = 10;
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var crazy = (from league in cntx.GetTable<league>()
+                var allUrls = (from league in cntx.GetTable<league>()
                              where league.isFavorite
                              from leagueUrl in cntx.GetTable<leagueUrl>()
                              where leagueUrl.parentId == league.id
@@ -848,13 +745,13 @@ namespace FinalBet.ViewModel
                 var borderTable = cntx.GetTable<border>();
                 foreach (var brd in borderTable)
                 {
-                    var except = crazy.Where(x => x.parentId == brd.leagueId && x.mark == brd.mark)
+                    var except = allUrls.Where(x => x.parentId == brd.leagueId && x.mark == brd.mark)
                         .Where(x => LeagueUrlViewModel.GetPossibleYear(x.year) < brd.resultBorderYear).ToList();
 
-                    crazy = crazy.Except(except).ToList();
+                    allUrls = allUrls.Except(except).ToList();
                 }
 
-                var urlsIds = crazy.Select(x => x.id).ToList();
+                var urlsIds = allUrls.Select(x => x.id).ToList();
 
                 var query = (from match in cntx.GetTable<match>()
                              where urlsIds.Contains(match.leagueUrlId)
@@ -936,6 +833,96 @@ namespace FinalBet.ViewModel
             {
                 IsBusy = false;
                 CancelAsync = false;
+            }
+        }
+
+
+        /// <summary>
+        /// Корректирует счета таймов (см. описание внутри)
+        /// </summary>
+        /// <param name="obj"></param>
+        private void CoerceResults(object obj)
+        {
+            //Correct ET + PEN
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var possibleResults = cntx.GetTable<possibleResult>();
+                var penOrEtIds = possibleResults.Where(x => x.value.Contains("PEN") || x.value.Contains("ET")).
+                    Select(x => x.id).ToList();
+
+                //НеNULLевые счета таймов, но при этом notCorrect итоговый счет
+                var listToCoerce = (from match in cntx.GetTable<match>()
+                                    where match.firstHalfResId != null && match.secondHalfResId != null
+                                    where penOrEtIds.Contains(match.matchResultId)
+                                    select new
+                                    {
+                                        MatchId = match.id,
+                                        FullTimeRes = match.matchResultId,
+                                        FirstHalfRes = match.firstHalfResId.Value,
+                                        SecondHalfRes = match.secondHalfResId.Value
+                                    }).ToList();
+
+                foreach (var match in listToCoerce)
+                {
+                    var res = possibleResults.Single(x => x.id == match.FullTimeRes);
+
+                    var psbl1 = possibleResults.Single(x => x.id == match.FirstHalfRes);
+                    var psbl2 = possibleResults.Single(x => x.id == match.SecondHalfRes);
+
+                    var psbl = possibleResults.Where(x => x.scored == (psbl1.scored + psbl2.scored) &&
+                                                        x.missed == (psbl1.missed + psbl2.missed)
+                                                        );
+                    if (psbl.Count() > 1) throw new Exception();
+                    if (psbl.Count() == 0)
+                    {
+                        var scored = psbl1.scored + psbl2.scored;
+                        var missed = psbl1.missed + psbl2.missed;
+                        var toAdd = new possibleResult()
+                        {
+                            scored = scored,
+                            missed = missed,
+                            isCorrect = true,
+                            value = scored + BetExplorerParser.BE_SCORE_DELIMITER + missed.ToString(),
+                            total = scored + missed,
+                            diff = scored - missed
+                        };
+                        possibleResults.InsertOnSubmit(toAdd);
+                        cntx.SubmitChanges();
+                    }
+
+                    var newPsbl = possibleResults.Single(x => x.scored == (psbl1.scored + psbl2.scored) &&
+                                                          x.missed == (psbl1.missed + psbl2.missed));
+
+                    var toUpdate = cntx.GetTable<match>().Single(x => x.id == match.MatchId);
+                    toUpdate.beforeCoercedId = toUpdate.matchResultId;
+                    cntx.SubmitChanges();
+                    toUpdate.matchResultId = newPsbl.id;
+                    cntx.SubmitChanges();
+                }
+            }
+
+            //CORRECT AWA, CAN.
+            //(Когда счета таймов есть, а итоговый счет тю-тю) Нужно обнулить счета таймов
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var possibleResults = cntx.GetTable<possibleResult>();
+                var awaIds = possibleResults.Where(x => x.value.Contains("AWA") || x.value.Contains("CAN")).
+                    Select(x => x.id).ToList();
+
+                var matches = (from match in cntx.GetTable<match>()
+                               where match.firstHalfResId != null && match.secondHalfResId != null
+                               where awaIds.Contains(match.matchResultId)
+                               select match).ToList();
+
+                int i = 0;
+                matches.ForEach(x =>
+                {
+                    x.firstHalfResId = null;
+                    x.secondHalfResId = null;
+                    i++;
+                });
+                cntx.SubmitChanges();
+                MessageBox.Show("Исправлено штук, " + i.ToString());
             }
         }
         #endregion
@@ -1411,64 +1398,5 @@ namespace FinalBet.ViewModel
 
         #endregion
 
-        public DatabaseViewModel()
-        {
-            base.DisplayName = "База данных";
-
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var table = cntx.GetTable<league>().ToList();
-                foreach (var league in table)
-                {
-                    Items.Add(league);
-                }
-            }
-            Table = new ListCollectionView(Items);
-            if (Items.Any()) Selected = Items[0];
-            
-            ShowOnlyFavorites = Settings.Default.onlyFavorites;
-            if (ShowOnlyFavorites)
-            {
-                Table.Filter = FilterLeagues;
-                Table.Refresh();
-                Selected = (league)Table.GetItemAt(0);
-            }
-
-            TestAsyncCommand = new AsyncCommand(TestAsyncTask);
-            TestCommand = new RelayCommand(Test);
-
-            SetUrlsRepoCommand = new AsyncCommand(SetUrlsRepo);
-            
-
-            LoadUrlsCommand = new AsyncCommand(()=> LoadUrls(Selected), () => Selected != null && !IsBusy);
-            LoadAllUrlsCommand = new AsyncCommand(LoadAllUrls, () => Items.Any() && !IsBusy);
-
-            LoadMatchesCommand = new AsyncCommand(()=>LoadMatches(Selected, LeagueUrls.Selected.Source),
-                () => Selected != null && LeagueUrls.Items.Any() && LeagueUrls.Selected != null && !IsBusy);
-            LoadMarkedMatchesCommand = new AsyncCommand(LoadMarkedMatches);
-            LoadLeagueMatchesCommand = new AsyncCommand(LoadLeagueMatches, () => Selected != null);
-
-
-            LoadMatchDetailsCommand = new AsyncCommand(LoadMatchDetails);
-            ReLoadMatchDetailsCommand = new AsyncCommand(ReloadMatchDetails);
-            CoerceResultsCommand = new RelayCommand(CoerceResults);
-
-            Load1x2CoefsCommand = new AsyncCommand(Load1x2Coefs);
-            LoadOuCoefsCommand = new AsyncCommand(()=>LoadCoefs(BeOddLoadMode.OU));
-            LoadForaCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.AH));
-            LoadBtsCoefsCommand = new AsyncCommand(() => LoadCoefs(BeOddLoadMode.BTS));
-
-
-
-            ShowFileDetailsCommand = new RelayCommand(ShowFileDetails, a => LeagueUrls.Items.Any());
-
-
-            MarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, SelectedLeagueMark.name),
-                a => LeagueUrls.Selected != null && SelectedLeagueMark != null);
-            UnmarkSelectedUrlsCommand = new RelayCommand(x=> MarkSelectedUrls(x, ""), a=>LeagueUrls.Selected != null);
-            MarkAutoCommand = new RelayCommand(MarkAuto, a=> LeagueUrls.Items.Any() && SelectedLeagueMark != null);
-            CheckMarksCommand = new RelayCommand(CheckMarks);
-
-        }
     }
 }

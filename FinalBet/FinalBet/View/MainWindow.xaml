@@ -127,27 +127,22 @@
                                 </Style>
                             </Menu.Resources>
                             <MenuItem Header="Ссылки">
-                                <MenuItem Header="Загрузить для выбранной лиги" Command="{Binding LoadUrlsCommand}"/>
+                                <MenuItem Header="Загрузить для лиги" Command="{Binding LoadCountryUrlsCommand}"/>
                                 <MenuItem Header="Загрузить всё" Command="{Binding LoadAllUrlsCommand}"/>
+                                <Separator/>
                                 <MenuItem Header="Показать детали" Command="{Binding ShowFileDetailsCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Матчи">
                                 <MenuItem Header="Открыть директорию" Command="{Binding OpenArchiveFolderCommand}"/>
-                                <MenuItem Header="Загрузить для выбранной URL" Command="{Binding LoadMatchesCommand}"/>
+                                <MenuItem Header="Загрузить для URL" Command="{Binding LoadUrlMatchesCommand}"/>
                                 <MenuItem Header="Загрузить для страны" Command="{Binding LoadLeagueMatchesCommand}"/>
                                 <Separator/>
-                                <MenuItem Header="Загрузить все отмеченные" Command="{Binding LoadMarkedMatchesCommand}"/>
+                                <MenuItem Header="Загрузить все матчи" Command="{Binding LoadAllMatchesCommand}"/>
                             </MenuItem>
-                            <MenuItem Header="Детали матчей">
-                                <MenuItem Header="Счета таймов">
-                                    <MenuItem Header="Первичная загрузка"
+                            <MenuItem Header="Счета таймов">
+                                    <MenuItem Header="Загрузить все"
                                               Command="{Binding LoadMatchDetailsCommand}"
                                     />
-                                    <MenuItem Header="Дозагрузка"
-                                              Command="{Binding ReLoadMatchDetailsCommand}"
-                                    />
-                                </MenuItem>
-
                                 <MenuItem Header="Коррекция"
                                           Command="{Binding CoerceResultsCommand}"
                                 />

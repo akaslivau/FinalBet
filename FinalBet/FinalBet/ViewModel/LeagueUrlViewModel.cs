@@ -118,7 +118,7 @@ namespace FinalBet.ViewModel
             Source = item;
 
             PossibleYear = GetPossibleYear(item.year);
-            IsCurrent = GetIsCurrent(item.url);
+            _isCurrent = GetIsCurrent(item.url);
         }
     }
 }
