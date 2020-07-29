@@ -6,6 +6,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -1197,32 +1200,34 @@ namespace FinalBet.ViewModel
                     tpl = tpl.Where(x =>
                         LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
                     //Naxer belarus
-                    var index = tpl.FindLastIndex(x => x.Item1.name == "Egypt");
+                    var index = tpl.FindLastIndex(x => x.Item1.name == "France");
                     tpl = tpl.Skip(index).ToList();
                 }
+
+                int batchSize = 100;
+                ServicePointManager.DefaultConnectionLimit = batchSize;
 
                 foreach (var item in tpl)
                 {
                     if (CancelAsync) break;
 
                     var batches = new List<List<match>>();
-                    int batchSize = 20;
-
+                   
                     using (var cntx = new SqlDataContext(Connection.ConnectionString))
                     {
-                        var matches = cntx.GetTable<match>()
-                            .Where(x => x.leagueId == item.Item1.id && x.leagueUrlId == item.Item2.id);
+                        var oddIdss = (from m in cntx.GetTable<match>()
+                            join o in cntx.GetTable<odd>() on m.id equals o.parentId
+                            where m.leagueUrlId == item.Item2.id && o.oddType.Contains(oddTypeKeyword)
+                            select m.id);
 
-                        var matchesToParse =
-                            (from match in matches
-                                where !cntx.GetTable<odd>().Where(x => x.oddType.Contains(oddTypeKeyword))
-                                    .Select(x => x.parentId).Distinct().Contains(match.id)
-                                select match).ToList();
-
-                        if (!matchesToParse.Any() || matchesToParse.Count < 50)
+                        var matchesToParse = (from m in cntx.GetTable<match>()
+                            where m.leagueUrlId == item.Item2.id && !oddIdss.Contains(m.id)
+                            select m).ToList();
+                     
+                        if (!matchesToParse.Any() || matchesToParse.Count < 100)
                         {
                             await Task.Delay(30);
-                            StatusText = "Skipping..." + item.Item1.name;
+                            StatusText = "Skipping..." + item.Item1.name + "\t" + item.Item2.url;
                             continue;
                         }
 
@@ -1239,7 +1244,7 @@ namespace FinalBet.ViewModel
                     {
                         sWatch.Reset();
                         sWatch.Start();
-                        
+
                         var tasks = batches[j].Select(x => BetExplorerParser.GetMatchOdds(x, mode)).ToList();
                         var oddsToAdd = await Task.WhenAll(tasks);
                         
@@ -1291,6 +1296,12 @@ namespace FinalBet.ViewModel
             }
         }
 
+        private static async Task SendRequest(HttpClient client, string url)
+        {
+            var response = await client.GetAsync(url);
+            Console.WriteLine($"Received response {response.StatusCode} from {url}");
+        }
+
         #endregion
 
         #region ToDelete
@@ -1299,7 +1310,84 @@ namespace FinalBet.ViewModel
 
         private async Task TestAsyncTask()
         {
-            var ids = File.ReadAllLines("input.txt").Select(x => int.Parse(x)).ToList();
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var ids = cntx.GetTable<odd>().Where(x => x.oddType == "Over 2.5").
+                    Take(100).Select(x => x.parentId).Distinct().ToList();
+
+                var matches = cntx.GetTable<match>().Where(x => ids.Contains(x.id)).ToList();
+
+                //begin to experiment
+                ServicePointManager.DefaultConnectionLimit = 20;
+
+                HttpClientHandler handler = new HttpClientHandler()
+                {
+                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                };
+
+
+                var client = new HttpClient(handler);
+
+                var href = matches[0].href;
+                var oddLoadMode = BeOddLoadMode.OU;
+
+                var matchId = href.Split('/').Last(x => !String.IsNullOrEmpty(x));
+                string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddLoadMode + "/";
+
+               // var tst = await BetExplorerParser.GetMatchOdds(matches[0], BeOddLoadMode.OU);
+
+
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                client.DefaultRequestHeaders.Add("UserAgent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36");
+                client.DefaultRequestHeaders.Add("Referer", Settings.Default.beUrl + href.Substring(1, href.Length - 1));
+                client.DefaultRequestHeaders.Add("method", "GET");
+                client.DefaultRequestHeaders.Add("authority", "www.betexplorer.com");
+                client.DefaultRequestHeaders.Add("scheme", "https");
+                client.DefaultRequestHeaders.Add("path", "/match-odds/" + matchId + "/1/" + oddLoadMode);
+                client.DefaultRequestHeaders.Add("x-requested-with", "XMLHttpRequest");
+                client.DefaultRequestHeaders.Add("sec-fetch-site", "same-origin");
+                client.DefaultRequestHeaders.Add("sec-fetch-mode", "cors");
+                client.DefaultRequestHeaders.Add("sec-fetch-dest", "empty");
+                client.DefaultRequestHeaders.Add("accept-language", "en-US;q=0.8,ru-RU,ru;q=0.9,en;q=0.7");
+
+                var result = await client.GetAsync(Settings.Default.beUrl + href.Substring(1, href.Length - 1));
+                int z = 3;
+
+                /*
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                //request.Accept = "application/json, text/javascript, #2#*; q=0.01";
+                //request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36";
+                //request.Referer = Settings.Default.beUrl + href.Substring(1, href.Length - 1);
+               // request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+
+                request.Headers.Add("method", "GET");
+                request.Headers.Add("authority", "www.betexplorer.com");
+                request.Headers.Add("scheme", "https");
+                request.Headers.Add("path", "/match-odds/" + matchId + "/1/" + oddLoadMode);
+                request.Headers.Add("x-requested-with", "XMLHttpRequest");
+                request.Headers.Add("sec-fetch-site", "same-origin");
+                request.Headers.Add("sec-fetch-mode", "cors");
+                request.Headers.Add("sec-fetch-dest", "empty");
+                request.Headers.Add("accept-language", "en-US;q=0.8,ru-RU,ru;q=0.9,en;q=0.7");*/
+
+
+
+
+
+            }
+
+
+
+            /*var t = new List<Task>();
+
+            for (var i = 0; i < 10; i++)
+            {
+                t.Add(SendRequest(client, "http://slowwly.robertomurray.co.uk/delay/5000/url/https://habr.com"));
+            }
+
+            Task.WaitAll(t.ToArray());*/
+            /*var ids = File.ReadAllLines("input.txt").Select(x => int.Parse(x)).ToList();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var matches = cntx.GetTable<match>().Where(x => ids.Contains(x.id)).ToList();
@@ -1309,7 +1397,7 @@ namespace FinalBet.ViewModel
                     int z = 3;
                     var odds = await BetExplorerParser.GetMatchOdds(match, BeOddLoadMode.OU);
                 }
-            }
+            }*/
         }
 
         public ICommand TestCommand { get; set; }
@@ -1317,7 +1405,7 @@ namespace FinalBet.ViewModel
         private void Test(object a)
         {
 
-            
+
 
             /*var country = Selected;
             var url = LeagueUrls.Selected;

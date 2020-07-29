@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Serilog;
 using System.IO.Compression;
+using System.Net.Http;
 using System.Windows.Input;
 using FinalBet.Model;
 using FinalBet.Properties;
@@ -741,6 +742,14 @@ namespace FinalBet.Database
             {
                 return String.Empty;
             }
+        }
+
+        public static async Task<string> GetOddHtml(HttpClient client, string href, BeOddLoadMode oddLoadMode)
+        {
+            var matchId = href.Split('/').Last(x => !String.IsNullOrEmpty(x));
+            string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddLoadMode + "/";
+            var result = await client.GetStringAsync(url);
+            return result;
         }
 
         private static async Task<string> GetOddHtml(match match, BeOddLoadMode oddLoadMode)
