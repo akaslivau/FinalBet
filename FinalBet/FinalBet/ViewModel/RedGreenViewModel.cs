@@ -308,7 +308,15 @@ namespace FinalBet.ViewModel
                 {
                     var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).
                         OrderBy(x => x.date).ToList();
-
+                    //Odds
+                    List<odd> odds = null;
+                    if (SolveMode.IsBookmakerMode)
+                    {
+                        var matchIds = line.Select(x => x.id).ToList();
+                        odds = cntx.GetTable<odd>().Where(x => matchIds.Contains(x.id)).ToList()
+                            .Where(x => SolveMode.OddTypes.Contains(x.oddType)).ToList();
+                    }
+                    
                     var rGmatches = new List<RGmatch>();
                     foreach (var match in line)
                     {
@@ -329,7 +337,11 @@ namespace FinalBet.ViewModel
                             continue;
                         }
 
-                        rGmatches.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff));
+                        var matchOdds = !SolveMode.IsBookmakerMode
+                            ? null
+                            : odds.Where(x => x.parentId == match.id).ToDictionary(x => x.oddType, x => x.value);
+                        
+                        rGmatches.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff,matchOdds));
                     }
 
                     var outputs = rGmatches.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();

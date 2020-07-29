@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Security.Policy;
 using System.Text;
@@ -65,12 +66,34 @@ namespace FinalBet.Usercontrols
                 
                 //Odds
                 control.Odds1x2 = "---------";
+                control.OddsTotal = "---------";
                 var oddsTable = cntx.GetTable<odd>();
                 var odds = oddsTable.Where(x => x.parentId == control.MatchId).ToList();
                 if (odds.Any())
                 {
                     var dict = odds.ToDictionary(x => x.oddType, x => x.value);
-                    control.Odds1x2 = dict[OddType._1] + "\t" + dict[OddType.X] + "\t" + dict[OddType._2];
+                    //1X2
+                    if (dict.ContainsKey(OddType._1) &&
+                        dict.ContainsKey(OddType.X) &&
+                        dict.ContainsKey(OddType._2))
+                    {
+                        control.Odds1x2 = dict[OddType._1] + "\t" + dict[OddType.X] + "\t" + dict[OddType._2];
+                    }
+                    //Total
+                    if (dict.Select(x => x.Key).Any(x => x.Contains(OddType.Over)))
+                    {
+                        var totalOdds = dict.Where(x => x.Key.Contains(OddType.Over) || x.Key.Contains(OddType.Under)).ToList();
+                        var doubles = (from m in totalOdds.Where(x => x.Key.Contains(OddType.Over)).Select(x => x.Key)
+                            let splt = double.Parse(m.Split(' ')[1], NumberStyles.Any)
+                            select splt).ToList().OrderBy(x => x).ToList();
+                        var overs = doubles.Select(x => dict[OddType.Over + " " + x]).ToList();
+                        var unders = doubles.Select(x => dict[OddType.Under + " " + x]).ToList();
+
+                        control.OddsTotal = "Total" + "\t" + string.Join("\t", doubles) + "\n" +
+                                            "Over" + "\t" + string.Join("\t", overs) + "\n" +
+                                            "Under" + "\t" + string.Join("\t", unders);
+                    }
+                            
                 }
             }
         }
@@ -98,6 +121,10 @@ namespace FinalBet.Usercontrols
                 OnPropertyChanged("Odds1x2");
             }
         }
+
+        private string _oddsTotal = "";
+        public string OddsTotal { get { return _oddsTotal;} set{ _oddsTotal = value; OnPropertyChanged("OddsTotal");}}
+
 
         private string _header = "Выберите матч";
         public string Header

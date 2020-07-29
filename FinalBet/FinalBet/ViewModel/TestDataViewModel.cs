@@ -19,15 +19,17 @@ namespace FinalBet.ViewModel
     /// </summary>
     public class TestDataViewModel: ViewModelBase
     {
-        /*  СПИСОК ТЕСТОВ
-         * 1. match.FirstHalfResId.COUNT = match.SecondHalfResId.COUNT
-         * 2. Число КОРРЕКТНЫХ результатов с matchPeriod == 0 должно быть равно числу неНУЛЛЕвых результатов c matchPeriod = 1,2
-         *  Либо все результаты c matchPeriod = 1,2 должны быть равны NULL.
-         * 3. Для всех notCorrect match.MatchResultId matchPeriod = 1,2 должны быть равны NULL (иначе требуется запуск Coerce)
-         * 4. Для всех Correct match.MatchResultId, MATCH_SCORED = FirstHalfScored + SecondHalfScored (то же для Missed)
-         * 5. PossibleResults NOT_CORRECT не должны содержать полей, НЕ равных -1. Соответственно не должно быть матчей со ссылкой на них
-         * 6. Test1X2 - тестирует наличие 1Х2 для матчей
-        */
+        public Dictionary<int, string> TestDescriptions = new Dictionary<int, string>
+        {
+            { 0, "Количество неНУЛЛевых результатов первых и вторых таймов должно быть одинаково [match.FirstHalfResId.COUNT = match.SecondHalfResId.COUNT]" },
+            { 1, "Для каждой ссылки количество корректных результатов должно быть одинаковым для итогового счета, первого (второго) таймов" },
+            { 2, "Для всех некорректных итоговых результатов 1-й и 2-й тайм (результаты) должны быть NULL" },
+            { 3, "Для всех корректных итоговых результатов выполняется условие SCORED[FINAL] = SCORED[1-st] + SCORED[2-nd]. То же самое для MISSED" },
+            { 4, "Проверка таблицы dbo.possibleResults" },
+            { 5, "Проверка коэффициентов 1Х2" }
+        };
+
+
         #region Async
         private bool _isBusy;
         public bool IsBusy
@@ -109,17 +111,6 @@ namespace FinalBet.ViewModel
         #endregion
 
         #region Fields
-        public Dictionary<int, string> TestDescriptions = new Dictionary<int, string>
-        {
-            { 0, "Not NULL match.FirstHalfResId.COUNT = match.SecondHalfResId.COUNT" },
-            { 1, "ForEach LeagueUrl CorrectFinalResults.Count == CorrectFirstOrSecondHalfResult.Count" },
-            { 2, "ForEach NOTcorrect match.FinalResult FirstAndSecondHalfResult = null" },
-            { 3, "ForEach Correct MATCH_SCORED = FirstHalfScored + SecondHalfScored (MISSED THE SAME)" },
-            { 4, "Common tests of all POSSIBLE RESULTS" },
-            { 5, "1X2 testing" }
-        };
-
-
         private string _output = "";
         public string Output { get { return _output;} set{ _output = value; OnPropertyChanged("Output");}}
 
@@ -663,10 +654,12 @@ namespace FinalBet.ViewModel
             wrongMatchIds = new List<int>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var urlIds = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id && x.mark == mark).
-                    ToList().Where(x => LeagueUrlViewModel.GetPossibleYear(x.year) >= Settings.Default.oddLoadYear)
+                var urlIds = cntx.GetTable<leagueUrl>().
+                    Where(x => x.parentId == league.id && x.mark == mark).ToList().
+                    Where(x => LeagueUrlViewModel.GetPossibleYear(x.year) >= Settings.Default.oddLoadYear)
                     .Select(x => x.id).ToList();
 
+                //Это id тех матчей, для которых загружены 1Х2 коэффициенты
                 var oddIds = (from odd in cntx.GetTable<odd>().Where(x => x.oddType == "1")
                     join m in cntx.GetTable<match>().Where(x => urlIds.Contains(x.leagueUrlId)) on odd.parentId equals
                         m.id
@@ -674,12 +667,14 @@ namespace FinalBet.ViewModel
 
                 var possResDict = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
 
+                //Это id всех матчей данной лиги
                 var allIds = cntx.GetTable<match>().Where(x => urlIds.Contains(x.leagueUrlId)).
                     ToList().
                     Where(x=>possResDict[x.matchResultId]).
                     Select(x => x.id)
                     .ToList();
 
+                //Это разница двух множеств. Если она не пустая, значит кэфов для этих id нет
                 var wrongIds = allIds.Except(oddIds).ToList();
                 foreach (var wrongId in wrongIds)
                 {
@@ -716,12 +711,14 @@ namespace FinalBet.ViewModel
                 {
                     var odds = await BetExplorerParser.GetMatchOdds(match, BeOddLoadMode._1X2);
                     var isOk = false;
+                    //Пытаемся грузануть прямо с сайта
                     if (odds.Count == 3)
                     {
                         oddTable.InsertAllOnSubmit(odds);
                         cntx.SubmitChanges();
                         isOk = true;
                     }
+                    //Иначе ищем ближайшие кэфы двух комманд и берем среднее
                     else
                     {
                         var nearestMatchesIds = cntx.GetTable<match>()

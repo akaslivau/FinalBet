@@ -84,6 +84,16 @@ namespace FinalBet.Model
             }
             return Output.Na;
         }
+
+        private static Output SolveBook(IMatch match, SolveMode mode)
+        {
+            if (match.IsNaN) return Output.Nan;
+            if (match.IsNa) return Output.Na;
+
+            if(match.Odds == null || !match.Odds.Any()) return Output.Nan;
+
+            return Output.Win;
+        }
     }
 
     public enum Output
@@ -107,5 +117,7 @@ namespace FinalBet.Model
 
         int Total { get; set; }
         int Dif { get; set; }
+
+        List<KeyValuePair<string, double>> Odds { get; set; }
     }
 }

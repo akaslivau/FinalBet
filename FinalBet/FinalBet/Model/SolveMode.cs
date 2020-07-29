@@ -7,11 +7,47 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using FinalBet.Database;
 
 namespace FinalBet.Model
 {
     public class SolveMode: INotifyPropertyChanged
     {
+        //TODO: Внимание, жесткая привязка hardCode
+        private void RefreshOddTypes()
+        {
+            if (_matchPeriod != 0)
+            {
+                OddTypes.Clear();
+                OnPropertyChanged("OddTypes");
+                return;
+            }
+
+            //Total
+            if (SelectedMode.number == 0)
+            {
+                OddTypes.Add(OddType.GetOverOddType(_modeParameter));
+                OddTypes.Add(OddType.GetUnderOddType(_modeParameter));
+                OnPropertyChanged("OddTypes");
+                return;
+            }
+
+            OddTypes.Clear();
+            OnPropertyChanged("OddTypes");
+        }
+
+        private List<string> _oddTypes = new List<string>();
+        public List<string> OddTypes
+        {
+            get { return _oddTypes; }
+            set
+            {
+                _oddTypes = value;
+                OnPropertyChanged("OddTypes");
+            }
+        }
+
+
         #region Properties
         private bool? isHome;
         public bool? IsHome
@@ -41,6 +77,7 @@ namespace FinalBet.Model
                 _matchPeriod = value;
                 OnPropertyChanged("MatchPeriod");
                 OnPropertyChanged("MatchPeriodString");
+                RefreshOddTypes();
             }
         }
 
@@ -56,6 +93,7 @@ namespace FinalBet.Model
                 _selectedMode = value;
                 OnPropertyChanged("SelectedMode");
                 IsParameterEnabled = value.hasParameter;
+                RefreshOddTypes();
             }
         }
 
@@ -68,6 +106,7 @@ namespace FinalBet.Model
                 if (_modeParameter == value) return;
                 _modeParameter = value;
                 OnPropertyChanged("ModeParameter");
+                RefreshOddTypes();
             }
         }
 

@@ -811,9 +811,9 @@ namespace FinalBet.Database
 
             if (oddsStrings.Count == 3)
             {
-                result.Add(new odd() {oddType = "1", parentId = parentId, value = double.Parse(oddsStrings[0])});
-                result.Add(new odd() {oddType = "X ", parentId = parentId, value = double.Parse(oddsStrings[1])});
-                result.Add(new odd() {oddType = "2 ", parentId = parentId, value = double.Parse(oddsStrings[2])});
+                result.Add(new odd() {oddType = OddType._1, parentId = parentId, value = double.Parse(oddsStrings[0])});
+                result.Add(new odd() {oddType = OddType.X, parentId = parentId, value = double.Parse(oddsStrings[1])});
+                result.Add(new odd() {oddType = OddType._2, parentId = parentId, value = double.Parse(oddsStrings[2])});
                 return result;
             }
 
@@ -836,9 +836,9 @@ namespace FinalBet.Database
             if (strOdds.Count != 3) return new List<odd>();
             if (strOdds.All(x => double.TryParse(x, out _)))
             {
-                result.Add(new odd() {oddType = "1", parentId = parentId, value = double.Parse(strOdds[0])});
-                result.Add(new odd() {oddType = "X ", parentId = parentId, value = double.Parse(strOdds[1])});
-                result.Add(new odd() {oddType = "2 ", parentId = parentId, value = double.Parse(strOdds[2])});
+                result.Add(new odd() {oddType = OddType._1, parentId = parentId, value = double.Parse(strOdds[0])});
+                result.Add(new odd() {oddType = OddType.X, parentId = parentId, value = double.Parse(strOdds[1])});
+                result.Add(new odd() {oddType = OddType._2, parentId = parentId, value = double.Parse(strOdds[2])});
                 return result;
             }
 
@@ -878,8 +878,8 @@ namespace FinalBet.Database
                 if (oddsStrings.Count != 2) continue;
                 var odds = oddsStrings.Select(double.Parse).ToList();
 
-                result.Add(new odd() { oddType = "Over " + total, parentId = parentId, value = odds[0] });
-                result.Add(new odd() { oddType = "Under " + total, parentId = parentId, value = odds[1] });
+                result.Add(new odd() { oddType = OddType.GetOverOddType(total), parentId = parentId, value = odds[0] });
+                result.Add(new odd() { oddType = OddType.GetUnderOddType(total), parentId = parentId, value = odds[1] });
             }
             return result;
         }

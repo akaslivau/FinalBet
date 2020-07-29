@@ -1,4 +1,7 @@
-﻿namespace FinalBet.Model
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace FinalBet.Model
 {
     public class RGmatch:IMatch
     {
@@ -10,8 +13,9 @@
         public int Missed { get; set; }
         public int Total { get; set; }
         public int Dif { get; set; }
+        public List<KeyValuePair<string, double>> Odds { get; set; }
 
-        public RGmatch(bool isHome, int scored, int missed, int total, int dif)
+        public RGmatch(bool isHome, int scored, int missed, int total, int dif, IEnumerable<KeyValuePair<string,double>> odds)
         {
             IsNa = false;
             IsHome = isHome;
@@ -19,17 +23,25 @@
             Missed = missed;
             Total = total;
             Dif = dif;
+            if (odds != null && odds.Any())
+            {
+                Odds = new List<KeyValuePair<string, double>>();
+                foreach (var keyValuePair in odds)
+                {
+                    Odds.Add(new KeyValuePair<string, double>(keyValuePair.Key, keyValuePair.Value));
+                }
+            }
         }
 
         public static RGmatch GetEmpty()
         {
-            var res = new RGmatch(true, -1, -1, -1, -1) {IsNa = true};
+            var res = new RGmatch(true, -1, -1, -1, -1, null) {IsNa = true};
             return res;
         }
 
         public static RGmatch GetNanMatch()
         {
-            var res = new RGmatch(true, -1, -1, -1, -1) {IsNaN = true, IsNa = false};
+            var res = new RGmatch(true, -1, -1, -1, -1, null) {IsNaN = true, IsNa = false};
             return res;
         }
     }
