@@ -792,8 +792,8 @@ namespace FinalBet.Database
                 if (oddsStrings.Count != 2) continue;
                 var odds = oddsStrings.Select(double.Parse).ToList();
 
-                result.Add(new odd() { oddType = "Home(" + fora + ")", parentId = parentId, value = odds[0] });
-                result.Add(new odd() { oddType = "Guest(" + fora + ")", parentId = parentId, value = odds[1] });
+                result.Add(new odd() { oddType = OddType.GetHomeOddType(fora), parentId = parentId, value = odds[0] });
+                result.Add(new odd() { oddType = OddType.GetGuestOddType(fora), parentId = parentId, value = odds[1] });
             }
             return result;
         }
@@ -919,8 +919,8 @@ namespace FinalBet.Database
 
             if (oddsStrings.Count != 2) return new List<odd>();
 
-            result.Add(new odd() { oddType = "BTS_YES", parentId = parentId, value = double.Parse(oddsStrings[0]) });
-            result.Add(new odd() { oddType = "BTS_NO ", parentId = parentId, value = double.Parse(oddsStrings[1]) });
+            result.Add(new odd() { oddType = OddType.BTS_YES, parentId = parentId, value = double.Parse(oddsStrings[0]) });
+            result.Add(new odd() { oddType = OddType.BTS_NO, parentId = parentId, value = double.Parse(oddsStrings[1]) });
 
             return result;
         }

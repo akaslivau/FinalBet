@@ -13,7 +13,7 @@ namespace FinalBet.Model
         public int Missed { get; set; }
         public int Total { get; set; }
         public int Dif { get; set; }
-        public List<KeyValuePair<string, double>> Odds { get; set; }
+        public Dictionary<string, double> Odds { get; set; }
 
         public RGmatch(bool isHome, int scored, int missed, int total, int dif, IEnumerable<KeyValuePair<string,double>> odds)
         {
@@ -25,10 +25,10 @@ namespace FinalBet.Model
             Dif = dif;
             if (odds != null && odds.Any())
             {
-                Odds = new List<KeyValuePair<string, double>>();
+                Odds = new Dictionary<string, double>();
                 foreach (var keyValuePair in odds)
                 {
-                    Odds.Add(new KeyValuePair<string, double>(keyValuePair.Key, keyValuePair.Value));
+                    Odds.Add(keyValuePair.Key, keyValuePair.Value);
                 }
             }
         }

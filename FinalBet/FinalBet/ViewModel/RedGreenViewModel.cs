@@ -304,19 +304,26 @@ namespace FinalBet.ViewModel
                 var possibleResults = cntx.GetTable<possibleResult>();
 
                 canvas.Width = 1;
+                List<odd> odds = null;
+                var allIds = matchList.Select(x => x.id);
+                if (SolveMode.IsBookmakerMode)
+                {
+                    odds = (from o in cntx.GetTable<odd>()
+                        where allIds.Contains(o.parentId) && SolveMode.OddTypes.Contains(o.oddType)
+                        select o).ToList();
+                }
+
                 foreach (var teamName in teamNames)
                 {
-                    var line = matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key).
-                        OrderBy(x => x.date).ToList();
-                    //Odds
-                    List<odd> odds = null;
-                    if (SolveMode.IsBookmakerMode)
-                    {
-                        var matchIds = line.Select(x => x.id).ToList();
-                        odds = cntx.GetTable<odd>().Where(x => matchIds.Contains(x.id)).ToList()
-                            .Where(x => SolveMode.OddTypes.Contains(x.oddType)).ToList();
-                    }
-                    
+                    var line = SolveMode.IsHome == null
+                        ? matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key)
+                            .ToList()
+                        : SolveMode.IsHome.Value
+                            ? matchList.Where(x => x.homeTeamId == teamName.Key).ToList()
+                            : matchList.Where(x => x.guestTeamId == teamName.Key).ToList();
+
+                    line = line.OrderBy(x => x.date).ToList();
+
                     var rGmatches = new List<RGmatch>();
                     foreach (var match in line)
                     {
@@ -341,7 +348,7 @@ namespace FinalBet.ViewModel
                             ? null
                             : odds.Where(x => x.parentId == match.id).ToDictionary(x => x.oddType, x => x.value);
                         
-                        rGmatches.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff,matchOdds));
+                        rGmatches.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff, matchOdds));
                     }
 
                     var outputs = rGmatches.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();

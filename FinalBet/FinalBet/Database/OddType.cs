@@ -13,6 +13,39 @@ namespace FinalBet.Database
         public static readonly OddType Over = new OddType("Over");
         public static readonly OddType Under = new OddType("Under");
 
+        public static readonly OddType Home = new OddType("Home");
+        public static readonly OddType Guest = new OddType("Guest");
+
+        public static readonly OddType BTS_YES = new OddType("BTS_YES");
+        public static readonly OddType BTS_NO = new OddType("BTS_NO");
+
+        #region string methods
+
+        public static string GetClearType(string typeAndPrm)
+        {
+            return typeAndPrm.Split(' ')[0];
+        }
+
+        public static string GetHomeOddType(double fora)
+        {
+            return Home + " " + fora;
+        }
+
+        public static string GetGuestOddType(double fora)
+        {
+            return Guest + " " + fora;
+        }
+
+        public static string GetHomeOddType(string fora)
+        {
+            return Home + " " + fora;
+        }
+
+        public static string GetGuestOddType(string fora)
+        {
+            return Guest + " " + fora;
+        }
+
         public static string GetOverOddType(double total)
         {
             return Over + " " + total;
@@ -30,7 +63,8 @@ namespace FinalBet.Database
             if (mode == BeOddLoadMode.BTS) return "BTS";
             throw new ArgumentException("Ty pes!");
         }
-        
+        #endregion
+
         private OddType(string name)
         {
             this._name = name;

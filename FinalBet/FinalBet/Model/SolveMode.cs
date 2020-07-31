@@ -13,18 +13,17 @@ namespace FinalBet.Model
 {
     public class SolveMode: INotifyPropertyChanged
     {
-        //TODO: Внимание, жесткая привязка hardCode
         private void RefreshOddTypes()
         {
+            OddTypes.Clear();
             if (_matchPeriod != 0)
             {
-                OddTypes.Clear();
                 OnPropertyChanged("OddTypes");
                 return;
             }
 
             //Total
-            if (SelectedMode.number == 0)
+            if (SelectedMode.number == ModeOfSolveMode.Total)
             {
                 OddTypes.Add(OddType.GetOverOddType(_modeParameter));
                 OddTypes.Add(OddType.GetUnderOddType(_modeParameter));
@@ -32,10 +31,30 @@ namespace FinalBet.Model
                 return;
             }
 
+            //Fora
+            if (SelectedMode.number == ModeOfSolveMode.Fora)
+            {
+                //TODO: dodelat
+                OnPropertyChanged("OddTypes");
+                return;
+            }
+
+            //BTS
+            if (SelectedMode.number == ModeOfSolveMode.BTS)
+            {
+                //TODO: dodelat
+                OnPropertyChanged("OddTypes");
+                return;
+            }
+
             OddTypes.Clear();
             OnPropertyChanged("OddTypes");
         }
-
+        
+        #region Fields
+        /// <summary>
+        /// Это типы ставок, относящиеся к заданному режиму расчета
+        /// </summary>
         private List<string> _oddTypes = new List<string>();
         public List<string> OddTypes
         {
@@ -47,19 +66,17 @@ namespace FinalBet.Model
             }
         }
 
-
-        #region Properties
-        private bool? isHome;
+        private bool? _isHome;
         public bool? IsHome
         {
             get
             {
-                return isHome;
+                return _isHome;
             }
             set
             {
-                if (isHome == value) return;
-                isHome = value;
+                if (_isHome == value) return;
+                _isHome = value;
                 OnPropertyChanged("IsHome");
                 OnPropertyChanged("IsHomeString");
             }
@@ -144,6 +161,7 @@ namespace FinalBet.Model
         public SolveMode()
         {
             if (Global.PossibleModes.Any()) _selectedMode = Global.PossibleModes.First();
+            RefreshOddTypes();
         }
 
         #region Debugging Aides
