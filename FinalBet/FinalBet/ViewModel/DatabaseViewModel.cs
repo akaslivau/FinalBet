@@ -1200,14 +1200,19 @@ namespace FinalBet.ViewModel
                     tpl = tpl.Where(x => !x.Item3).ToList();
                     tpl = tpl.Where(x =>
                         LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
-                    //Naxer belarus
-                    var index = tpl.FindLastIndex(x => x.Item1.name == "France");
+                   
+                    //TODO: DELETE
+                    var a = cntx.GetTable<odd>().Max(x => x.id);
+                    var aa = cntx.GetTable<odd>().Single(x => x.id == a).parentId;
+                    var b = cntx.GetTable<match>().Single(x => x.id == aa).leagueUrlId;
+                    var c = tpl.Single(x => x.Item2.id == b);
+                    var index = tpl.IndexOf(c);
                     tpl = tpl.Skip(index).ToList();
                 }
 
                 int batchSize = 100;
                 ServicePointManager.DefaultConnectionLimit = batchSize;
-
+                
                 foreach (var item in tpl)
                 {
                     if (CancelAsync) break;
@@ -1216,13 +1221,8 @@ namespace FinalBet.ViewModel
                    
                     using (var cntx = new SqlDataContext(Connection.ConnectionString))
                     {
-                        var oddIdss = (from m in cntx.GetTable<match>()
-                            join o in cntx.GetTable<odd>() on m.id equals o.parentId
-                            where m.leagueUrlId == item.Item2.id && o.oddType.Contains(oddTypeKeyword)
-                            select m.id);
-
                         var matchesToParse = (from m in cntx.GetTable<match>()
-                            where m.leagueUrlId == item.Item2.id && !oddIdss.Contains(m.id)
+                            where m.leagueUrlId == item.Item2.id
                             select m).ToList();
                      
                         if (!matchesToParse.Any() || matchesToParse.Count < 100)
@@ -1231,8 +1231,7 @@ namespace FinalBet.ViewModel
                             StatusText = "Skipping..." + item.Item1.name + "\t" + item.Item2.url;
                             continue;
                         }
-
-
+                        
                         batches = matchesToParse.Split(batchSize).ToList();
                     }
 

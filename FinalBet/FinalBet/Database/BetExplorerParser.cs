@@ -738,18 +738,11 @@ namespace FinalBet.Database
 
                 return res;
             }
-            catch 
+            catch(Exception ex)
             {
+                int z = 3;
                 return String.Empty;
             }
-        }
-
-        public static async Task<string> GetOddHtml(HttpClient client, string href, BeOddLoadMode oddLoadMode)
-        {
-            var matchId = href.Split('/').Last(x => !String.IsNullOrEmpty(x));
-            string url = "https://www.betexplorer.com/match-odds/" + matchId + "/1/" + oddLoadMode + "/";
-            var result = await client.GetStringAsync(url);
-            return result;
         }
 
         private static async Task<string> GetOddHtml(match match, BeOddLoadMode oddLoadMode)
@@ -877,19 +870,21 @@ namespace FinalBet.Database
 
                 if (!double.TryParse(totalStrings.First(), out var total)) continue;
 
+                if (Math.Abs(total % 1 - 0.25) < 0.01) continue;
+                if (Math.Abs(total % 1 - 0.75) < 0.01) continue;
+
                 //<td class="table-main__detail-odds" data-odd="1.07"></td>
                 var oddsStrings = tableNode.SelectNodes(".//td[@class='table-main__detail-odds']")
-                    .Select(x => x.GetAttributeValue("data-odd", "")).
-                    Where(x => !string.IsNullOrEmpty(x)).
-                    ToList();
+                    .Select(x => x.GetAttributeValue("data-odd", "")).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
                 oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
                 if (oddsStrings.Count != 2) continue;
                 var odds = oddsStrings.Select(double.Parse).ToList();
 
-                result.Add(new odd() { oddType = OddType.GetOverOddType(total), parentId = parentId, value = odds[0] });
-                result.Add(new odd() { oddType = OddType.GetUnderOddType(total), parentId = parentId, value = odds[1] });
+                result.Add(new odd() {oddType = OddType.GetOverOddType(total), parentId = parentId, value = odds[0]});
+                result.Add(new odd() {oddType = OddType.GetUnderOddType(total), parentId = parentId, value = odds[1]});
             }
+
             return result;
         }
 
