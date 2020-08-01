@@ -878,11 +878,44 @@ namespace FinalBet.Database
                     .Select(x => x.GetAttributeValue("data-odd", "")).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
                 oddsStrings = oddsStrings.Skip(oddsStrings.Count - 2).ToList();
-                if (oddsStrings.Count != 2) continue;
-                var odds = oddsStrings.Select(double.Parse).ToList();
+                if (oddsStrings.Count == 2)
+                {
+                    var odds = oddsStrings.Select(double.Parse).ToList();
+                    result.Add(
+                        new odd() {oddType = OddType.GetOverOddType(total), parentId = parentId, value = odds[0]});
+                    result.Add(new odd()
+                        {oddType = OddType.GetUnderOddType(total), parentId = parentId, value = odds[1]});
+                    continue;
+                }
 
-                result.Add(new odd() {oddType = OddType.GetOverOddType(total), parentId = parentId, value = odds[0]});
-                result.Add(new odd() {oddType = OddType.GetUnderOddType(total), parentId = parentId, value = odds[1]});
+                //Иначе надо парсить неактивные ставки, если они есть
+                //<tr data-bid=\"417\" data-originid=\"1\">
+                var trNodes = tableNode.Descendants().Where(x => x.Name == "tr")
+                    .Where(x => !string.IsNullOrEmpty(x.GetAttributeValue("data-bid", ""))).ToList();
+
+                if (!trNodes.Any()) continue;
+
+                //<td class=\"table-main__detail-odds table-main__detail-odds--first inactive\" data-odd=\"1.46\" data-created=\"10,11,2018,14,56\" data-opening-odd=\"1.38\" data-opening-date=\"10,11,2018,11,16\">
+                //<td class=\"table-main__detail-odds inactive\" data-odd=\"2.56\" data-created=\"10,11,2018,14,56\" data-opening-odd=\"2.78\" data-opening-date=\"10,11,2018,11,16\"><span></span></td>
+
+                var trNode = trNodes.First();
+                var strOdds = trNode.Descendants().Where(x => x.Name == "td")
+                    .Where(x => x.GetAttributeValue("class", "").Contains("table-main__detail-odds"))
+                    .Select(x => x.GetAttributeValue("data-odd", "")).Where(x => !string.IsNullOrEmpty(x)).ToList();
+
+                if (strOdds.Count != 2) continue;
+                if (strOdds.All(x => double.TryParse(x, out _)))
+                {
+                    result.Add(new odd()
+                    {
+                        oddType = OddType.GetOverOddType(total), parentId = parentId, value = double.Parse(strOdds[0])
+                    });
+                    result.Add(new odd()
+                    {
+                        oddType = OddType.GetUnderOddType(total), parentId = parentId, value = double.Parse(strOdds[1])
+                    });
+                    continue;
+                }
             }
 
             return result;

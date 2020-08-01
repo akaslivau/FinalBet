@@ -1200,75 +1200,62 @@ namespace FinalBet.ViewModel
                     tpl = tpl.Where(x => !x.Item3).ToList();
                     tpl = tpl.Where(x =>
                         LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
-                   
-                    //TODO: DELETE
-                    var a = cntx.GetTable<odd>().Max(x => x.id);
-                    var aa = cntx.GetTable<odd>().Single(x => x.id == a).parentId;
-                    var b = cntx.GetTable<match>().Single(x => x.id == aa).leagueUrlId;
-                    var c = tpl.Single(x => x.Item2.id == b);
-                    var index = tpl.IndexOf(c);
-                    tpl = tpl.Skip(index).ToList();
+                    
+                  
                 }
 
-                int batchSize = 100;
+                int batchSize = 50;
                 ServicePointManager.DefaultConnectionLimit = batchSize;
-                
-                foreach (var item in tpl)
+
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
                 {
-                    if (CancelAsync) break;
+                    var leagueUrlsIds = tpl.Select(x => x.Item2.id).ToList();
 
-                    var batches = new List<List<match>>();
-                   
-                    using (var cntx = new SqlDataContext(Connection.ConnectionString))
-                    {
-                        var matchesToParse = (from m in cntx.GetTable<match>()
-                            where m.leagueUrlId == item.Item2.id
-                            select m).ToList();
-                     
-                        if (!matchesToParse.Any() || matchesToParse.Count < 100)
-                        {
-                            await Task.Delay(30);
-                            StatusText = "Skipping..." + item.Item1.name + "\t" + item.Item2.url;
-                            continue;
-                        }
-                        
-                        batches = matchesToParse.Split(batchSize).ToList();
-                    }
+                    var notCorrectResIds = cntx.GetTable<possibleResult>().
+                        Where(x => !x.isCorrect).Select(x => x.id)
+                        .ToList();
 
+                    var notLoadedIds = ((from m in cntx.GetTable<match>()
+                        where leagueUrlsIds.Contains(m.leagueUrlId) && !notCorrectResIds.Contains(m.matchResultId)
+                        select m.id).Except
+                    (
+                        (from o in cntx.GetTable<odd>()
+                            where o.oddType.Contains(OddType.Over)
+                            select o.parentId).Distinct()
+                    )).ToList();
+                    
+                    var idBatches = notLoadedIds.Split(batchSize).ToList();
+                    
                     string elapsed = "";
-                    var cnt = batches.Count;
+                    var cnt = idBatches.Count;
                     var totalTime = 0D;
                     var sWatch = new Stopwatch();
-
+                    
                     for (int j = 0; j < cnt; j++)
                     {
                         sWatch.Reset();
                         sWatch.Start();
 
-                        var tasks = batches[j].Select(x => BetExplorerParser.GetMatchOdds(x, mode)).ToList();
+                        var matchesToParse = (from m in cntx.GetTable<match>()
+                            where idBatches[j].Contains(m.id)
+                            select m).ToList();
+
+                        var tasks = matchesToParse.Select(x => BetExplorerParser.GetMatchOdds(x, mode)).ToList();
                         var oddsToAdd = await Task.WhenAll(tasks);
                         
-                        using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                        var oddsTable = cntx.GetTable<odd>();
+                        for (int k = 0; k < oddsToAdd.Length; k++)
                         {
-                            var oddsTable = cntx.GetTable<odd>();
-                            for (int k = 0; k < oddsToAdd.Length; k++)
+                            if (oddsToAdd[k].Any() && oddsToAdd[k].All(z => z != null))
                             {
-                                var toDelete = oddsToAdd[k];
-                                if (oddsToAdd[k].Any() && oddsToAdd[k].All(z => z != null))
-                                {
-                                    oddsTable.InsertAllOnSubmit(oddsToAdd[k]);
-                                }
+                                oddsTable.InsertAllOnSubmit(oddsToAdd[k]);
                             }
-
-                            cntx.SubmitChanges();
                         }
 
+                        cntx.SubmitChanges();
+                        
                         sWatch.Stop();
-
-
                         StatusText = "Mode: " + mode.ToString() + "\r\n" +
-                                     "League info: " + String.Join("\t",
-                                         new string[] {item.Item1.name, item.Item2.url, item.Item2.year}) + "\r\n" +
                                      "Chunk size: " + batchSize +
                                      ". Number " + j + " from " + cnt + "."
                                      + "Last time: " + elapsed + " s."
@@ -1276,13 +1263,12 @@ namespace FinalBet.ViewModel
                                      (((double) totalTime * ((double) (cnt - j)) / j / 3600D)).ToString("F2") + " h.";
 
                         ProgressBarValue = 100 * ((double) j / (double) cnt);
-
                         sWatch.Stop();
                         elapsed = sWatch.Elapsed.Seconds.ToString();
                         totalTime += sWatch.Elapsed.Seconds;
                     }
-                }
 
+                }
                 await Task.Delay(100);
             }
             catch (Exception ex)
