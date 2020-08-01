@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using FinalBet.Database;
+using FinalBet.Properties;
 
 namespace FinalBet.Model
 {
@@ -92,11 +93,17 @@ namespace FinalBet.Model
 
         private static Output SolveBook(IMatch match, SolveMode mode)
         {
+            //TODO: доделать
             if (match.IsNaN) return Output.Nan;
             if (match.IsNa) return Output.Na;
 
             if(match.Odds == null || !match.Odds.Any()) return Output.Nan;
-
+            
+            if( Math.Abs(match.Odds.ElementAt(0).Value - match.Odds.ElementAt(1).Value) < Settings.Default.oddMinDif)
+            {
+                return Output.Nan;
+            }
+            
             var min = match.Odds.Min(x => x.Value);
             var minKey = OddType.GetClearType(match.Odds.Single(x => Math.Abs(x.Value - min) < 0.0005).Key);
 

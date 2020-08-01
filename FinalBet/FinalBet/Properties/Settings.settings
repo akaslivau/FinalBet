@@ -31,5 +31,8 @@
     <Setting Name="oddLoadYear" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2012</Value>
     </Setting>
+    <Setting Name="oddMinDif" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.05</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
