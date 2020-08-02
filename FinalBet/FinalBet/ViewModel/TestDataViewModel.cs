@@ -259,6 +259,10 @@ namespace FinalBet.ViewModel
         public ICommand TestFourCommand { get; private set; }
         public ICommand TestFiveCommand { get; private set; }
         public ICommand Test1X2Command { get; private set; }
+        public ICommand TestOuCommand { get; private set; }
+        public ICommand TestForaCommand { get; private set; }
+        public ICommand TestBtsCommand { get; private set; }
+
         public IAsyncCommand Coerce1X2Command { get; private set; }
 
 
@@ -310,7 +314,7 @@ namespace FinalBet.ViewModel
 
         private void TestTwo(object obj)
         {
-            Output = "Результаты выполнения теста №3 для ["
+            Output = "Результаты выполнения теста №2 для ["
                      + SelectedLeague.name.ToUpper() + "]."
                      + "[" + SelectedTournament + "]\r\n";
 
@@ -395,12 +399,12 @@ namespace FinalBet.ViewModel
             Output = (Test5() ? "OK" : "Error") + "\t\tТест №5" + "\t\t" + TestDescriptions[4];
         }
 
-        private void Test1X2(object obj)
+        private void TestOdds(string keyword)
         {
-            var isOk = Test1X2(SelectedLeague, SelectedTournament, out var o, out _);
+            TestOdds(SelectedLeague, SelectedTournament, keyword, out var o, out _);
             Output = o;
         }
-
+        
         private static bool Test1(league league)
         {
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
@@ -424,10 +428,13 @@ namespace FinalBet.ViewModel
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var urlTable = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id && x.mark == mark)
+                var urlIds = cntx.GetTable<leagueUrl>().Where(x => x.parentId == league.id && x.mark == mark)
                     .Select(x => x.id).ToList();
-                var query = (from match in cntx.GetTable<match>().Where(x => urlTable.Contains(x.leagueUrlId))
-                    group match by match.leagueUrlId
+
+                var query = (
+                    from m in cntx.GetTable<match>()
+                    where urlIds.Contains(m.leagueUrlId)
+                    group m by m.leagueUrlId
                     into g
                     select new
                     {
@@ -647,59 +654,9 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private static bool Test1X2(league league, string mark, out string output, out List<int> wrongMatchIds)
-        {
-            output = league.name + " OK.";
-            var res = true;
-            wrongMatchIds = new List<int>();
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var urlIds = cntx.GetTable<leagueUrl>().
-                    Where(x => x.parentId == league.id && x.mark == mark).ToList().
-                    Where(x => LeagueUrlViewModel.GetPossibleYear(x.year) >= Settings.Default.oddLoadYear)
-                    .Select(x => x.id).ToList();
-
-                //Это id тех матчей, для которых загружены 1Х2 коэффициенты
-                var oddIds = (from odd in cntx.GetTable<odd>().Where(x => x.oddType == "1")
-                    join m in cntx.GetTable<match>().Where(x => urlIds.Contains(x.leagueUrlId)) on odd.parentId equals
-                        m.id
-                    select m.id).ToList();
-
-                var possResDict = cntx.GetTable<possibleResult>().ToDictionary(x => x.id, x => x.isCorrect);
-
-                //Это id всех матчей данной лиги
-                var allIds = cntx.GetTable<match>().Where(x => urlIds.Contains(x.leagueUrlId)).
-                    ToList().
-                    Where(x=>possResDict[x.matchResultId]).
-                    Select(x => x.id)
-                    .ToList();
-
-                //Это разница двух множеств. Если она не пустая, значит кэфов для этих id нет
-                var wrongIds = allIds.Except(oddIds).ToList();
-                foreach (var wrongId in wrongIds)
-                {
-                   wrongMatchIds.Add(wrongId);
-                }
-                
-                res = !wrongIds.Any();
-                
-                if (!res)
-                {
-                    var teamNamesDict = cntx.GetTable<teamName>().ToDictionary(x => x.id, x => x.name);
-                    var lst = (from m in cntx.GetTable<match>().Where(x => wrongIds.Contains(x.id)).ToList()
-                        let str = m.date.ToShortDateString() + "\t" 
-                                       + teamNamesDict[m.homeTeamId] + "\t"
-                                       + teamNamesDict[m.guestTeamId] + "\t"
-                               select str).ToList();
-                    output = string.Join("\n", lst);
-                }
-            }
-            return res;
-        }
-
         private async Task Coerce1X2(league league, string mark)
         {
-            Test1X2(league, mark, out _, out var ids);
+            TestOdds(league, mark, OddType._1, out _, out var ids);
             using (var cntx = new SqlDataContext())
             {
                 Dispatcher.CurrentDispatcher.Invoke(() => { Output = "Начинаю исправление" + "\r\n"; });
@@ -780,16 +737,72 @@ namespace FinalBet.ViewModel
             }
         }
 
+        //TODO: coerce odds
+
+        private static bool TestOdds(league league, string mark, string keyWord, out string output, out List<int> wrongMatchIds)
+        {
+            output = league.name + " OK.";
+            var res = true;
+            wrongMatchIds = new List<int>();
+            using (var cntx = new SqlDataContext(Connection.ConnectionString))
+            {
+                var urlIds = cntx.GetTable<leagueUrl>().
+                    Where(x => x.parentId == league.id && x.mark == mark).ToList().
+                    Where(x => LeagueUrlViewModel.GetPossibleYear(x.year) >= Settings.Default.oddLoadYear)
+                    .Select(x => x.id).ToList();
+                
+                var notCorrectResIds = cntx.GetTable<possibleResult>().
+                    Where(x => !x.isCorrect).Select(x => x.id)
+                    .ToList();
+
+                //Это id тех матчей, для которых нет кэфов
+                var wrongIds = ((from m in cntx.GetTable<match>()
+                    where urlIds.Contains(m.leagueUrlId) && !notCorrectResIds.Contains(m.matchResultId)
+                    select m.id).Except
+                (
+                    (from o in cntx.GetTable<odd>()
+                        where o.oddType.Contains(keyWord)
+                        select o.parentId).Distinct()
+                )).ToList();
+
+                if (wrongIds.Count > 2000)
+                {
+                    output = "More than 2000 wrong records! Bad, very bad!";
+                    return false;
+                }
+
+                foreach (var wrongId in wrongIds)
+                {
+                    wrongMatchIds.Add(wrongId);
+                }
+
+                res = !wrongIds.Any();
+
+                if (!res)
+                {
+                    var teamNamesDict = cntx.GetTable<teamName>().ToDictionary(x => x.id, x => x.name);
+                    var lst = (from m in cntx.GetTable<match>().Where(x=>wrongIds.Contains(x.id)).ToList()
+                        let str = m.date.ToShortDateString() + "\t"
+                                                             + teamNamesDict[m.homeTeamId] + "\t"
+                                                             + teamNamesDict[m.guestTeamId] + "\t"
+                        select str).ToList();
+                    output = string.Join("\n", lst);
+                }
+            }
+            return res;
+        }
+
         private List<bool> GetTestResults(league league, string mark)
         {
             return new List<bool>
             {
-                Test1(league),
-                Test2(league, mark, out _),
-                Test3(league, mark, out _),
-                Test4(league, mark, out _),
-                Test5(),
-                Test1X2(league, mark, out _, out _)
+                //Test1(league),
+                //Test2(league, mark, out _),
+                //Test3(league, mark, out _),
+                //Test4(league, mark, out _),
+                //Test5(),
+                //Test1X2(league, mark, out _, out _),
+                TestOdds(league, mark, OddType.Over, out _, out _)
             };
         }
         #endregion
@@ -811,7 +824,7 @@ namespace FinalBet.ViewModel
 
             DoTestCommand = new RelayCommand(DoTest, a => SelectedLeague != null);
             TestAllCommand = new AsyncCommand(TestAll);
-            ClearHalfResultsCommand = new RelayCommand(ClearHalfResultUnderBorder, a=> SelectedLeague!=null);
+            ClearHalfResultsCommand = new RelayCommand(ClearHalfResultUnderBorder, a => SelectedLeague != null);
 
             CorrectTestTwoCommand = new RelayCommand(CorrectTestTwo);
 
@@ -820,8 +833,13 @@ namespace FinalBet.ViewModel
             TestThreeCommand = new RelayCommand(TestThree, a => SelectedLeague != null);
             TestFourCommand = new RelayCommand(TestFour, a => SelectedLeague != null);
             TestFiveCommand = new RelayCommand(TestFive);
-            Test1X2Command = new RelayCommand(Test1X2);
-            Coerce1X2Command = new AsyncCommand(()=>Coerce1X2(SelectedLeague, SelectedTournament));
+            //
+            Test1X2Command = new RelayCommand(x => TestOdds(OddType._1));
+            TestOuCommand = new RelayCommand(x => TestOdds(OddType.Over));
+            TestForaCommand = new RelayCommand(x => TestOdds(OddType.Home));
+            TestBtsCommand = new RelayCommand(x => TestOdds(OddType.BTS));
+            //
+            Coerce1X2Command = new AsyncCommand(() => Coerce1X2(SelectedLeague, SelectedTournament));
         }
 
 

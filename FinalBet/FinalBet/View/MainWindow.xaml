@@ -175,6 +175,11 @@
 
 
                             </MenuItem>
+                            <MenuItem Header="[Danger zone]">
+                                <MenuItem Header="Удалить данные для турнира" 
+                                          Command="{Binding RemoveLeagueDataCommand}"
+                                          />
+                            </MenuItem>
                             <MenuItem Header="Прервать загрузку"  Command="{Binding BreakCommand}"/>
                             <MenuItem Header="Тестовая команда"  Command="{Binding TestCommand}"/>
                             <MenuItem Header="Async Тестовая команда"  Command="{Binding TestAsyncCommand}"/>
@@ -193,6 +198,7 @@
                                          Margin="{StaticResource ControlMargin}">
                             <ComboBox Width="300"
                                       Height="20"
+                                      Name="MarkComboBox"
                                       Margin="{StaticResource ControlMargin}"
                                       DisplayMemberPath="name"
                                       ItemsSource="{Binding Source={x:Static model:Global.LeagueMarks}}"
@@ -560,7 +566,19 @@
                                 <MenuItem Header="Запуск" Command="{Binding Test1X2Command}"/>
                                 <MenuItem Header="Корректировка" Command="{Binding Coerce1X2Command}"/>
                             </MenuItem>
-                            
+                            <MenuItem Header="Тест Ou" >
+                                <MenuItem Header="Запуск" Command="{Binding TestOuCommand}"/>
+                                <MenuItem Header="Корректировка" />
+                            </MenuItem>
+                            <MenuItem Header="Тест Fora" >
+                                <MenuItem Header="Запуск" Command="{Binding TestForaCommand}"/>
+                                <MenuItem Header="Корректировка" />
+                            </MenuItem>
+                            <MenuItem Header="Тест Bts" >
+                                <MenuItem Header="Запуск" Command="{Binding TestBtsCommand}"/>
+                                <MenuItem Header="Корректировка" />
+                            </MenuItem>
+
                         </Menu>
                     </DockPanel>
                     <Grid Grid.Row="3">

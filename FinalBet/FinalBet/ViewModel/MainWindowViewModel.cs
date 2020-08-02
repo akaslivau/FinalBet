@@ -66,9 +66,6 @@ namespace FinalBet.ViewModel
             OpenLogCommand = new RelayCommand(OpenLog);
 
             TestCommand = new RelayCommand(Test);
-
-
-
         }
     }
 

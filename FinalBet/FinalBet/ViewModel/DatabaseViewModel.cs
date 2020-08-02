@@ -49,7 +49,6 @@ namespace FinalBet.ViewModel
         {
             //TODO: Солвер для режима угадывания буком - проверить! Желательно unit test
             //TODO: Тесты для кэфов
-            //TODO: удалить лигу
             //TODO: оперативное добавление лиги
             //TODO: загрузка счетов таймов для выбранной ссылки-лиги-турнира в лиге
             //TODO: список методов-свойств
@@ -108,6 +107,8 @@ namespace FinalBet.ViewModel
             UnmarkSelectedUrlsCommand = new RelayCommand(x => MarkSelectedUrls(x, ""), a => LeagueUrls.Selected != null);
             MarkAutoCommand = new RelayCommand(MarkAuto, a => LeagueUrls.Items.Any() && SelectedLeagueMark != null);
             CheckMarksCommand = new RelayCommand(CheckMarks);
+            //
+            RemoveLeagueDataCommand = new RelayCommand(RemoveLeagueData, x => Selected != null && SelectedLeagueMark != null);
 
         }
 
@@ -1033,62 +1034,103 @@ namespace FinalBet.ViewModel
 
         #endregion
 
+        #region DangerZone
+        public ICommand RemoveLeagueDataCommand { get; }
+
+        private void RemoveLeagueData(object obj)
+        {
+            var leagueId = Selected.id;
+            var mark = SelectedLeagueMark.name;
+
+            var dlg = MessageBox.Show("Очистить данные для " + Selected.name + " - " + mark + "?", "",
+                MessageBoxButton.YesNo);
+            if (dlg == MessageBoxResult.Yes)
+            {
+                var output = "";
+                using (var cntx = new SqlDataContext(Connection.ConnectionString))
+                {
+                    var leagueUrlTable = cntx.GetTable<leagueUrl>();
+                    //Демаркируем leagueUrl
+                    var itemsToDemark = leagueUrlTable.Where(x => x.parentId == leagueId && x.mark == mark);
+                    foreach (var leagueUrl in itemsToDemark)
+                    {
+                        leagueUrl.mark = "";
+                    }
+
+                    output = "Сняты отметки с " + itemsToDemark.Count() + " шт." + "\n";
+
+                    //Удаляем odds
+                    var urlIds = itemsToDemark.ToList().Select(x => x.id).ToList();
+
+                    var oddsTable = cntx.GetTable<odd>();
+
+                    var oddsToDelete = from o in oddsTable
+                                       where
+                            (from m in cntx.GetTable<match>()
+                                where urlIds.Contains(m.leagueUrlId)
+                                select m.id
+                            ).Contains(o.parentId)
+                        select o;
+
+                    output += "Удалено кэфов " + oddsToDelete.Count() + " шт." + "\n";
+
+                    oddsTable.DeleteAllOnSubmit(oddsToDelete);
+                    
+                    //Удаляем teamNames, причем только те, которые используются исключительно для выбранной mark
+                    var teamNamesTable = cntx.GetTable<teamName>();
+
+                    var markIds = ((from m in cntx.GetTable<match>()
+                            where urlIds.Contains(m.leagueUrlId)
+                            select m.homeTeamId
+                        ).Union(
+                            from m in cntx.GetTable<match>()
+                            where urlIds.Contains(m.leagueUrlId)
+                            select m.guestTeamId
+                        )).Distinct().ToList();
+
+                    var restIds = ((from m in cntx.GetTable<match>()
+                            where !urlIds.Contains(m.leagueUrlId)
+                            select m.homeTeamId
+                        ).Union(
+                            from m in cntx.GetTable<match>()
+                            where !urlIds.Contains(m.leagueUrlId)
+                            select m.guestTeamId
+                        )).Distinct().ToList();
+
+                    var toDeleteIds = markIds.Except(restIds).ToList();
+
+                    var namesToDelete = from n in teamNamesTable
+                        where toDeleteIds.Contains(n.id)
+                        select n;
+
+                    output += "Удалено имен команд " + namesToDelete.Count() + " шт." + "\n";
+
+                    teamNamesTable.DeleteAllOnSubmit(namesToDelete);
+                    
+                    //Удаляем матчи
+                    var matchesTable = cntx.GetTable<match>();
+                    var matchesToDelete = from m in matchesTable
+                        where urlIds.Contains(m.leagueUrlId)
+                        select m;
+
+                    output += "Удалено матчей " + matchesToDelete.Count() + " шт." + "\n";
+                    matchesTable.DeleteAllOnSubmit(matchesToDelete);
+
+                    cntx.SubmitChanges();
+
+                    MessageBox.Show(output);
+                }
+            }
+        }
+
+
+        #endregion
+
         #region Кэфы
         public IAsyncCommand Load1x2CoefsCommand { get; private set; }
         public IAsyncCommand LoadOuCoefsCommand { get; private set; }
         public IAsyncCommand LoadForaCoefsCommand { get; private set; }
         public IAsyncCommand LoadBtsCoefsCommand { get; private set; }
-
-        private async Task LoadMatchOdds()
-        {
-            //Помни про take(N)
-            var matches = new List<match>();
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var parsedResults = cntx.GetTable<parsedResult>().Select(x => x.matchId).ToList(); //Таблица содержит id матчей, для которых уже были попытки сделать парсинг
-                matches = cntx.GetTable<match>().
-                    Where(x => !parsedResults.Contains(x.id)).
-                    Take(6).
-                    ToList();
-            }
-
-            try
-            {
-                IsBusy = true;
-
-                string elapsed = "";
-                var cnt = matches.Count;
-                var sWatch = new Stopwatch();
-
-                for (int i = 0; i < cnt; i++)
-                {
-                    sWatch.Reset();
-                    sWatch.Start();
-
-                    var matchOdds = await BetExplorerParser.GetMatchOdds(matches[i], BeOddLoadMode.OU);
-
-                    StatusText = "Number " + i + " from " + cnt + "."
-                                 + "Last time: " + elapsed + " s.";
-
-                    ProgressBarValue = 100 * ((double)i / (double)cnt);
-
-                    sWatch.Stop();
-                    elapsed = sWatch.Elapsed.Seconds.ToString();
-
-                    if (CancelAsync) break;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Fatal(e, "LoadMatchDetails");
-                Global.Current.Errors++;
-            }
-            finally
-            {
-                IsBusy = false;
-                CancelAsync = false;
-            }
-        }
 
         private async Task Load1x2Coefs()
         {
@@ -1117,6 +1159,7 @@ namespace FinalBet.ViewModel
 
                 var total = tpl.Count;
                 int i = 0;
+
                 foreach (var item in tpl)
                 {
                     if (CancelAsync) break;
@@ -1156,8 +1199,6 @@ namespace FinalBet.ViewModel
                                     parentId = m.id,
                                     value = ma.Odds[j]
                                 }).ToList();
-
-                            //TODO: проверка на дублирование
 
                             oddsTable.InsertAllOnSubmit(toAddOdds);
                             cntx.SubmitChanges();
@@ -1200,11 +1241,9 @@ namespace FinalBet.ViewModel
                     tpl = tpl.Where(x => !x.Item3).ToList();
                     tpl = tpl.Where(x =>
                         LeagueUrlViewModel.GetPossibleYear(x.Item2.year) >= Settings.Default.oddLoadYear).ToList();
-                    
-                  
                 }
 
-                int batchSize = 50;
+                int batchSize = 100;
                 ServicePointManager.DefaultConnectionLimit = batchSize;
 
                 using (var cntx = new SqlDataContext(Connection.ConnectionString))

@@ -16,6 +16,7 @@ namespace FinalBet.Database
         public static readonly OddType Home = new OddType("Home");
         public static readonly OddType Guest = new OddType("Guest");
 
+        public static readonly OddType BTS = new OddType("BTS");
         public static readonly OddType BTS_YES = new OddType("BTS_YES");
         public static readonly OddType BTS_NO = new OddType("BTS_NO");
 

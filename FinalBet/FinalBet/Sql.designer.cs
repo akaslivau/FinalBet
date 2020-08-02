@@ -54,9 +54,6 @@ namespace FinalBet
     partial void InsertteamName(teamName instance);
     partial void UpdateteamName(teamName instance);
     partial void DeleteteamName(teamName instance);
-    partial void InsertparsedResult(parsedResult instance);
-    partial void UpdateparsedResult(parsedResult instance);
-    partial void DeleteparsedResult(parsedResult instance);
     partial void Insertborder(border instance);
     partial void Updateborder(border instance);
     partial void Deleteborder(border instance);
@@ -156,14 +153,6 @@ namespace FinalBet
 			get
 			{
 				return this.GetTable<teamName>();
-			}
-		}
-		
-		public System.Data.Linq.Table<parsedResult> parsedResults
-		{
-			get
-			{
-				return this.GetTable<parsedResult>();
 			}
 		}
 		
@@ -407,12 +396,8 @@ namespace FinalBet
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagues")]
 	public partial class league : INotifyPropertyChanging, INotifyPropertyChanged
 	{
-        public override string ToString()
-        {
-            return _name;
-        }
-
-        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _id;
 		
@@ -1283,212 +1268,6 @@ namespace FinalBet
 					this._name = value;
 					this.SendPropertyChanged("name");
 					this.OnnameChanged();
-				}
-			}
-		}
-		
-		public event PropertyChangingEventHandler PropertyChanging;
-		
-		public event PropertyChangedEventHandler PropertyChanged;
-		
-		protected virtual void SendPropertyChanging()
-		{
-			if ((this.PropertyChanging != null))
-			{
-				this.PropertyChanging(this, emptyChangingEventArgs);
-			}
-		}
-		
-		protected virtual void SendPropertyChanged(String propertyName)
-		{
-			if ((this.PropertyChanged != null))
-			{
-				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
-	}
-	
-	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.parsedResults")]
-	public partial class parsedResult : INotifyPropertyChanging, INotifyPropertyChanged
-	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
-		
-		private int _id;
-		
-		private int _matchId;
-		
-		private System.Nullable<bool> _resultsLoaded;
-		
-		private System.Nullable<bool> _ouLoaded;
-		
-		private System.Nullable<bool> @__1x2Loaded;
-		
-		private System.Nullable<bool> _ahLoaded;
-		
-		private System.Nullable<bool> _btsLoaded;
-		
-    #region Extensibility Method Definitions
-    partial void OnLoaded();
-    partial void OnValidate(System.Data.Linq.ChangeAction action);
-    partial void OnCreated();
-    partial void OnidChanging(int value);
-    partial void OnidChanged();
-    partial void OnmatchIdChanging(int value);
-    partial void OnmatchIdChanged();
-    partial void OnresultsLoadedChanging(System.Nullable<bool> value);
-    partial void OnresultsLoadedChanged();
-    partial void OnouLoadedChanging(System.Nullable<bool> value);
-    partial void OnouLoadedChanged();
-    partial void On_1x2LoadedChanging(System.Nullable<bool> value);
-    partial void On_1x2LoadedChanged();
-    partial void OnahLoadedChanging(System.Nullable<bool> value);
-    partial void OnahLoadedChanged();
-    partial void OnbtsLoadedChanging(System.Nullable<bool> value);
-    partial void OnbtsLoadedChanged();
-    #endregion
-		
-		public parsedResult()
-		{
-			OnCreated();
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_id", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
-		public int id
-		{
-			get
-			{
-				return this._id;
-			}
-			set
-			{
-				if ((this._id != value))
-				{
-					this.OnidChanging(value);
-					this.SendPropertyChanging();
-					this._id = value;
-					this.SendPropertyChanged("id");
-					this.OnidChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_matchId", DbType="Int NOT NULL")]
-		public int matchId
-		{
-			get
-			{
-				return this._matchId;
-			}
-			set
-			{
-				if ((this._matchId != value))
-				{
-					this.OnmatchIdChanging(value);
-					this.SendPropertyChanging();
-					this._matchId = value;
-					this.SendPropertyChanged("matchId");
-					this.OnmatchIdChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_resultsLoaded", DbType="Bit")]
-		public System.Nullable<bool> resultsLoaded
-		{
-			get
-			{
-				return this._resultsLoaded;
-			}
-			set
-			{
-				if ((this._resultsLoaded != value))
-				{
-					this.OnresultsLoadedChanging(value);
-					this.SendPropertyChanging();
-					this._resultsLoaded = value;
-					this.SendPropertyChanged("resultsLoaded");
-					this.OnresultsLoadedChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ouLoaded", DbType="Bit")]
-		public System.Nullable<bool> ouLoaded
-		{
-			get
-			{
-				return this._ouLoaded;
-			}
-			set
-			{
-				if ((this._ouLoaded != value))
-				{
-					this.OnouLoadedChanging(value);
-					this.SendPropertyChanging();
-					this._ouLoaded = value;
-					this.SendPropertyChanged("ouLoaded");
-					this.OnouLoadedChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Name="[_1x2Loaded]", Storage="__1x2Loaded", DbType="Bit")]
-		public System.Nullable<bool> _1x2Loaded
-		{
-			get
-			{
-				return this.@__1x2Loaded;
-			}
-			set
-			{
-				if ((this.@__1x2Loaded != value))
-				{
-					this.On_1x2LoadedChanging(value);
-					this.SendPropertyChanging();
-					this.@__1x2Loaded = value;
-					this.SendPropertyChanged("_1x2Loaded");
-					this.On_1x2LoadedChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_ahLoaded", DbType="Bit")]
-		public System.Nullable<bool> ahLoaded
-		{
-			get
-			{
-				return this._ahLoaded;
-			}
-			set
-			{
-				if ((this._ahLoaded != value))
-				{
-					this.OnahLoadedChanging(value);
-					this.SendPropertyChanging();
-					this._ahLoaded = value;
-					this.SendPropertyChanged("ahLoaded");
-					this.OnahLoadedChanged();
-				}
-			}
-		}
-		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_btsLoaded", DbType="Bit")]
-		public System.Nullable<bool> btsLoaded
-		{
-			get
-			{
-				return this._btsLoaded;
-			}
-			set
-			{
-				if ((this._btsLoaded != value))
-				{
-					this.OnbtsLoadedChanging(value);
-					this.SendPropertyChanging();
-					this._btsLoaded = value;
-					this.SendPropertyChanged("btsLoaded");
-					this.OnbtsLoadedChanged();
 				}
 			}
 		}
