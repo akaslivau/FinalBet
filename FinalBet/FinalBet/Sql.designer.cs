@@ -396,8 +396,12 @@ namespace FinalBet
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagues")]
 	public partial class league : INotifyPropertyChanging, INotifyPropertyChanged
 	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+        public override string ToString()
+        {
+            return _name;
+        }
+
+        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _id;
 		
@@ -554,8 +558,12 @@ namespace FinalBet
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.leagueUrls")]
 	public partial class leagueUrl : INotifyPropertyChanging, INotifyPropertyChanged
 	{
-		
-		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+        public override string ToString()
+        {
+            return _url;
+        }
+
+        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _id;
 		

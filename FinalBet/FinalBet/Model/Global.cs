@@ -95,6 +95,12 @@ namespace FinalBet.Model
 
         #endregion
 
-
+        public static ObservableCollection<string> MatchLoadModes = new ObservableCollection<string>()
+        {
+            "Выбранная ссылка",
+            "Турнир для страны",
+            "Турнир для всех стран",
+            "Все турниры"
+        };
     }
 }

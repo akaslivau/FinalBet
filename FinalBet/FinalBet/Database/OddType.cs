@@ -59,9 +59,9 @@ namespace FinalBet.Database
 
         public static string GetOddTypeKeyword(BeOddLoadMode mode)
         {
-            if (mode == BeOddLoadMode.OU) return "Over";
-            if (mode == BeOddLoadMode.AH) return "Home";
-            if (mode == BeOddLoadMode.BTS) return "BTS";
+            if (mode == BeOddLoadMode.OU) return Over;
+            if (mode == BeOddLoadMode.AH) return Home;
+            if (mode == BeOddLoadMode.BTS) return BTS;
             throw new ArgumentException("Ty pes!");
         }
         #endregion

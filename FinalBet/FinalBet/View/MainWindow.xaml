@@ -134,10 +134,7 @@
                             </MenuItem>
                             <MenuItem Header="Матчи">
                                 <MenuItem Header="Открыть директорию" Command="{Binding OpenArchiveFolderCommand}"/>
-                                <MenuItem Header="Загрузить для URL" Command="{Binding LoadUrlMatchesCommand}"/>
-                                <MenuItem Header="Загрузить для страны" Command="{Binding LoadLeagueMatchesCommand}"/>
-                                <Separator/>
-                                <MenuItem Header="Загрузить все матчи" Command="{Binding LoadAllMatchesCommand}"/>
+                                <MenuItem Header="Загрузить" Command="{Binding LoadMatchesCommand}"/>
                             </MenuItem>
                             <MenuItem Header="Счета таймов">
                                     <MenuItem Header="Загрузить все"
@@ -191,11 +188,6 @@
                                   IsChecked="{Binding ShowOnlyFavorites, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         />
 
-                        <Controls:Badged x:Name="CountingBadge1"
-                                         Badge="{Binding ElementName=LeagueUrlsDatagrid, Path=SelectedItems.Count}"
-                                         BadgePlacementMode="Left"
-                                         BadgeBackground="LightSeaGreen"
-                                         Margin="{StaticResource ControlMargin}">
                             <ComboBox Width="300"
                                       Height="20"
                                       Name="MarkComboBox"
@@ -204,12 +196,16 @@
                                       ItemsSource="{Binding Source={x:Static model:Global.LeagueMarks}}"
                                       SelectedItem="{Binding Path=SelectedLeagueMark, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             />
-                        </Controls:Badged>
-                        <usercontrols:AutoTextBox 
-                            VerticalAlignment="Center"
-                            FilterSource="{Binding Path=Items}"
-                            SelectedCommand="{Binding ShitCommand}"
-                            />
+                        <TextBlock Margin="{StaticResource ControlMargin}"
+                                   Text="Режим загрузки"
+                                   VerticalAlignment="Center"
+                                   />
+                        <ComboBox Width="300"
+                                  Height="20"
+                                  Margin="{StaticResource ControlMargin}"
+                                  ItemsSource="{Binding Source={x:Static model:Global.MatchLoadModes}}"
+                                  SelectedItem="{Binding Path=SelectedMatchLoadMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        />
                     </DockPanel>
 
 
