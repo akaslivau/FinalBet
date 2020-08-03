@@ -1234,7 +1234,7 @@ namespace FinalBet.ViewModel
                         select m.id).Except
                     (
                         (from o in cntx.GetTable<odd>()
-                            where o.oddType.Contains(OddType.Over)
+                            where o.oddType.Contains(oddTypeKeyword)
                             select o.parentId).Distinct()
                     )).ToList();
                     
