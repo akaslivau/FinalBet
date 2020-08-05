@@ -25,7 +25,7 @@ namespace FinalBet.Model
             { Output.Win, Brushes.Green },
             { Output.Lose, Brushes.Red },
             { Output.Deuce, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ffdd00")) },
-            { Output.Na, Brushes.LightGray },
+            { Output.Na, Brushes.LightGray},
             { Output.Nan, Brushes.Aqua },
         };
 

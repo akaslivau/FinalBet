@@ -15,6 +15,9 @@ namespace FinalBet.Model
         public int Dif { get; set; }
         public Dictionary<string, double> Odds { get; set; }
 
+        public int MatchId { get; set; }
+        public Output Output { get; set; }
+
         public RGmatch(bool isHome, int scored, int missed, int total, int dif, IEnumerable<KeyValuePair<string,double>> odds)
         {
             IsNa = false;
@@ -33,16 +36,47 @@ namespace FinalBet.Model
             }
         }
 
-        public static RGmatch GetEmpty()
+        public RGmatch(bool isHome, int? resId, List<possibleResult> results, Dictionary<string,double> matchOdds)
         {
-            var res = new RGmatch(true, -1, -1, -1, -1, null) {IsNa = true};
-            return res;
-        }
+            Odds = new Dictionary<string, double>();
+            if (resId == null)
+            {
+                IsNaN = false;
+                IsNa = true;
+                IsHome = true;
+                Scored = -1;
+                Missed = -1;
+                Total = -1;
+                Dif = -1;
+                return;
+            }
 
-        public static RGmatch GetNanMatch()
-        {
-            var res = new RGmatch(true, -1, -1, -1, -1, null) {IsNaN = true, IsNa = false};
-            return res;
+            var res = results.Single(x => x.id == resId);
+            if (!res.isCorrect)
+            {
+                IsNaN = true;
+                IsNa = false;
+                IsHome = true;
+                Scored = -1;
+                Missed = -1;
+                Total = -1;
+                Dif = -1;
+                return;
+            }
+
+            IsHome = isHome;
+            Scored = res.scored;
+            Missed = res.missed;
+            Total = res.total;
+            Dif = res.diff;
+            if (matchOdds != null && matchOdds.Any())
+            {
+                Odds = new Dictionary<string, double>();
+                foreach (var keyValuePair in matchOdds)
+                {
+                    Odds.Add(keyValuePair.Key, keyValuePair.Value);
+                }
+            }
         }
     }
 }

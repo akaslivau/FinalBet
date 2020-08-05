@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using FinalBet.Database;
+using FinalBet.Extensions;
 using FinalBet.Framework;
 using FinalBet.Model;
 using FinalBet.Properties;
@@ -271,132 +272,134 @@ namespace FinalBet.ViewModel
 
         #region Commands
         public ICommand DrawCommand { get; private set; }
-        public ICommand TestCommand { get; private set; }
 
         private void Draw(object prm)
         {
+            GetDrawingData(SelectedLeague, SelectedYear, SelectedTournament, SelectedSubSeason, SolveMode,
+                out var data
+            );
+
+            var teamNamesDict = Soccer.GetTeamNames(data.Select(x => x.Key));
+
+            var shift = 4;
+
+            var canvas = (DrawingCanvas) prm;
+            canvas.Clear();
+            canvas.TeamCellWidth = DrawingCanvas.GetTeamCellSizeWidth(teamNamesDict.Select(x => x.Value).ToList());
+            canvas.Width = 1;
+            canvas.Height = data.Count * (canvas.CellSize + shift) + shift;
+
+            int i = 0;
+            foreach (var item in data)
+            {
+                var line = item.Value;
+                //Название команды
+                var teamVisual = new VisualWithTag();
+                canvas.DrawTeamCell(teamVisual,
+                    new Point(shift, shift + i * (canvas.CellSize + shift)),
+                    teamNamesDict[item.Key],
+                    new Size(canvas.TeamCellWidth, canvas.CellSize));
+
+                canvas.AddVisual(teamVisual);
+
+                //Это подборка ширины и высоты канваса
+                var cWidth = canvas.TeamCellWidth + canvas.CellSize / 4 + line.Count * (canvas.CellSize + shift);
+                if (canvas.Width < cWidth)
+                {
+                    canvas.Width = cWidth;
+                }
+
+                //Отрисовка самих клеток
+                for (int j = 0; j < line.Count; j++)
+                {
+                    var txt = MatchSolver.OutputStrings[line[j].Output];
+                    var brush = MatchSolver.OutputBrushes[line[j].Output];
+                    var cellVisual = new VisualWithTag {Tag = line[j].MatchId};
+
+                    canvas.DrawCellSquare(
+                        cellVisual,
+                        new Point(canvas.TeamCellWidth + canvas.CellSize / 4 + j * (canvas.CellSize + shift),
+                            shift + i * (canvas.CellSize + shift)),
+                        brush,
+                        txt);
+                    canvas.AddVisual(cellVisual);
+                }
+                i++;
+            }
+        }
+
+        private static void GetDrawingData(
+            league lg, 
+            string year, 
+            string tournament, 
+            matchTag tag,
+            SolveMode mode,
+            out Dictionary<int,List<RGmatch>> data
+            )
+        {
+            data = new Dictionary<int, List<RGmatch>>();
+            //Получаем список матчей для выбранных уставок
             var matchList = new List<match>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
                 var parentId = cntx.GetTable<leagueUrl>()
-                    .Single(x => x.parentId == SelectedLeague.id && x.year == SelectedYear && x.mark == SelectedTournament).id;
+                    .Single(x => x.parentId == lg.id && x.year == year && x.mark == tournament).id;
 
                 matchList = cntx.GetTable<match>()
-                    .Where(x => x.leagueUrlId == parentId && x.tagId == SelectedSubSeason.id).ToList();
+                    .Where(x => x.leagueUrlId == parentId && x.tagId == tag.id).ToList();
             }
 
-            if (!matchList.Any()) return;
+            if (!matchList.Any())
+            {
+                return;
+            }
 
-            var teamNames = Soccer.GetTeamNames(
-                (matchList.Select(x => x.homeTeamId).
-                Union(matchList.Select(x => x.guestTeamId))).Distinct());
-
-
-            var canvas = (DrawingCanvas)prm;
-            canvas.Clear();
-            var shift = 4;
-            int i = 0;
-            var teamCellWidth = DrawingCanvas.GetTeamCellSizeWidth(teamNames.Select(x => x.Value).ToList());
-            canvas.TeamCellWidth = teamCellWidth;
+            var teamNames = Soccer.GetTeamNames(matchList);
 
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var possibleResults = cntx.GetTable<possibleResult>();
-
-                canvas.Width = 1;
-                List<odd> odds = null;
+                var possibleResults = cntx.GetTable<possibleResult>().ToList();
+                
                 var allIds = matchList.Select(x => x.id);
-                if (SolveMode.IsBookmakerMode)
+                //Если режим "Угадывания буком", то подгружаем все ставки для списка матчей
+                List<odd> odds = null;
+                if (mode.IsBookmakerMode)
                 {
                     odds = (from o in cntx.GetTable<odd>()
-                        where allIds.Contains(o.parentId) && SolveMode.OddTypes.Contains(o.oddType)
-                        select o).ToList();
+                            where allIds.Contains(o.parentId) && mode.OddTypes.Contains(o.oddType)
+                            select o).ToList();
                 }
 
-                foreach (var teamName in teamNames)
+                foreach (var item in teamNames)
                 {
-                    var line = SolveMode.IsHome == null
-                        ? matchList.Where(x => x.homeTeamId == teamName.Key || x.guestTeamId == teamName.Key)
+                    //Отбираем матчи для команды с учетом режима [Все матчи, Дома, В гостях]
+                    var line = mode.IsHome == null
+                        ? matchList.Where(x => x.homeTeamId == item.Key || x.guestTeamId == item.Key)
                             .ToList()
-                        : SolveMode.IsHome.Value
-                            ? matchList.Where(x => x.homeTeamId == teamName.Key).ToList()
-                            : matchList.Where(x => x.guestTeamId == teamName.Key).ToList();
+                        : mode.IsHome.Value
+                            ? matchList.Where(x => x.homeTeamId == item.Key).ToList()
+                            : matchList.Where(x => x.guestTeamId == item.Key).ToList();
 
-                    line = line.OrderBy(x => x.date).ToList();
+                    line = line.OrderBy(x => x.date).ToList(); //Возрастают по дате
 
-                    var rGmatches = new List<RGmatch>();
-                    foreach (var match in line)
-                    {
-                        var resId = SolveMode.MatchPeriod == 0 ? match.matchResultId :
-                            SolveMode.MatchPeriod == 1 ? match.firstHalfResId : 
-                            match.secondHalfResId;
-
-                        if (resId == null)
+                    //Получаем список матчей
+                    var rGmatches = (from m in line
+                        let resId = mode.MatchPeriod == 0 ? m.matchResultId :mode.MatchPeriod == 1 ? m.firstHalfResId : m.secondHalfResId
+                        let matchOdds = (mode.IsBookmakerMode && resId!=null )? odds.Where(x => x.parentId == m.id).ToDictionary(x => x.oddType, x => x.value): null
+                        let rgm = new RGmatch(m.homeTeamId == item.Key, resId, possibleResults, matchOdds)
                         {
-                            rGmatches.Add(RGmatch.GetEmpty());
-                            continue;
+                            MatchId = m.id,
                         }
+                            select rgm
+                            ).ToList();
 
-                        var res = possibleResults.Single(x => x.id == resId);
-                        if (!res.isCorrect)
-                        {
-                            rGmatches.Add(RGmatch.GetNanMatch());
-                            continue;
-                        }
-
-                        var matchOdds = !SolveMode.IsBookmakerMode
-                            ? null
-                            : odds.Where(x => x.parentId == match.id).ToDictionary(x => x.oddType, x => x.value);
-                        
-                        rGmatches.Add(new RGmatch(match.homeTeamId == teamName.Key, res.scored, res.missed, res.total, res.diff, matchOdds));
-                    }
-
-                    var outputs = rGmatches.Select(x => MatchSolver.Solve(x, SolveMode)).ToList();
-
-                    //Отрисовка
-                    var teamVisual = new VisualWithTag();
-                    canvas.DrawTeamCell(teamVisual,
-                        new Point(shift, shift + i * (canvas.CellSize + shift)),
-                        teamName.Value,
-                        new Size(teamCellWidth, canvas.CellSize));
-
-                    canvas.AddVisual(teamVisual);
-
-
-                    var cWidth = teamCellWidth + +canvas.CellSize / 4 + line.Count * (canvas.CellSize + shift);
-                    if (canvas.Width < cWidth)
-                    {
-                        canvas.Width = cWidth;
-                    }
-                    canvas.Height = teamNames.Count * (canvas.CellSize + shift) + shift;
-
-                    for (int j = 0; j < line.Count; j++)
-                    {
-                        var txt = MatchSolver.OutputStrings[outputs[j]];
-                        var brush = MatchSolver.OutputBrushes[outputs[j]];
-                        var cellVisual = new VisualWithTag();
-                        cellVisual.Tag = line[j].id;
-
-                        canvas.DrawCellSquare(
-                            cellVisual,
-                            new Point(teamCellWidth + canvas.CellSize / 4 + j * (canvas.CellSize + shift), shift + i * (canvas.CellSize + shift)),
-                            brush,
-                            txt);
-                        canvas.AddVisual(cellVisual);
-                    }
-                    i++;
+                    var lineOutput = rGmatches.Select(x => MatchSolver.Solve(x, mode)).ToList();
+                    rGmatches.ForEach((i, x) => x.Output = lineOutput[i]);
+                    data.Add(item.Key, rGmatches);
                 }
             }
         }
-
-        private void Test(object obj)
-        {
-            using (var cntx = new SqlDataContext(Connection.ConnectionString))
-            {
-                var op = cntx.GetTable<match>().Single(x => x.id == 2958);
-                var ap = BetExplorerParser.GetHalfsResults(op);
-            }
-        }
+        
         #endregion
 
         public RedGreenViewModel()
@@ -410,7 +413,6 @@ namespace FinalBet.ViewModel
             InitializeLeagues(true);
 
             DrawCommand = new RelayCommand(Draw, a => SelectedSubSeason != null);
-            TestCommand = new RelayCommand(Test);
         }
 
 
