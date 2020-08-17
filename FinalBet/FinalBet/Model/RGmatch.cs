@@ -5,27 +5,33 @@ namespace FinalBet.Model
 {
     public class RGmatch:IMatch
     {
-        public bool IsNa { get; set; }
-        public bool IsNaN { get; set; }
+        public bool IsEmpty { get; set; }
+        public bool IsNull { get; set; }
 
         public bool IsHome { get; set; }
         public int Scored { get; set; }
         public int Missed { get; set; }
-        public int Total { get; set; }
-        public int Dif { get; set; }
         public Dictionary<string, double> Odds { get; set; }
 
         public int MatchId { get; set; }
         public Output Output { get; set; }
 
-        public RGmatch(bool isHome, int scored, int missed, int total, int dif, IEnumerable<KeyValuePair<string,double>> odds)
+        public RGmatch(bool isHome, int scored, int missed, IEnumerable<KeyValuePair<string,double>> odds)
         {
-            IsNa = false;
+            IsEmpty = false;
             IsHome = isHome;
-            Scored = scored;
-            Missed = missed;
-            Total = total;
-            Dif = dif;
+            if (scored >= 0 && missed >= 0)
+            {
+                Scored = scored;
+                Missed = missed;
+            }
+            else
+            {
+                IsNull = true;
+                Scored = -1;
+                Missed = -1;
+            }
+
             if (odds != null && odds.Any())
             {
                 Odds = new Dictionary<string, double>();
@@ -41,34 +47,28 @@ namespace FinalBet.Model
             Odds = new Dictionary<string, double>();
             if (resId == null)
             {
-                IsNaN = false;
-                IsNa = true;
+                IsNull = false;
+                IsEmpty = true;
                 IsHome = true;
                 Scored = -1;
                 Missed = -1;
-                Total = -1;
-                Dif = -1;
                 return;
             }
 
             var res = results.Single(x => x.id == resId);
             if (!res.isCorrect)
             {
-                IsNaN = true;
-                IsNa = false;
+                IsNull = true;
+                IsEmpty = false;
                 IsHome = true;
                 Scored = -1;
                 Missed = -1;
-                Total = -1;
-                Dif = -1;
                 return;
             }
 
             IsHome = isHome;
             Scored = res.scored;
             Missed = res.missed;
-            Total = res.total;
-            Dif = res.diff;
             if (matchOdds != null && matchOdds.Any())
             {
                 Odds = new Dictionary<string, double>();
