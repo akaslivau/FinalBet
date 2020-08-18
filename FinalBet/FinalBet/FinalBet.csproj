@@ -168,7 +168,10 @@
     <Compile Include="Framework\RelayCommand.cs" />
     <Compile Include="Framework\ViewModelBase.cs" />
     <Compile Include="Model\Global.cs" />
+    <Compile Include="Model\IMatch.cs" />
     <Compile Include="Model\MatchSolver.cs" />
+    <Compile Include="Model\ModeOfSolveMode.cs" />
+    <Compile Include="Model\Output.cs" />
     <Compile Include="Model\RGmatch.cs" />
     <Compile Include="Model\SolveMode.cs" />
     <Compile Include="Sql.designer.cs">

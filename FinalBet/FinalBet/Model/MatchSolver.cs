@@ -28,8 +28,7 @@ namespace FinalBet.Model
             { Output.Empty, Brushes.LightGray},
             { Output.Null, Brushes.Aqua },
         };
-
-
+        
         //Если вдруг будет тормозить
         private static Dictionary<string, Output> _cachedOutputs = new Dictionary<string, Output>();
 
@@ -91,6 +90,12 @@ namespace FinalBet.Model
             {
                 return total % 2 == 0 ? Output.Win : Output.Lose;
             }
+
+            //X/12
+            if (num == ModeOfSolveMode.X_12)
+            {
+                return match.Scored==match.Missed ? Output.Win : Output.Lose;
+            }
             return Output.Empty;
         }
 
@@ -102,9 +107,9 @@ namespace FinalBet.Model
 
             if(match.Odds == null || !match.Odds.Any()) return Output.Null;
             
-            if( Math.Abs(match.Odds.ElementAt(0).Value - match.Odds.ElementAt(1).Value) < Settings.Default.oddMinDif)
+            if(Math.Abs(match.Odds.ElementAt(0).Value - match.Odds.ElementAt(1).Value) < Settings.Default.oddMinDif)
             {
-                return Output.Null;
+                return Output.Empty;
             }
             
             var min = match.Odds.Min(x => x.Value);
@@ -122,58 +127,5 @@ namespace FinalBet.Model
             {OddType.Under, Output.Lose},
         };
 
-    }
-
-    public sealed class ModeOfSolveMode
-    {
-        private readonly int _number;
-
-        public static readonly ModeOfSolveMode Total = new ModeOfSolveMode(Global.PossibleModes.Single(x => x.name == "Тотал"));
-        public static readonly ModeOfSolveMode Fora = new ModeOfSolveMode(Global.PossibleModes.Single(x => x.name == "Фора"));
-        public static readonly ModeOfSolveMode BTS = new ModeOfSolveMode(Global.PossibleModes.Single(x => x.name == "Обе забьют"));
-
-        public static readonly ModeOfSolveMode Scored = new ModeOfSolveMode(Global.PossibleModes.Single(x => x.name == "Забито"));
-        public static readonly ModeOfSolveMode Missed = new ModeOfSolveMode(Global.PossibleModes.Single(x => x.name == "Пропущено"));
-        public static readonly ModeOfSolveMode CN = new ModeOfSolveMode(Global.PossibleModes.Single(x => x.name == "Чет/нечет"));
-
-        private ModeOfSolveMode(solveMode mode)
-        {
-            this._number = mode.number;
-        }
-
-        public override string ToString()
-        {
-            return _number.ToString();
-        }
-
-        public static implicit operator int(ModeOfSolveMode o) => o._number;
-
-        public static implicit operator solveMode(ModeOfSolveMode m) => Global.PossibleModes.Single(x => x.number == m._number);
-        public static explicit operator ModeOfSolveMode(solveMode b) => new ModeOfSolveMode(b);
-
-
-
-    }
-
-    public enum Output
-    {
-        Win = 1,
-        Lose = 0,
-        Deuce = -1,
-        Empty = -2,
-        Null = -3
-    }
-
-    public interface IMatch
-    {
-        bool IsEmpty { get; set; }
-        bool IsNull { get; set; }
-
-        bool IsHome { get; set; }
-
-        int Scored { get; set; }
-        int Missed { get; set; }
-
-        Dictionary<string, double> Odds { get; set; }
     }
 }

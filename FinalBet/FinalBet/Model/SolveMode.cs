@@ -31,18 +31,10 @@ namespace FinalBet.Model
                 return;
             }
 
-            //Fora
+            //Fora and other....
             if (SelectedMode.number == ModeOfSolveMode.Fora)
             {
-                //TODO: dodelat
-                OnPropertyChanged("OddTypes");
-                return;
-            }
-
-            //BTS
-            if (SelectedMode.number == ModeOfSolveMode.BTS)
-            {
-                //TODO: dodelat
+                //TODO: Доделать выбор итпов ставок для IsBookmakerMode == true
                 OnPropertyChanged("OddTypes");
                 return;
             }

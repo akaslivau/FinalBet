@@ -91,6 +91,117 @@ namespace FinalBetTests
         }
 
         [Test]
+        public void ScoredTests()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                var prm = 0 + i * 0.5;
+                var solveMode = new SolveMode
+                {
+                    ModeParameter = prm,
+                    IsBookmakerMode = false,
+                    MatchPeriod = 0,
+                    SelectedMode = ModeOfSolveMode.Scored
+                };
+
+                var win = Matches.Where(x => x.Scored  > prm).ToList();
+                var lose = Matches.Where(x => x.Scored  < prm).ToList();
+
+                Assert.AreEqual(win.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+                Assert.AreEqual(lose.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+
+                var guestMatches = Matches.Select(x => new RGmatch(false, x.Scored, x.Missed, null)).ToList();
+
+                var gwin = guestMatches.Where(x => x.Missed  > prm).ToList();
+                var glose = guestMatches.Where(x => x.Missed  < prm).ToList();
+
+                Assert.AreEqual(gwin.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+                Assert.AreEqual(glose.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+            }
+        }
+
+        [Test]
+        public void MissedTests()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                var prm = 0 + i * 0.5;
+                var solveMode = new SolveMode
+                {
+                    ModeParameter = prm,
+                    IsBookmakerMode = false,
+                    MatchPeriod = 0,
+                    SelectedMode = ModeOfSolveMode.Missed
+                };
+
+                var win = Matches.Where(x => x.Missed > prm).ToList();
+                var lose = Matches.Where(x => x.Missed < prm).ToList();
+
+                Assert.AreEqual(win.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+                Assert.AreEqual(lose.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+
+                var guestMatches = Matches.Select(x => new RGmatch(false, x.Scored, x.Missed, null)).ToList();
+
+                var gwin = guestMatches.Where(x => x.Scored > prm).ToList();
+                var glose = guestMatches.Where(x => x.Scored < prm).ToList();
+
+                Assert.AreEqual(gwin.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+                Assert.AreEqual(glose.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+            }
+        }
+
+        [Test]
+        public void BtsTests()
+        {
+            var solveMode = new SolveMode
+            {
+                IsBookmakerMode = false,
+                MatchPeriod = 0,
+                SelectedMode = ModeOfSolveMode.BTS
+            };
+
+            var more = Matches.Where(x => x.Scored > 0 && x.Missed >0).ToList();
+            var less = Matches.Where(x => x.Scored == 0 || x.Missed == 0).ToList();
+
+            Assert.AreEqual(more.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+            Assert.AreEqual(less.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+        }
+
+        [Test]
+        public void CnTests()
+        {
+            var solveMode = new SolveMode
+            {
+                IsBookmakerMode = false,
+                MatchPeriod = 0,
+                SelectedMode = ModeOfSolveMode.CN
+            };
+
+            var more = Matches.Where(x => (x.Scored + x.Missed) % 2 == 0).ToList();
+            var less = Matches.Where(x => (x.Scored + x.Missed) % 2 != 0).ToList();
+
+            Assert.AreEqual(more.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+            Assert.AreEqual(less.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+        }
+
+        [Test]
+        public void X12Tests()
+        {
+            var solveMode = new SolveMode
+            {
+                IsBookmakerMode = false,
+                MatchPeriod = 0,
+                SelectedMode = ModeOfSolveMode.X_12
+            };
+
+            var more = Matches.Where(x => x.Scored ==x.Missed).ToList();
+            var less = Matches.Where(x => x.Scored!=x.Missed).ToList();
+
+            Assert.AreEqual(more.All(z => MatchSolver.Solve(z, solveMode) == Output.Win), true);
+            Assert.AreEqual(less.All(z => MatchSolver.Solve(z, solveMode) == Output.Lose), true);
+        }
+
+        [Test]
         public void NullTests()
         {
             var rnd = new Random();
