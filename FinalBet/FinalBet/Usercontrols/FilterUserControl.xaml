@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="FinalBet.Usercontrols.FilterUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FinalBet.Usercontrols"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:model="clr-namespace:FinalBet.Model"
+             mc:Ignorable="d" 
+             Name="_this"
+             Padding="5"
+             Margin="{StaticResource ControlMargin}"
+             >
+    <Border BorderBrush="{DynamicResource AccentColorBrush4}" BorderThickness="1">
+        <Grid DataContext="{Binding ElementName=_this, Path=Filter}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Menu Grid.Row="0" Grid.RowSpan="3" Grid.Column="0">
+                <Menu.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </Menu.ItemsPanel>
+                <MenuItem Command="{Binding AddCommand}">
+                    <MenuItem.Header>
+                        <iconPacks:PackIconMaterial Kind="PlusThick" 
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Width="{StaticResource SquareButtonSize}" 
+                                                    Height="{StaticResource SquareButtonSize}" />
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding RemoveCommand}">
+                    <MenuItem.Header>
+                        <iconPacks:PackIconMaterial Kind="Minus" 
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Width="{StaticResource SquareButtonSize}" 
+                                                    Height="{StaticResource SquareButtonSize}" />
+                    </MenuItem.Header>
+                </MenuItem>
+            </Menu>
+            <Grid Grid.Row="1" Grid.Column="1">
+                <ComboBox 
+                    Width="150"
+                    ItemsSource="{Binding Source={x:Static model:Global.FilterMethods}}"
+                    />
+            </Grid>
+            <ListBox Grid.Row="2" Grid.Column="1" Margin="{StaticResource ControlMargin}"
+                     ItemsSource="{Binding Path=Items}" 
+                     SelectedItem="{Binding Selected}" 
+                     DisplayMemberPath="Name"
+            />
+        </Grid>
+    </Border>
+</UserControl>

@@ -9,6 +9,8 @@
                Right="5"
     />
 
+    <system:Double x:Key="SquareButtonSize">16</system:Double>
+
     <Style TargetType="{x:Type Button}" x:Key="Button.Usual" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
             <Setter Property="Width" Value="200"/>

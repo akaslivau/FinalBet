@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -52,6 +53,28 @@ namespace FinalBet.Model
                     _possibleModes = new ObservableCollection<solveMode>(table);
                 }
                 return _possibleModes;
+            }
+        }
+
+        private static ObservableCollection<string> _filterMethods = null;
+        public static ObservableCollection<string> FilterMethods
+        {
+            get
+            {
+                if (_filterMethods == null)
+                {
+                    _filterMethods = new ObservableCollection<string>();
+                    var methods = typeof(StaticMatchMethods).GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    foreach (var methodInfo in methods)
+                    {
+                        var attr = methodInfo.GetCustomAttributes(typeof(FilterAttribute), false);
+                        if (attr.Length > 0)
+                        {
+                            _filterMethods.Add(((FilterAttribute)attr[0]).Description);
+                        }
+                    }
+                }
+                return _filterMethods;
             }
         }
 

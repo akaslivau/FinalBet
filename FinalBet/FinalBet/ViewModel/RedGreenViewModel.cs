@@ -34,10 +34,7 @@ namespace FinalBet.ViewModel
         private int _selectedMatchId = -1;
         public int SelectedMatchId
         {
-            get
-            {
-                return _selectedMatchId;
-            }
+            get => _selectedMatchId;
             set
             {
                 if (_selectedMatchId == value) return;
@@ -158,6 +155,18 @@ namespace FinalBet.ViewModel
                 if (_onlyMainSeason == value) return;
                 _onlyMainSeason = value;
                 OnPropertyChanged("OnlyMainSeason");
+            }
+        }
+
+        private MatchPropertyRepoViewModel _filter = new MatchPropertyRepoViewModel();
+        public MatchPropertyRepoViewModel Filter
+        {
+            get => _filter;
+            set
+            {
+                if (_filter == value) return;
+                _filter = value;
+                OnPropertyChanged("Filter");
             }
         }
         #endregion

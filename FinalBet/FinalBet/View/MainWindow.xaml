@@ -474,35 +474,44 @@
                         </Menu>
                     </DockPanel>
 
-                    <ScrollViewer Grid.Row="2" 
-                                  HorizontalAlignment="Left"
-                                  VerticalAlignment="Top"
-                                  HorizontalScrollBarVisibility="Auto" 
-                                  VerticalScrollBarVisibility="Auto">
-                        <viewModel:DrawingCanvas
-                            ClipToBounds="True"
-                            x:Name="RedGreenCanvas"
-                            CellForegroundBrush="White"
-                            TeamBrush="Black"
-                            FontSize="12"
-                            CellSize="40"
-                        >
-                            <i:Interaction.Triggers>
-                                <i:EventTrigger EventName="MouseLeftButtonDown">
-                                    <ei:CallMethodAction
-                                        TargetObject="{Binding}"
-                                        MethodName="OnTableMouseClick"/>
-                                </i:EventTrigger>
-                            </i:Interaction.Triggers>
-                            <viewModel:DrawingCanvas.Background>
-                                <LinearGradientBrush Opacity="0.5">
-                                    <GradientStop Color="{StaticResource AccentColor4}" Offset="0.2"/>
-                                    <GradientStop Color="{StaticResource AccentColor}" Offset="0.8"/>
-                                </LinearGradientBrush>
-                            </viewModel:DrawingCanvas.Background>
-                        </viewModel:DrawingCanvas>
-                    </ScrollViewer>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ScrollViewer Grid.Column="0"
+                                      HorizontalAlignment="Left"
+                                      VerticalAlignment="Top"
+                                      HorizontalScrollBarVisibility="Auto" 
+                                      VerticalScrollBarVisibility="Auto">
+                            <viewModel:DrawingCanvas
+                                ClipToBounds="True"
+                                x:Name="RedGreenCanvas"
+                                CellForegroundBrush="White"
+                                TeamBrush="Black"
+                                FontSize="12"
+                                CellSize="40"
+                            >
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                                        <ei:CallMethodAction
+                                            TargetObject="{Binding}"
+                                            MethodName="OnTableMouseClick"/>
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
+                                <viewModel:DrawingCanvas.Background>
+                                    <LinearGradientBrush Opacity="0.5">
+                                        <GradientStop Color="{StaticResource AccentColor4}" Offset="0.2"/>
+                                        <GradientStop Color="{StaticResource AccentColor}" Offset="0.8"/>
+                                    </LinearGradientBrush>
+                                </viewModel:DrawingCanvas.Background>
+                            </viewModel:DrawingCanvas>
+                        </ScrollViewer>
+                        <usercontrols:FilterUserControl Grid.Column="1"
+                                                        Filter="{Binding Path=Filter}"
+                                                        />
 
+                    </Grid>
                 </Grid>
             </TabItem>
             <TabItem Header="{Binding DisplayName}"
