@@ -405,50 +405,9 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <GroupBox Grid.Column="0" Header="Выбор турнира" Margin="{StaticResource ControlMargin}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <ComboBox Grid.Row="0" Grid.Column="1"
-                                          Width="200" Height="25"
-                                          Margin="{StaticResource ControlMargin}"
-                                          ItemsSource="{Binding Leagues}"
-                                          SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          DisplayMemberPath="name"
-                                />
-                                <ComboBox  Grid.Row="1" Grid.Column="1"
-                                           Width="200" Height="25"
-                                           Margin="{StaticResource ControlMargin}"
-                                           ItemsSource="{Binding Tournaments}"
-                                           SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                />
-
-                                <ComboBox Grid.Row="0" Grid.Column="2"
-                                          Width="200"
-                                          Height="25"
-                                          VerticalAlignment="Center"
-                                          Margin="{StaticResource ControlMargin}"
-                                          ItemsSource="{Binding LeagueYears}"
-                                          SelectedItem="{Binding SelectedYear}"
-                                />
-
-                                <ComboBox Grid.Row="1" Grid.Column="2"
-                                          Width="200" Height="25"
-                                          Margin="{StaticResource ControlMargin}"
-                                          ItemsSource="{Binding SubSeasons}"
-                                          SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          DisplayMemberPath="name"
-                                          Visibility="{Binding OnlyMainSeason, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                />
-                            </Grid>
-                        </GroupBox>
+                        <usercontrols:TournamentSelector Grid.Column="0"
+                                                         Tournament="{Binding Tournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         />
 
                         <usercontrols:CodeSelector Grid.Column="1"
                                                    SolveMode="{Binding SolveMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -469,6 +428,8 @@
                             <MenuItem Header="Рисовать" Command="{Binding DrawCommand}"
                                       CommandParameter="{Binding ElementName=RedGreenCanvas}"
                                       />
+                            <MenuItem Header="Фильтровать" Command="{Binding FilterCommand}"
+                            />
                             <MenuItem Header="Тестовая команда" Command="{Binding TestCommand}"
                                       />
                         </Menu>

@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="FinalBet.Usercontrols.TournamentSelector"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FinalBet.Usercontrols"
+             Name="_this"
+             mc:Ignorable="d" >
+    <GroupBox Header="Выбор турнира" Margin="{StaticResource ControlMargin}"
+              DataContext="{Binding ElementName=_this, Path=Tournament}"
+              >
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox Grid.Row="0" Grid.Column="1"
+                                          Width="200" Height="25"
+                                          Margin="{StaticResource ControlMargin}"
+                                          ItemsSource="{Binding Leagues}"
+                                          SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          DisplayMemberPath="name"
+                                />
+            <ComboBox  Grid.Row="1" Grid.Column="1"
+                                           Width="200" Height="25"
+                                           Margin="{StaticResource ControlMargin}"
+                                           ItemsSource="{Binding Tournaments}"
+                                           SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                />
+
+            <ComboBox Grid.Row="0" Grid.Column="2"
+                                          Width="200"
+                                          Height="25"
+                                          VerticalAlignment="Center"
+                                          Margin="{StaticResource ControlMargin}"
+                                          ItemsSource="{Binding LeagueYears}"
+                                          SelectedItem="{Binding SelectedYear}"
+                                />
+
+            <ComboBox Grid.Row="1" Grid.Column="2"
+                                          Width="200" Height="25"
+                                          Margin="{StaticResource ControlMargin}"
+                                          ItemsSource="{Binding SubSeasons}"
+                                          SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          DisplayMemberPath="name"
+                                          Visibility="{Binding OnlyMainSeason, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                />
+        </Grid>
+    </GroupBox>
+</UserControl>

@@ -214,6 +214,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Usercontrols\TournamentSelector.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -238,6 +242,7 @@
     <Compile Include="Framework\RelayCommand.cs" />
     <Compile Include="Framework\ViewModelBase.cs" />
     <Compile Include="Model\Filtering\FilterAttribute.cs" />
+    <Compile Include="Model\Filtering\MatchFilter.cs" />
     <Compile Include="Model\Filtering\MatchMethod.cs" />
     <Compile Include="Model\Global.cs" />
     <Compile Include="Model\IMatch.cs" />
@@ -266,6 +271,9 @@
     <Compile Include="Usercontrols\MatchDetailsUserControl.xaml.cs">
       <DependentUpon>MatchDetailsUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Usercontrols\TournamentSelector.xaml.cs">
+      <DependentUpon>TournamentSelector.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModel\DatabaseViewModel.cs" />
     <Compile Include="ViewModel\DrawingCanvas.cs" />
     <Compile Include="ViewModel\LeagueUrlRepoViewModel.cs" />
@@ -273,6 +281,7 @@
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\RedGreenViewModel.cs" />
     <Compile Include="ViewModel\TestDataViewModel.cs" />
+    <Compile Include="ViewModel\TournamentViewModel.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using FinalBet.Framework;
 
@@ -52,6 +54,14 @@ namespace FinalBet.Model.Filtering
         }
 
         #endregion
+
+        public List<SolveMode> GetDistinctModes()
+        {
+            return Items.Where(x => x.Method.NeedSolveMode).
+                Select(x => x.Mode).
+                Distinct().
+                ToList();
+        }
 
         public MatchPropertyRepoViewModel()
         {

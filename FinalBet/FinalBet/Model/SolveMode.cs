@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,7 +12,7 @@ using FinalBet.Database;
 
 namespace FinalBet.Model
 {
-    public class SolveMode: INotifyPropertyChanged
+    public class SolveMode: INotifyPropertyChanged, IEquatable<SolveMode>
     {
         private void RefreshOddTypes()
         {
@@ -156,6 +157,18 @@ namespace FinalBet.Model
             RefreshOddTypes();
         }
 
+        public override string ToString()
+        {
+            return string.Join("#", new string[]
+            {
+                IsBookmakerModeString,
+                IsHomeString,
+                MatchPeriodString,
+                SelectedMode.name,
+                IsParameterEnabled? ModeParameter.ToString(CultureInfo.InvariantCulture): "-",
+            });
+        }
+
         #region Debugging Aides
 
         /// <summary>
@@ -214,5 +227,43 @@ namespace FinalBet.Model
         }
 
         #endregion // INotifyPropertyChanged Members
+
+        #region IEquatable
+        public bool Equals(SolveMode other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return this.ToString() == other.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SolveMode)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return this.ToString().GetHashCode();
+            }
+        }
+
+        public static bool operator ==(SolveMode left, SolveMode right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(SolveMode left, SolveMode right)
+        {
+            return !Equals(left, right);
+        }
+
+
+        #endregion
+
     }
 }

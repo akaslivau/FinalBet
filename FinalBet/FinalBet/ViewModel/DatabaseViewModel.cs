@@ -3,13 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
@@ -19,8 +17,6 @@ using FinalBet.Extensions;
 using FinalBet.Framework;
 using FinalBet.Model;
 using FinalBet.Properties;
-using HtmlAgilityPack;
-using MahApps.Metro.Controls;
 using Serilog;
 // ReSharper disable All
 
