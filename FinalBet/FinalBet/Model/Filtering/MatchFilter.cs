@@ -7,31 +7,54 @@ using FinalBet.Database;
 
 namespace FinalBet.Model.Filtering
 {
+    public class LineImatch
+    {
+        public int LeagueUrlId { get; }
+        public int TeamId { get; }
+        public List<match> Data { get; }
+
+        public LineImatch(int leagueUrlId, int teamId, List<match> data)
+        {
+            LeagueUrlId = leagueUrlId;
+            TeamId = teamId;
+            Data = data;
+        }
+    }
+
+
     public class MatchFilter
     {
-        private List<List<IMatch>> Data { get; set; }
+        private List<LineImatch> Data { get; set; }
 
         public void DoFilter()
         {
 
         }
 
-        public MatchFilter(league lg)
+        public MatchFilter(leagueUrl url)
         {
-            Data = new List<List<IMatch>>();
+            Data = new List<LineImatch>();
             using (var cntx = new SqlDataContext(Connection.ConnectionString))
             {
-                var parentId = cntx.GetTable<leagueUrl>().Single(x => x.parentId == lg.id).id;
+                var ordered = cntx.GetTable<match>().OrderBy(x => x.date);
+                var teamIds = ((from m in cntx.GetTable<match>()
+                    where m.leagueUrlId == url.id
+                    select m.homeTeamId).Union(
+                    from m in cntx.GetTable<match>()
+                    where m.leagueUrlId == url.id
+                    select m.guestTeamId)).Distinct().ToList();
 
-                /*
-                var matchList = from m in cntx.GetTable<match>()
-                                where m.leagueId == parentId
-                                group m by new
-                                {
-                                    m.leagueUrlId,
-                                    c.Friend,
-                                    c.FavoriteColor,
-                                } into gcs*/
+                var l1 = (from m in ordered
+                    where m.leagueUrlId == url.id && (teamIds.Contains(m.homeTeamId) || teamIds.Contains(m.guestTeamId))
+                    
+                    group m by new
+                    {
+                        m.leagueUrlId,
+                        m.homeTeamId
+                    }
+                    into grp
+                    select new LineImatch(grp.Key.leagueUrlId, grp.Key.homeTeamId, grp.ToList())).ToList();
+
             }
 
         }

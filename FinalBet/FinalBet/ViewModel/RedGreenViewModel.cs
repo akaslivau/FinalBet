@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -60,6 +61,7 @@ namespace FinalBet.ViewModel
                 OnPropertyChanged("Filter");
             }
         }
+        
         #endregion
 
         #region Methods
@@ -83,7 +85,7 @@ namespace FinalBet.ViewModel
 
         private void Draw(object prm)
         {
-            GetDrawingData(Tournament.SelectedLeague, Tournament.SelectedYear, Tournament.SelectedTournament, Tournament.SelectedSubSeason, SolveMode,
+            GetDrawingData(Tournament.SelectedLeague, Tournament.SelectedUrl.year, Tournament.SelectedTournament, Tournament.SelectedSubSeason, SolveMode,
                 out var data
             );
 
@@ -211,7 +213,11 @@ namespace FinalBet.ViewModel
 
         private void RunFilter(object obj)
         {
-            
+            var sw = new Stopwatch();
+            sw.Start();
+            var dt = new MatchFilter(Tournament.SelectedUrl);
+            sw.Stop();
+            MessageBox.Show(sw.Elapsed.Seconds.ToString());
         }
 
         #endregion
@@ -221,7 +227,7 @@ namespace FinalBet.ViewModel
             base.DisplayName = "Красно-зеленая";
             
             DrawCommand = new RelayCommand(Draw, a =>Tournament.SelectedSubSeason != null);
-            FilterCommand = new RelayCommand(RunFilter, a=> Filter.Items.Any());
+            FilterCommand = new RelayCommand(RunFilter);
         }
 
     }

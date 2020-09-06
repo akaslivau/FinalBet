@@ -8,7 +8,9 @@
              xmlns:model="clr-namespace:FinalBet.Model"
              Name="_this"
              mc:Ignorable="d" >
-    <GroupBox Header="Выбор режима для расчета" Margin="{StaticResource ControlMargin}">
+    <GroupBox Header="Выбор режима для расчета" Margin="{StaticResource ControlMargin}"
+              DataContext="{Binding ElementName=_this, Path=SolveMode}"
+              >
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -24,22 +26,22 @@
                           HorizontalAlignment="Left"
                           Width="200"
                           Margin="{StaticResource ControlMargin}"
-                          IsChecked="{Binding ElementName=_this, Path=SolveMode.IsBookmakerMode}"
-                          Content="{Binding ElementName=_this, Path=SolveMode.IsBookmakerModeString}"/>
+                          IsChecked="{Binding IsBookmakerMode}"
+                          Content="{Binding IsBookmakerModeString}"/>
             
                 <CheckBox Grid.Row="1" Grid.Column="0"
                           IsThreeState="True"
                           Width="150"
                           Margin="{StaticResource ControlMargin}"
-                          IsChecked="{Binding ElementName=_this, Path=SolveMode.IsHome}"
-                          Content="{Binding ElementName=_this, Path=SolveMode.IsHomeString}"/>
+                          IsChecked="{Binding IsHome}"
+                          Content="{Binding IsHomeString}"/>
 
                 <StackPanel Grid.Row="2" Grid.Column="0" 
                             Orientation="Vertical"
                             HorizontalAlignment="Left"
                             >
                     <mah:NumericUpDown Margin="{StaticResource ControlMargin}"
-                                       Value="{Binding ElementName=_this, Path=SolveMode.MatchPeriod}"
+                                       Value="{Binding MatchPeriod}"
                                        Minimum="0"
                                        Maximum="2"
                                        Width="150"
@@ -47,7 +49,7 @@
                     <TextBlock Style="{StaticResource Textblock.H5}"
                                Margin="5,-5,5,5"
                                HorizontalAlignment="Center"
-                               Text="{Binding ElementName=_this, Path=SolveMode.MatchPeriodString}" />
+                               Text="{Binding MatchPeriodString}" />
                 </StackPanel>
 
                 <ComboBox Grid.Row="1" Grid.Column="2"
@@ -55,7 +57,7 @@
                           HorizontalAlignment="Left"
                           Width="150"
                           Height="25"
-                          SelectedItem="{Binding ElementName=_this, Path=SolveMode.SelectedMode}"
+                          SelectedItem="{Binding SelectedMode}"
                           DisplayMemberPath="name"
                           ItemsSource="{Binding Source={x:Static model:Global.PossibleModes}}"
                 />
@@ -63,11 +65,11 @@
                 <StackPanel Grid.Row="2" Grid.Column="2" 
                             Orientation="Vertical"
                             HorizontalAlignment="Left"
-                            IsEnabled="{Binding ElementName=_this, Path=SolveMode.IsParameterEnabled}"
+                            IsEnabled="{Binding IsParameterEnabled}"
                 >
 
                     <mah:NumericUpDown Margin="{StaticResource ControlMargin}"
-                                       Value="{Binding ElementName=_this, Path=SolveMode.ModeParameter}"
+                                       Value="{Binding ModeParameter}"
                                        Interval="0.5"
                                        Width="150"
                     />

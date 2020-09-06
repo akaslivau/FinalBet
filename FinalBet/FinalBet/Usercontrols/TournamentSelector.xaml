@@ -9,6 +9,13 @@
     <GroupBox Header="Выбор турнира" Margin="{StaticResource ControlMargin}"
               DataContext="{Binding ElementName=_this, Path=Tournament}"
               >
+        <GroupBox.Resources>
+            <Style TargetType="ComboBox">
+                <Setter Property="Height" Value="35"/>
+                <Setter Property="Width" Value="200"/>
+                <Setter Property="Margin" Value="{StaticResource ControlMargin}"/>
+            </Style>
+        </GroupBox.Resources>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -20,31 +27,22 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <ComboBox Grid.Row="0" Grid.Column="1"
-                                          Width="200" Height="25"
-                                          Margin="{StaticResource ControlMargin}"
                                           ItemsSource="{Binding Leagues}"
                                           SelectedItem="{Binding SelectedLeague, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           DisplayMemberPath="name"
                                 />
             <ComboBox  Grid.Row="1" Grid.Column="1"
-                                           Width="200" Height="25"
-                                           Margin="{StaticResource ControlMargin}"
                                            ItemsSource="{Binding Tournaments}"
                                            SelectedItem="{Binding SelectedTournament, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 />
 
             <ComboBox Grid.Row="0" Grid.Column="2"
-                                          Width="200"
-                                          Height="25"
                                           VerticalAlignment="Center"
-                                          Margin="{StaticResource ControlMargin}"
-                                          ItemsSource="{Binding LeagueYears}"
-                                          SelectedItem="{Binding SelectedYear}"
+                                          ItemsSource="{Binding LeagueUrls}"
+                                          SelectedItem="{Binding SelectedUrl}"
                                 />
 
             <ComboBox Grid.Row="1" Grid.Column="2"
-                                          Width="200" Height="25"
-                                          Margin="{StaticResource ControlMargin}"
                                           ItemsSource="{Binding SubSeasons}"
                                           SelectedItem="{Binding SelectedSubSeason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           DisplayMemberPath="name"

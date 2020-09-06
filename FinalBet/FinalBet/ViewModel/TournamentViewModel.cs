@@ -60,29 +60,29 @@ namespace FinalBet.ViewModel
             }
         }
 
-        private ObservableCollection<string> _leagueYears = new ObservableCollection<string>();
-        public ObservableCollection<string> LeagueYears
+        private ObservableCollection<leagueUrl> _leagueUrls = new ObservableCollection<leagueUrl>();
+        public ObservableCollection<leagueUrl> LeagueUrls
         {
-            get => _leagueYears;
+            get => _leagueUrls;
             set
             {
-                if (_leagueYears == value) return;
-                _leagueYears = value;
-                OnPropertyChanged("LeagueYears");
+                if (_leagueUrls == value) return;
+                _leagueUrls = value;
+                OnPropertyChanged("LeagueUrls");
             }
         }
 
-        private string _selectedYear;
-        public string SelectedYear
+        private leagueUrl _selectedUrl;
+        public leagueUrl SelectedUrl
         {
-            get => _selectedYear;
+            get => _selectedUrl;
             set
             {
-                if (_selectedYear == value) return;
-                _selectedYear = value;
-                OnPropertyChanged("SelectedYear");
+                if (_selectedUrl == value) return;
+                _selectedUrl = value;
+                OnPropertyChanged("SelectedUrl");
 
-                InitializeSubSeasons(SelectedLeague, value);
+                InitializeSubSeasons(SelectedLeague, value.year);
             }
         }
 
@@ -168,7 +168,7 @@ namespace FinalBet.ViewModel
 
         private void InitializeYears(league value, string mark)
         {
-            LeagueYears.Clear();
+            LeagueUrls.Clear();
 
             if (string.IsNullOrEmpty(SelectedTournament)) return;
 
@@ -178,14 +178,12 @@ namespace FinalBet.ViewModel
                     Where(x => x.parentId == value.id && x.mark == SelectedTournament).
                     ToList();
 
-                var items = table.Select(x => x.year).Distinct().ToList();
-
-                foreach (var item in items)
+                foreach (var item in table)
                 {
-                    LeagueYears.Add(item);
+                    LeagueUrls.Add(item);
                 }
 
-                if (LeagueYears.Any()) SelectedYear = LeagueYears.First();
+                if (LeagueUrls.Any()) SelectedUrl = LeagueUrls.First();
             }
         }
 
