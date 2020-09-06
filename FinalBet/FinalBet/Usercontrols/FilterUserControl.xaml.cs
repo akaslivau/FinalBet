@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using FinalBet.Model;
+using FinalBet.Model.Filtering;
 
 namespace FinalBet.Usercontrols
 {

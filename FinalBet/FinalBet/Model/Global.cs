@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using FinalBet.Database;
 using FinalBet.Framework;
+using FinalBet.Model.Filtering;
 
 namespace FinalBet.Model
 {
@@ -56,21 +57,23 @@ namespace FinalBet.Model
             }
         }
 
-        private static ObservableCollection<string> _filterMethods = null;
-        public static ObservableCollection<string> FilterMethods
+        private static ObservableCollection<MatchMethod> _filterMethods = null;
+        public static ObservableCollection<MatchMethod> FilterMethods
         {
             get
             {
                 if (_filterMethods == null)
                 {
-                    _filterMethods = new ObservableCollection<string>();
-                    var methods = typeof(StaticMatchMethods).GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    _filterMethods = new ObservableCollection<MatchMethod>();
+                    var methods = typeof(StaticMatchMethods).GetMethods(
+                        BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     foreach (var methodInfo in methods)
                     {
                         var attr = methodInfo.GetCustomAttributes(typeof(FilterAttribute), false);
                         if (attr.Length > 0)
                         {
-                            _filterMethods.Add(((FilterAttribute)attr[0]).Description);
+                            var at = (FilterAttribute) attr[0];
+                            _filterMethods.Add(new MatchMethod(at.Id, methodInfo.Name, at.Description, at.IsHistorical, at.NeedSolveMode));
                         }
                     }
                 }

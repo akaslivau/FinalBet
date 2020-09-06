@@ -12,6 +12,7 @@ using FinalBet.Database;
 using FinalBet.Extensions;
 using FinalBet.Framework;
 using FinalBet.Model;
+using FinalBet.Model.Filtering;
 using FinalBet.Properties;
 
 namespace FinalBet.ViewModel

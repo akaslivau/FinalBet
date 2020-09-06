@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using FinalBet.Framework;
 
-namespace FinalBet.Model
+namespace FinalBet.Model.Filtering
 {
     public class MatchPropertyRepoViewModel:ViewModelBase
     {
@@ -45,11 +40,15 @@ namespace FinalBet.Model
         private void Add(object obj)
         {
             Items.Add(new MatchPropertyViewModel());
+            Selected = Items[Items.Count - 1];
         }
 
         private void Remove(object obj)
         {
+            int index = Items.IndexOf(Selected);
             Items.Remove(Selected);
+            if (index > 0) Selected = Items[index - 1];
+
         }
 
         #endregion
